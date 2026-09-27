@@ -1062,7 +1062,22 @@ fn summarize(fixtures: &[FixtureReport]) -> ReportSummary {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::path::PathBuf;
+    use serde::{Serialize, de::DeserializeOwned};
+    use std::{
+        io::Write,
+        path::PathBuf,
+        process::Stdio,
+    };
+    use yu_capability_psd::{
+        PSD_CONTRACT_VERSION, PsdFormat as ContractPsdFormat, PsdInspectResult, PsdLayerId,
+        PsdLayerInfoResult, PsdLayerListResult, PsdTreeResult, flatten_layer_tree,
+        inspect_engine_request, layer_export_engine_request, layer_info_engine_request,
+        layer_list_engine_request, tree_engine_request,
+    };
+    use yu_engine_api::{
+        ExternalEngineErrorCode, ExternalEngineRequest, ExternalEngineResponse,
+        validate_external_response,
+    };
 
     fn committed_corpus_path() -> PathBuf {
         Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/psd/corpus.json")
@@ -1075,6 +1090,79 @@ mod tests {
 
     fn committed_strategy_path() -> PathBuf {
         Path::new(env!("CARGO_MANIFEST_DIR")).join("../../docs/data/psd-engine-strategy-v1.json")
+    }
+
+    fn committed_fixture_path(fixture_id: &str) -> PathBuf {
+        let corpus_path = committed_corpus_path();
+        let corpus = load_corpus(&corpus_path).expect("committed corpus should load");
+        let fixture = corpus
+            .fixtures
+            .iter()
+            .find(|fixture| fixture.id == fixture_id)
+            .unwrap_or_else(|| panic!("missing committed fixture: {fixture_id}"));
+        corpus_path
+            .parent()
+            .expect("corpus path should have a parent")
+            .join(&fixture.path)
+    }
+
+    fn run_ag_psd_protocol<TRequest, TResult>(
+        request: &ExternalEngineRequest<TRequest>,
+    ) -> ExternalEngineResponse<TResult>
+    where
+        TRequest: Serialize,
+        TResult: DeserializeOwned,
+    {
+        let node = env::var_os("YU_TYPESCRIPT_PSD_NODE")
+            .filter(|value| !value.is_empty())
+            .unwrap_or_else(|| OsString::from("node"));
+        let script = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("adapters/typescript/ag_psd_protocol.cjs");
+        let mut child = Command::new(node)
+            .arg(script)
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()
+            .expect("ag-psd protocol adapter should start");
+
+        child
+            .stdin
+            .take()
+            .expect("protocol stdin should exist")
+            .write_all(
+                &serde_json::to_vec(request).expect("protocol request should serialize"),
+            )
+            .expect("protocol request should write");
+
+        let output = child
+            .wait_with_output()
+            .expect("protocol adapter should complete");
+        assert!(
+            output.status.success(),
+            "protocol adapter transport failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+
+        let response = serde_json::from_slice::<ExternalEngineResponse<TResult>>(&output.stdout)
+            .unwrap_or_else(|error| {
+                panic!(
+                    "protocol stdout should be one valid response: {error}; stdout={}",
+                    String::from_utf8_lossy(&output.stdout)
+                )
+            });
+        validate_external_response(request, &response)
+            .expect("protocol response should correlate to request");
+        response
+    }
+
+    fn expect_protocol_ok<T>(response: ExternalEngineResponse<T>) -> T {
+        match response {
+            ExternalEngineResponse::Ok { result, .. } => result,
+            ExternalEngineResponse::Error { error, .. } => {
+                panic!("unexpected protocol error: {:?}: {}", error.code, error.message)
+            }
+        }
     }
 
     struct ExpectedObservationAdapter;
@@ -1402,6 +1490,97 @@ mod tests {
         assert_eq!(report.summary.failed, 0);
         assert_eq!(report.summary.skipped, 0);
         assert_eq!(report.summary.errors, 0);
+    }
+
+    #[test]
+    #[ignore = "requires Node.js 22 with ag-psd 31.0.2"]
+    fn ag_psd_protocol_v1_conforms_to_psd_contract() {
+        let simple_psd = committed_fixture_path("simple-pixel-layers-psd");
+        let simple_psb = committed_fixture_path("simple-pixel-layers-psb");
+        let group_psd = committed_fixture_path("nested-group");
+        let duplicate_psd = committed_fixture_path("duplicate-layer-names");
+
+        let inspect = inspect_engine_request(
+            "protocol-inspect-psd",
+            simple_psd.to_string_lossy().into_owned(),
+        );
+        let inspect_result =
+            expect_protocol_ok(run_ag_psd_protocol::<_, PsdInspectResult>(&inspect));
+        assert_eq!(inspect_result.contract_version, PSD_CONTRACT_VERSION);
+        assert_eq!(inspect_result.document.format, ContractPsdFormat::Psd);
+        assert_eq!(inspect_result.document.width, 101);
+        assert_eq!(inspect_result.document.height, 55);
+        assert_eq!(inspect_result.document.bits_per_channel, 8);
+        assert_eq!(inspect_result.document.layer_count, 2);
+
+        let inspect_psb = inspect_engine_request(
+            "protocol-inspect-psb",
+            simple_psb.to_string_lossy().into_owned(),
+        );
+        let psb_result =
+            expect_protocol_ok(run_ag_psd_protocol::<_, PsdInspectResult>(&inspect_psb));
+        assert_eq!(psb_result.document.format, ContractPsdFormat::Psb);
+        assert_eq!(psb_result.document.layer_count, 2);
+
+        let tree = tree_engine_request(
+            "protocol-tree",
+            group_psd.to_string_lossy().into_owned(),
+        );
+        let tree_result = expect_protocol_ok(run_ag_psd_protocol::<_, PsdTreeResult>(&tree));
+        assert_eq!(tree_result.contract_version, PSD_CONTRACT_VERSION);
+        let flat_tree = flatten_layer_tree(&tree_result.layers);
+        assert_eq!(flat_tree.len(), 3);
+        for (index, layer) in flat_tree.iter().enumerate() {
+            assert_eq!(
+                layer.id,
+                PsdLayerId::from_index(index + 1).expect("canonical layer ID")
+            );
+        }
+        assert!(
+            flat_tree
+                .iter()
+                .any(|layer| layer.parent_id.is_some()),
+            "nested-group fixture should expose parent relationships"
+        );
+
+        let list = layer_list_engine_request(
+            "protocol-list",
+            duplicate_psd.to_string_lossy().into_owned(),
+        );
+        let list_result =
+            expect_protocol_ok(run_ag_psd_protocol::<_, PsdLayerListResult>(&list));
+        assert_eq!(list_result.layers.len(), 2);
+        assert_eq!(list_result.layers[0].name, "X");
+        assert_eq!(list_result.layers[1].name, "X");
+        assert_eq!(list_result.layers[0].id.as_str(), "L0001");
+        assert_eq!(list_result.layers[1].id.as_str(), "L0002");
+
+        let info = layer_info_engine_request(
+            "protocol-info",
+            duplicate_psd.to_string_lossy().into_owned(),
+            PsdLayerId::from_index(2).unwrap(),
+        );
+        let info_result =
+            expect_protocol_ok(run_ag_psd_protocol::<_, PsdLayerInfoResult>(&info));
+        assert_eq!(info_result.layer.id.as_str(), "L0002");
+        assert_eq!(info_result.layer.name, "X");
+
+        let export = layer_export_engine_request(
+            "protocol-export",
+            simple_psd.to_string_lossy().into_owned(),
+            PsdLayerId::from_index(1).unwrap(),
+            "ignored.png",
+        );
+        let response =
+            run_ag_psd_protocol::<_, serde_json::Value>(&export);
+        match response {
+            ExternalEngineResponse::Error { error, .. } => {
+                assert_eq!(error.code, ExternalEngineErrorCode::UnsupportedCapability);
+            }
+            ExternalEngineResponse::Ok { .. } => {
+                panic!("PR #20 protocol adapter must not silently implement layer export")
+            }
+        }
     }
 
     #[test]
