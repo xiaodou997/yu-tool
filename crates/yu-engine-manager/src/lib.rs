@@ -62,6 +62,8 @@ pub struct EnginePackage {
     pub sha256: String,
     pub archive: ArchiveKind,
     pub entrypoint: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub args: Vec<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -122,6 +124,7 @@ impl EngineManifest {
             }
 
             validate_relative_entrypoint(&package.entrypoint)?;
+            validate_package_args(&package.args)?;
         }
 
         for (index, package) in self.packages.iter().enumerate() {
@@ -482,6 +485,31 @@ fn validate_version_segment(value: &str) -> Result<(), ManagerError> {
     Ok(())
 }
 
+pub(crate) fn validate_package_args(args: &[String]) -> Result<(), ManagerError> {
+    if args.len() > 64 {
+        return Err(ManagerError::InvalidManifest(
+            "package args must contain at most 64 fixed arguments".to_owned(),
+        ));
+    }
+
+    let total_bytes = args.iter().map(String::len).sum::<usize>();
+    if total_bytes > 64 * 1024 {
+        return Err(ManagerError::InvalidManifest(
+            "package args exceed the 64 KiB manifest limit".to_owned(),
+        ));
+    }
+
+    for arg in args {
+        if arg.as_bytes().contains(&0) {
+            return Err(ManagerError::InvalidManifest(
+                "package args must not contain NUL bytes".to_owned(),
+            ));
+        }
+    }
+
+    Ok(())
+}
+
 fn validate_relative_entrypoint(value: &str) -> Result<(), ManagerError> {
     let path = Path::new(value);
 
@@ -518,6 +546,7 @@ mod tests {
                 sha256: "a".repeat(64),
                 archive: ArchiveKind::Zip,
                 entrypoint: "bin/example".to_owned(),
+                args: Vec::new(),
             }],
         }
     }
@@ -543,6 +572,32 @@ mod tests {
 
         let package = manifest.package_for(&target).unwrap();
         assert_eq!(package.entrypoint, "bin/example");
+    }
+
+    #[test]
+    fn manifest_accepts_fixed_entrypoint_args() {
+        let target = EngineTarget::new("linux", "x86_64");
+        let mut manifest = manifest_for(target);
+        manifest.packages[0].entrypoint = "runtime/node".to_owned();
+        manifest.packages[0].args = vec!["engine/protocol.cjs".to_owned()];
+
+        manifest.validate().unwrap();
+        assert_eq!(
+            manifest.packages[0].args,
+            vec!["engine/protocol.cjs".to_owned()]
+        );
+    }
+
+    #[test]
+    fn manifest_rejects_nul_in_fixed_entrypoint_args() {
+        let target = EngineTarget::new("linux", "x86_64");
+        let mut manifest = manifest_for(target);
+        manifest.packages[0].args = vec!["bad\0arg".to_owned()];
+
+        assert!(matches!(
+            manifest.validate(),
+            Err(ManagerError::InvalidManifest(_))
+        ));
     }
 
     #[test]
