@@ -137,7 +137,7 @@ Progress:
 - [x] TypeScript/Node candidate integration (ag-psd 31.0.2);
 - [x] candidate comparison report v1 (conformance, distribution, maintenance evidence);
 - [x] controlled performance/memory benchmark report v2;
-- [ ] PSD engine strategy decision.
+- [x] PSD engine strategy decision (ADR 0006: ag-psd Managed primary, psd-tools reference/compatibility).
 
 Build a representative fixture corpus covering, where legally distributable:
 
@@ -181,7 +181,9 @@ Deliverables:
 - recommended compatibility/managed engine, if useful;
 - explicit unsupported/partial capability list.
 
-Exit criteria:
+Strategy exit criteria are now satisfied by ADR 0006 and the M3 evidence chain.
+
+The implementation target remains:
 
 ```bash
 yu psd inspect design.psd --json
@@ -190,7 +192,7 @@ yu psd layer list design.psd --json
 yu psd layer export design.psd --id <id> -o layer.png --json
 ```
 
-have a tested engine strategy.
+using the selected Managed ag-psd engine strategy.
 
 ## M4 — Safe mutation
 
