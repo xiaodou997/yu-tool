@@ -201,7 +201,11 @@ yu image convert input.png -o output.webp
 
 ## PSD commands
 
-PSD is currently a capability namespace rather than a promise about one specific backend.
+ADR 0006 selects `ag-psd 31.0.2` as the preferred v0.1 Managed PSD engine. The commands below remain planned until the Managed package and public capability schema are implemented.
+
+The default production path must not require a system Node.js installation. If no compatible active Managed PSD engine exists, commands return a structured `ENGINE_UNAVAILABLE` result rather than silently installing or activating one.
+
+PSD execution does not silently fail over to psd-tools. Use explicit `--engine` selection for an alternate implementation when such a provider is productized.
 
 ### `yu psd inspect` — planned
 
@@ -256,13 +260,23 @@ yu psd layer info design.psd --id L0007
 
 Future selectors may include `--path` and `--name`, but ambiguous names must never silently select an arbitrary layer.
 
-### `yu psd layer export` — planned
+### `yu psd layer export` — planned / partial v0.1 contract
 
 ```bash
 yu psd layer export design.psd --id L0007 -o layer.png
 ```
 
-### `yu psd render` — planned
+Initial semantics:
+
+- source scope: 8-bit PSD/PSB documents;
+- engine materializes the selected layer bitmap;
+- YuTool normalizes pixels to RGBA8;
+- v0.1 output container is PNG;
+- selected engine/version/provider is included in structured output;
+- this is not a Photoshop-equivalent full-document render promise;
+- 16-bit/32-bit layer export returns `UNSUPPORTED_CAPABILITY` until a high-bit normalization contract is accepted.
+
+### `yu psd render` — deferred
 
 ```bash
 yu psd render design.psd -o preview.png

@@ -294,13 +294,24 @@ Requirements include:
 - checksum/signature verification where available;
 - atomic activation of managed engine versions.
 
+## PSD engine strategy
+
+ADR 0006 resolves the initial PSD engine question:
+
+- v0.1 has no Built-in PSD engine;
+- ag-psd 31.0.2 is the preferred Managed PSD engine;
+- its production package should carry a private Node.js 22 runtime or equivalent self-contained entrypoint;
+- psd-tools remains an independent reference/explicit compatibility implementation;
+- PSD engines do not silently fail over between implementations;
+- high-bit-depth layer export is outside the v0.1 contract until normalization semantics are accepted.
+
 ## Open architecture questions
 
-The following should be resolved through implementation spikes or ADRs rather than assumptions:
+The following should still be resolved through implementation work or later ADRs:
 
-- which Rust PSD library, if any, is mature enough for the built-in PSD path;
-- which engines should be managed by YuTool versus only discovered as system tools;
-- whether managed Python/Node engines ship private runtimes or share a Yu-managed runtime;
-- engine package manifest/schema format;
-- capability conformance-test format;
+- exact self-contained Managed package layout for language-runtime engines;
+- catalog/update/signing policy for managed runtime bundles;
+- stable third-party engine process protocol;
+- high-bit-depth normalized/native export contract;
+- render-fidelity contract;
 - plugin ABI/process protocol for third-party engines.

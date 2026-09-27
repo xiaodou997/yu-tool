@@ -60,31 +60,41 @@ The first implementation deliberately favors a small, predictable dependency foo
 
 ## PSD / PSB
 
-PSD support requires an implementation spike before a built-in engine is selected.
+M3 selected the v0.1 engine strategy in ADR 0006.
 
-| Capability | v0.1 target | Engine status |
+Preferred production direction:
+
+```text
+engine:   ag-psd 31.0.2
+runtime:  private Node.js 22
+provider: managed
+```
+
+Node/ag-psd remain optional and must not become YuTool core dependencies. The production Managed package should be self-contained in YuTool-owned storage rather than depending on a user-managed system Node installation.
+
+| Capability | v0.1 target | Selected strategy |
 | --- | --- | --- |
-| `psd.inspect` | Planned | engine selection pending |
-| `psd.tree` | Planned | engine selection pending |
-| `psd.layer.list` | Planned | engine selection pending |
-| `psd.layer.info` | Planned | engine selection pending |
-| `psd.layer.export` | Planned | engine selection pending |
-| `psd.render` | Planned | engine selection pending |
-| layer rename | Future | not frozen |
-| show/hide layer | Future | not frozen |
-| layer opacity | Future | not frozen |
-| layer move/delete | Future | not frozen |
+| `psd.inspect` | Planned | Managed ag-psd |
+| `psd.tree` | Planned | Managed ag-psd |
+| `psd.layer.list` | Planned | Managed ag-psd |
+| `psd.layer.info` | Planned | Managed ag-psd |
+| `psd.layer.export` | Partial target | 8-bit materialized layer bitmap → RGBA8/PNG via ag-psd |
+| `psd.render` | Deferred | no v0.1 fidelity promise |
+| high-bit layer export | Unsupported in v0.1 | normalization contract unresolved |
+| layer rename | Future | mutation safety not frozen |
+| show/hide layer | Future | mutation safety not frozen |
+| layer opacity | Future | mutation safety not frozen |
+| layer move/delete | Future | mutation safety not frozen |
 | text-layer editing | Future/Research | must be capability-tested |
 | Smart Object editing | Future/Research | must be capability-tested |
 
-Candidate engines to evaluate include:
+Compatibility roles:
 
-- Rust PSD implementations;
-- psd-tools;
-- TypeScript PSD implementations where useful;
-- other mature native implementations discovered during the spike.
+- `psd-tools 1.20.0 / Python 3.12` remains the independent reference and explicit compatibility path;
+- `rawpsd 0.2.2` remains experimental evidence and is not a v0.1 production engine;
+- YuTool does not silently fail over between PSD engines because output semantics can differ.
 
-No candidate is considered the permanent default until fixture testing is complete.
+The 8-bit export target means bitmap materialization, not Photoshop-equivalent full-document rendering.
 
 ## Engine-management capabilities
 
