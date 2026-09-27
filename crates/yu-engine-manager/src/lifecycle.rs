@@ -822,6 +822,15 @@ mod tests {
             Some("2.0.0")
         );
 
+        let command = manager
+            .active_command(&descriptor)
+            .unwrap()
+            .expect("active command should exist");
+        assert_eq!(command.engine_id, "fixture-engine");
+        assert_eq!(command.version, "2.0.0");
+        assert!(command.entrypoint.ends_with("bin/fixture"));
+        assert!(command.args.is_empty());
+
         let versions = manager.list_managed_versions(&descriptor).unwrap();
         assert!(
             !versions
