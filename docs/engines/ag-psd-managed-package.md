@@ -153,3 +153,33 @@ The package advertises only the capabilities implemented by the Protocol v1 adap
 It does **not** advertise `psd.layer.export` yet.
 
 This prevents capability discovery from promising an operation that PR #20 intentionally left implementation-deferred.
+
+
+## Accepted prototype receipt
+
+The accepted three-target prototype is frozen in:
+
+```text
+docs/data/ag-psd-managed-manifest-prototype-v1.json
+docs/data/ag-psd-managed-package-prototype-v1.json
+```
+
+Evidence source:
+
+```text
+Workflow:    Managed ag-psd Package
+Run ID:      36297203908
+Source head: 2592275cf9b965ecb575faed9a670814fb7693a9
+```
+
+Accepted package ZIPs:
+
+| Target | Package bytes | Package SHA-256 |
+| --- | ---: | --- |
+| `linux/x86_64` | 49,770,553 | `80b2edba1be82146fca6367d3062b3583eeb2b937cb849072be252b1c364b83b` |
+| `macos/aarch64` | 42,987,682 | `46e16561758b49577b1f2f624f2af4efc28b120fd8d39f02b332fcf68e59e971` |
+| `windows/x86_64` | 39,179,579 | `0ff9802987ebaa47dc2a082968c12d1c9dd640ed3a087076d8d1a707b86ebb12` |
+
+All three targets independently completed the full package → install → activate → private runtime → Protocol v1 → inventory ready → cleanup smoke.
+
+The SHA values above are the hashes of the inner Managed Engine ZIPs consumed by EngineInstaller. GitHub Actions artifact digests are recorded separately in the machine-readable receipt because Actions wraps the uploaded files in its own artifact container.
