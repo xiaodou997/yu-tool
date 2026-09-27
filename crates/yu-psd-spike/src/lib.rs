@@ -1284,12 +1284,11 @@ mod tests {
         for package in packages {
             assert_eq!(package["archive"], "zip");
             assert_eq!(package["args"][0], "engine/ag_psd_protocol.cjs");
-            assert_eq!(
+            assert!(
                 package["url"]
                     .as_str()
                     .expect("package URL should be a string")
-                    .starts_with("https://example.invalid/"),
-                true
+                    .starts_with("https://example.invalid/")
             );
 
             let target = &package["target"];
