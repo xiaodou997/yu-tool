@@ -41,7 +41,8 @@ M2 starts with schema version `1`.
       "url": "https://example.invalid/imagemagick-macos-aarch64.zip",
       "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
       "archive": "zip",
-      "entrypoint": "bin/magick"
+      "entrypoint": "bin/magick",
+      "args": []
     }
   ]
 }
@@ -126,6 +127,30 @@ Rejected examples:
 ```
 
 This prevents a manifest from defining an entrypoint outside YuTool-managed storage.
+
+## Fixed entrypoint arguments
+
+M3 adds an **optional additive** `args` field to each package:
+
+```json
+{
+  "entrypoint": "runtime/node",
+  "args": ["engine/ag_psd_protocol.cjs"]
+}
+```
+
+Rules:
+
+- omitted `args` means an empty argv and preserves the frozen M2 behavior;
+- arguments are package-controlled fixed strings, not user input;
+- at most 64 arguments are accepted;
+- total encoded argument text is limited to 64 KiB;
+- NUL bytes are rejected;
+- arguments are passed directly to the executable without shell interpolation;
+- `args` are persisted into `.yu-install.json`;
+- the runtime working directory for an active Managed command is the installed engine version root.
+
+This makes self-contained language-runtime engines possible without introducing shell wrapper scripts.
 
 ## Managed storage
 

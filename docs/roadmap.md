@@ -140,7 +140,7 @@ Progress:
 - [x] PSD engine strategy decision (ADR 0006: ag-psd Managed primary, psd-tools reference/compatibility);
 - [x] PSD capability contract v1;
 - [x] External Engine Protocol v1;
-- [ ] Managed ag-psd package prototype;
+- [x] Managed ag-psd package prototype (Node 22.23.3 + ag-psd 31.0.2; Linux x64 / macOS arm64 / Windows x64);
 - [ ] runtime wiring for inspect / tree / layer list / layer info;
 - [ ] 8-bit layer export implementation;
 - [ ] M3 implementation freeze.

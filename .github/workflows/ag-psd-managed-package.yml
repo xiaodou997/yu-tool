@@ -1,0 +1,115 @@
+name: Managed ag-psd Package
+
+on:
+  pull_request:
+    paths:
+      - "packaging/ag-psd-engine/**"
+      - "tools/build_ag_psd_managed_package.py"
+      - "crates/yu-engine-manager/**"
+      - "crates/yu-psd-spike/adapters/typescript/ag_psd_protocol.cjs"
+      - ".github/workflows/ag-psd-managed-package.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    name: package + install smoke / ${{ matrix.label }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: linux-x86_64
+            runner: ubuntu-latest
+            target_os: linux
+            target_arch: x86_64
+          - label: macos-aarch64
+            runner: macos-latest
+            target_os: macos
+            target_arch: aarch64
+          - label: windows-x86_64
+            runner: windows-latest
+            target_os: windows
+            target_arch: x86_64
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22.23.3"
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Install pinned package dependencies
+        working-directory: packaging/ag-psd-engine
+        run: npm install --ignore-scripts --no-audit --no-fund
+
+      - name: Build verified self-contained package
+        run: >-
+          python tools/build_ag_psd_managed_package.py build
+          --sources packaging/ag-psd-engine/node-runtime-sources-v1.json
+          --target-os ${{ matrix.target_os }}
+          --target-arch ${{ matrix.target_arch }}
+          --node-modules packaging/ag-psd-engine/node_modules
+          --protocol-adapter crates/yu-psd-spike/adapters/typescript/ag_psd_protocol.cjs
+          --output-dir target/ag-psd-managed/${{ matrix.label }}
+          --package-base-url https://example.invalid/yu-tool/ag-psd-engine-prototype-v1
+
+      - name: Install, activate, execute private runtime, and discover engine
+        run: >-
+          cargo run -p yu-engine-manager --example managed_package_smoke --
+          target/ag-psd-managed/${{ matrix.label }}/manifest-${{ matrix.label }}.json
+          target/ag-psd-managed/${{ matrix.label }}/yu-engine-ag-psd-31.0.2-node22.23.3-${{ matrix.label }}.zip
+          fixtures/psd/upstream/psd-tools/2layers.psd
+
+      - name: Upload managed engine package
+        uses: actions/upload-artifact@v4
+        with:
+          name: ag-psd-managed-package-${{ matrix.label }}
+          path: |
+            target/ag-psd-managed/${{ matrix.label }}/yu-engine-ag-psd-31.0.2-node22.23.3-${{ matrix.label }}.zip
+            target/ag-psd-managed/${{ matrix.label }}/manifest-${{ matrix.label }}.json
+          if-no-files-found: error
+
+      - name: Upload package metadata
+        uses: actions/upload-artifact@v4
+        with:
+          name: ag-psd-managed-metadata-${{ matrix.label }}
+          path: target/ag-psd-managed/${{ matrix.label }}/metadata-${{ matrix.label }}.json
+          if-no-files-found: error
+
+  manifest:
+    name: assemble prototype manifest
+    needs: package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - uses: actions/download-artifact@v5
+        with:
+          pattern: ag-psd-managed-metadata-*
+          path: target/ag-psd-managed-metadata
+          merge-multiple: true
+
+      - name: Assemble three-target Engine Manifest v1
+        run: >-
+          python tools/build_ag_psd_managed_package.py assemble
+          --metadata target/ag-psd-managed-metadata/metadata-*.json
+          --output target/ag-psd-managed-manifest-v1.json
+
+      - name: Upload prototype manifest
+        uses: actions/upload-artifact@v4
+        with:
+          name: ag-psd-managed-manifest-v1
+          path: target/ag-psd-managed-manifest-v1.json
+          if-no-files-found: error

@@ -1088,6 +1088,16 @@ mod tests {
         Path::new(env!("CARGO_MANIFEST_DIR")).join("../../docs/data/psd-engine-strategy-v1.json")
     }
 
+    fn committed_managed_manifest_path() -> PathBuf {
+        Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../docs/data/ag-psd-managed-manifest-prototype-v1.json")
+    }
+
+    fn committed_managed_package_receipt_path() -> PathBuf {
+        Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../docs/data/ag-psd-managed-package-prototype-v1.json")
+    }
+
     fn committed_fixture_path(fixture_id: &str) -> PathBuf {
         let corpus_path = committed_corpus_path();
         let corpus = load_corpus(&corpus_path).expect("committed corpus should load");
@@ -1226,6 +1236,84 @@ mod tests {
                 candidate.id
             );
         }
+    }
+
+    #[test]
+    fn committed_managed_ag_psd_package_receipt_matches_manifest() {
+        let manifest: serde_json::Value = serde_json::from_slice(
+            &fs::read(committed_managed_manifest_path())
+                .expect("managed ag-psd prototype manifest should exist"),
+        )
+        .expect("managed ag-psd prototype manifest should parse");
+        let receipt: serde_json::Value = serde_json::from_slice(
+            &fs::read(committed_managed_package_receipt_path())
+                .expect("managed ag-psd package receipt should exist"),
+        )
+        .expect("managed ag-psd package receipt should parse");
+
+        assert_eq!(manifest["schema_version"], "1");
+        assert_eq!(manifest["id"], "ag-psd");
+        assert_eq!(manifest["version"], "31.0.2+node22.23.3");
+        assert_eq!(receipt["receipt_id"], "m3-managed-ag-psd-prototype-v1");
+        assert_eq!(receipt["workflow"]["run_id"], 36297203908_u64);
+        assert_eq!(
+            receipt["workflow"]["source_head"],
+            "2592275cf9b965ecb575faed9a670814fb7693a9"
+        );
+        assert_eq!(receipt["acceptance"]["validated_targets"], 3);
+
+        let capabilities = manifest["capabilities"]
+            .as_array()
+            .expect("managed manifest capabilities should be an array");
+        assert_eq!(capabilities.len(), 4);
+        assert!(
+            capabilities
+                .iter()
+                .all(|value| value.as_str() != Some("psd.layer.export"))
+        );
+
+        let packages = manifest["packages"]
+            .as_array()
+            .expect("managed manifest packages should be an array");
+        let receipts = receipt["packages"]
+            .as_array()
+            .expect("managed receipt packages should be an array");
+        assert_eq!(packages.len(), 3);
+        assert_eq!(receipts.len(), 3);
+
+        for package in packages {
+            assert_eq!(package["archive"], "zip");
+            assert_eq!(package["args"][0], "engine/ag_psd_protocol.cjs");
+            assert!(
+                package["url"]
+                    .as_str()
+                    .expect("package URL should be a string")
+                    .starts_with("https://example.invalid/")
+            );
+
+            let target = &package["target"];
+            let matching = receipts
+                .iter()
+                .find(|receipt| receipt["target"] == *target)
+                .expect("each manifest target should have a receipt");
+
+            assert_eq!(matching["sha256"], package["sha256"]);
+            assert_eq!(matching["entrypoint"], package["entrypoint"]);
+            assert_eq!(matching["args"], package["args"]);
+            assert!(
+                matching["bytes"]
+                    .as_u64()
+                    .expect("package byte size should be an integer")
+                    > 1_000_000
+            );
+        }
+
+        assert_eq!(
+            receipt["distribution"]["status"],
+            "prototype_ci_artifact_only"
+        );
+        assert_eq!(receipt["distribution"]["public_catalog"], false);
+        assert_eq!(receipt["distribution"]["public_https_packages"], false);
     }
 
     #[test]

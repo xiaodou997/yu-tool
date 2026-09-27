@@ -1,0 +1,100 @@
+{
+  "schema_version": "1",
+  "receipt_id": "m3-managed-ag-psd-prototype-v1",
+  "workflow": {
+    "name": "Managed ag-psd Package",
+    "run_id": 36297203908,
+    "source_head": "2592275cf9b965ecb575faed9a670814fb7693a9"
+  },
+  "engine": {
+    "id": "ag-psd",
+    "version": "31.0.2+node22.23.3",
+    "ag_psd_version": "31.0.2",
+    "node_version": "22.23.3",
+    "provider": "managed",
+    "protocol_version": "1",
+    "psd_contract_version": "1",
+    "capabilities": [
+      "psd.inspect",
+      "psd.tree",
+      "psd.layer.list",
+      "psd.layer.info"
+    ]
+  },
+  "distribution": {
+    "status": "prototype_ci_artifact_only",
+    "public_catalog": false,
+    "public_https_packages": false,
+    "prototype_url_base": "https://example.invalid/yu-tool/ag-psd-engine-prototype-v1"
+  },
+  "packages": [
+    {
+      "target": {
+        "os": "linux",
+        "arch": "x86_64"
+      },
+      "file_name": "yu-engine-ag-psd-31.0.2-node22.23.3-linux-x86_64.zip",
+      "bytes": 49770553,
+      "sha256": "80b2edba1be82146fca6367d3062b3583eeb2b937cb849072be252b1c364b83b",
+      "entrypoint": "runtime/node",
+      "args": [
+        "engine/ag_psd_protocol.cjs"
+      ],
+      "github_artifact": {
+        "id": 10924865499,
+        "name": "ag-psd-managed-package-linux-x86_64",
+        "artifact_digest": "sha256:9ba23bf67cc5522afcd552141db553ea31900d55c09a4c9b3afc69b10233eb03"
+      }
+    },
+    {
+      "target": {
+        "os": "macos",
+        "arch": "aarch64"
+      },
+      "file_name": "yu-engine-ag-psd-31.0.2-node22.23.3-macos-aarch64.zip",
+      "bytes": 42987682,
+      "sha256": "46e16561758b49577b1f2f624f2af4efc28b120fd8d39f02b332fcf68e59e971",
+      "entrypoint": "runtime/node",
+      "args": [
+        "engine/ag_psd_protocol.cjs"
+      ],
+      "github_artifact": {
+        "id": 10924930362,
+        "name": "ag-psd-managed-package-macos-aarch64",
+        "artifact_digest": "sha256:acc36a3ea5c5ebaefe4c821a3c118884f4c17073a1026aedd8d9abd3bb60dc56"
+      }
+    },
+    {
+      "target": {
+        "os": "windows",
+        "arch": "x86_64"
+      },
+      "file_name": "yu-engine-ag-psd-31.0.2-node22.23.3-windows-x86_64.zip",
+      "bytes": 39179579,
+      "sha256": "0ff9802987ebaa47dc2a082968c12d1c9dd640ed3a087076d8d1a707b86ebb12",
+      "entrypoint": "runtime/node.exe",
+      "args": [
+        "engine/ag_psd_protocol.cjs"
+      ],
+      "github_artifact": {
+        "id": 10924815658,
+        "name": "ag-psd-managed-package-windows-x86_64",
+        "artifact_digest": "sha256:ee80f2685165cf3533ab3c2d916c31a992b97c51976e5c290f23d607e0ce47aa"
+      }
+    }
+  ],
+  "assembled_manifest_artifact": {
+    "id": 10924416151,
+    "name": "ag-psd-managed-manifest-v1",
+    "artifact_digest": "sha256:37cf678640bc747d3250d3b360b565faaa34ea5894d76e1c82245c7e0bedc1db"
+  },
+  "acceptance": {
+    "node_archive_sha256_verified": true,
+    "package_sha256_verified_by_engine_installer": true,
+    "explicit_activation": true,
+    "private_node_protocol_inspect": true,
+    "managed_inventory_ready": true,
+    "cleanup_deactivate_remove": true,
+    "validated_targets": 3
+  }
+}

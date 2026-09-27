@@ -1,6 +1,6 @@
 use crate::{
     EngineManager, EngineManifest, EnginePackage, EngineTarget, ManagerError, validate_identifier,
-    validate_relative_entrypoint, validate_version_segment,
+    validate_package_args, validate_relative_entrypoint, validate_version_segment,
 };
 use serde::{Deserialize, Serialize};
 use std::{
@@ -25,6 +25,8 @@ pub struct InstalledEngineMetadata {
     pub capabilities: Vec<String>,
     pub target: EngineTarget,
     pub entrypoint: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub args: Vec<String>,
     pub sha256: String,
 }
 
@@ -35,6 +37,16 @@ pub struct InstalledVersion {
     pub active: bool,
     pub path: PathBuf,
     pub entrypoint: PathBuf,
+    pub args: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct ManagedEngineCommand {
+    pub engine_id: String,
+    pub version: String,
+    pub working_dir: PathBuf,
+    pub entrypoint: PathBuf,
+    pub args: Vec<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -143,11 +155,40 @@ impl EngineManager {
                 version,
                 path: entry.path(),
                 entrypoint,
+                args: metadata.args.clone(),
             });
         }
 
         versions.sort_by(|left, right| left.version.cmp(&right.version));
         Ok(versions)
+    }
+
+    pub fn active_command(
+        &self,
+        descriptor: &EngineDescriptor,
+    ) -> Result<Option<ManagedEngineCommand>, ManagerError> {
+        ensure_managed(descriptor)?;
+        validate_identifier("engine id", &descriptor.id)?;
+
+        let Some(state) = self.read_active_state(&descriptor.id)? else {
+            return Ok(None);
+        };
+
+        let metadata = self.read_installed_metadata(&descriptor.id, &state.active_version)?;
+        ensure_metadata_matches_target(self, &metadata)?;
+        let working_dir = self
+            .layout()
+            .engine_version_dir(&descriptor.id, &state.active_version);
+        let entrypoint = working_dir.join(&metadata.entrypoint);
+        ensure_real_file(&entrypoint, "engine entrypoint")?;
+
+        Ok(Some(ManagedEngineCommand {
+            engine_id: descriptor.id.clone(),
+            version: state.active_version,
+            working_dir,
+            entrypoint,
+            args: metadata.args,
+        }))
     }
 
     pub fn activate_version(
@@ -449,6 +490,7 @@ pub(crate) fn write_install_metadata(
         capabilities: manifest.capabilities.clone(),
         target: package.target.clone(),
         entrypoint: package.entrypoint.clone(),
+        args: package.args.clone(),
         sha256: sha256.to_owned(),
     };
     validate_metadata(&metadata, &manifest.id, &manifest.version)?;
@@ -509,6 +551,7 @@ fn validate_metadata(
     validate_identifier("engine id", &metadata.engine_id)?;
     validate_version_segment(&metadata.version)?;
     validate_relative_entrypoint(&metadata.entrypoint)?;
+    validate_package_args(&metadata.args)?;
 
     if metadata.sha256.len() != 64 || !metadata.sha256.bytes().all(|byte| byte.is_ascii_hexdigit())
     {
@@ -726,6 +769,7 @@ mod tests {
                 sha256: "a".repeat(64),
                 archive: ArchiveKind::Raw,
                 entrypoint: "bin/fixture".to_owned(),
+                args: Vec::new(),
             }],
         };
 
@@ -779,6 +823,20 @@ mod tests {
             manager.active_version(&descriptor).unwrap().as_deref(),
             Some("2.0.0")
         );
+
+        let command = manager
+            .active_command(&descriptor)
+            .unwrap()
+            .expect("active command should exist");
+        assert_eq!(command.engine_id, "fixture-engine");
+        assert_eq!(command.version, "2.0.0");
+        assert!(
+            command
+                .working_dir
+                .ends_with("engines/fixture-engine/2.0.0")
+        );
+        assert!(command.entrypoint.ends_with("bin/fixture"));
+        assert!(command.args.is_empty());
 
         let versions = manager.list_managed_versions(&descriptor).unwrap();
         assert!(
@@ -950,6 +1008,7 @@ mod tests {
                 sha256: "a".repeat(64),
                 archive: ArchiveKind::Raw,
                 entrypoint: "bin/fixture".to_owned(),
+                args: Vec::new(),
             }],
         };
 

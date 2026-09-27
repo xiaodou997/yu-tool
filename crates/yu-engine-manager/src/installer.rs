@@ -678,6 +678,7 @@ mod tests {
                 sha256: sha256_bytes(bytes),
                 archive,
                 entrypoint: entrypoint.to_owned(),
+                args: Vec::new(),
             }],
         }
     }
