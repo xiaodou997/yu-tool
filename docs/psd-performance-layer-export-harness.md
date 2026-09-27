@@ -135,3 +135,64 @@ PR #16 does not close these M3 gaps:
 - production distribution/update strategy.
 
 The benchmark harness is the measurement foundation for those later decisions, not the final Engine Strategy verdict.
+
+
+## PR #18 representative suite
+
+PR #18 keeps the frozen seven-fixture conformance corpus unchanged and adds a separate benchmark-only corpus:
+
+```text
+fixtures/psd/benchmark/corpus.json
+```
+
+The representative suite is declared in:
+
+```text
+docs/data/psd-benchmark-suite-v2.json
+```
+
+and covers:
+
+- a larger 8-bit RGB baseline shared by all three candidates;
+- advanced blending;
+- mask-heavy content;
+- layer effects;
+- placed / Smart Object metadata;
+- 16-bit RGB PSD;
+- 32-bit PSB.
+
+Each workload still has `ranking_allowed = false`. The suite exists to collect evidence across feature classes and sizes, not to manufacture a single winner score.
+
+The canonical report job runs all workloads sequentially on one `ubuntu-latest` runner and uploads one aggregate JSON artifact. Existing Ubuntu/macOS/Windows smoke jobs remain the cross-platform compatibility gate.
+
+### Peak RSS
+
+Candidate reports now include `peak_rss_bytes` for the benchmark worker:
+
+- rawpsd: process peak RSS from the Rust benchmark process using native OS APIs;
+- psd-tools: Python worker peak RSS;
+- ag-psd: Node worker peak RSS.
+
+This is the peak resident set for the warm benchmark worker/process. It is not a whole-application memory budget and does not include package installation.
+
+### Controlled-report rule
+
+The committed controlled report may summarize the canonical Ubuntu suite, but it must retain:
+
+```text
+ranking_allowed = false
+```
+
+and must not turn GitHub-hosted-runner timing into a universal performance ranking.
+
+
+## Controlled report snapshot
+
+The first canonical suite snapshot is committed at:
+
+```text
+docs/data/psd-benchmark-report-v2.json
+docs/psd-controlled-benchmark-report.md
+```
+
+It is sourced from PSD Spike workflow run `36135069883` and remains non-ranking. Standard Rust tests guard the report ID, workload count, source run, and the currently unresolved high-bit-depth export divergence.

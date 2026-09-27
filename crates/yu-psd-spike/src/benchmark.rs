@@ -14,6 +14,7 @@ use std::process::Command;
 use std::time::Instant;
 
 pub const BENCHMARK_SCHEMA_VERSION: &str = "1";
+pub const BENCHMARK_SUITE_SCHEMA_VERSION: &str = "1";
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct BenchmarkPlan {
@@ -25,6 +26,27 @@ pub struct BenchmarkPlan {
     pub layer_export_candidates: Vec<String>,
     pub ranking_allowed: bool,
     pub purpose: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct BenchmarkSuitePlan {
+    pub schema_version: String,
+    pub suite_id: String,
+    pub corpus_path: String,
+    pub ranking_allowed: bool,
+    pub canonical_report_platform: String,
+    pub plans: Vec<String>,
+    pub purpose: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct BenchmarkSuiteReport {
+    pub schema_version: String,
+    pub suite_id: String,
+    pub ranking_allowed: bool,
+    pub canonical_report_platform: String,
+    pub environment: BenchmarkEnvironment,
+    pub reports: Vec<BenchmarkReport>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -52,6 +74,8 @@ pub struct CandidateBenchmarkReport {
     pub cold_inspect: DurationOperationReport,
     pub warm_parse: DurationOperationReport,
     pub layer_export_materialize: LayerExportOperationReport,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub peak_rss_bytes: Option<u64>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -105,6 +129,100 @@ struct ExternalBenchmarkObservation {
     exported_layer_count: usize,
     total_rgba_bytes: usize,
     export_checksum_sha256: String,
+    peak_rss_bytes: u64,
+}
+
+pub fn load_benchmark_suite_plan(path: &Path) -> Result<BenchmarkSuitePlan, CorpusError> {
+    let content = fs::read_to_string(path).map_err(|error| {
+        CorpusError::new(format!(
+            "failed to read PSD benchmark suite {}: {error}",
+            path.display()
+        ))
+    })?;
+    let suite = serde_json::from_str::<BenchmarkSuitePlan>(&content).map_err(|error| {
+        CorpusError::new(format!(
+            "failed to parse PSD benchmark suite {}: {error}",
+            path.display()
+        ))
+    })?;
+    validate_benchmark_suite_plan(&suite)?;
+    Ok(suite)
+}
+
+pub fn validate_benchmark_suite_plan(suite: &BenchmarkSuitePlan) -> Result<(), CorpusError> {
+    if suite.schema_version != BENCHMARK_SUITE_SCHEMA_VERSION {
+        return Err(CorpusError::new(format!(
+            "unsupported PSD benchmark suite schema {}; expected {}",
+            suite.schema_version, BENCHMARK_SUITE_SCHEMA_VERSION
+        )));
+    }
+    if suite.suite_id.trim().is_empty() {
+        return Err(CorpusError::new("PSD benchmark suite_id must not be empty"));
+    }
+    if suite.corpus_path.trim().is_empty() {
+        return Err(CorpusError::new(
+            "PSD benchmark suite corpus_path must not be empty",
+        ));
+    }
+    if suite.canonical_report_platform.trim().is_empty() {
+        return Err(CorpusError::new(
+            "PSD benchmark suite canonical_report_platform must not be empty",
+        ));
+    }
+    if suite.ranking_allowed {
+        return Err(CorpusError::new(
+            "representative PSD benchmark suite v2 must not allow ranking",
+        ));
+    }
+    if suite.plans.is_empty() {
+        return Err(CorpusError::new(
+            "PSD benchmark suite must contain at least one workload plan",
+        ));
+    }
+
+    let mut unique = HashSet::new();
+    for plan in &suite.plans {
+        if plan.trim().is_empty() {
+            return Err(CorpusError::new(
+                "PSD benchmark suite plan path must not be empty",
+            ));
+        }
+        if !unique.insert(plan.as_str()) {
+            return Err(CorpusError::new(format!(
+                "duplicate PSD benchmark suite plan: {plan}"
+            )));
+        }
+    }
+
+    Ok(())
+}
+
+pub fn run_benchmark_suite(path: &Path) -> Result<BenchmarkSuiteReport, CorpusError> {
+    let suite = load_benchmark_suite_plan(path)?;
+    let corpus_path = Path::new(&suite.corpus_path);
+    let mut reports = Vec::with_capacity(suite.plans.len());
+
+    for plan in &suite.plans {
+        let report = run_benchmark(corpus_path, Path::new(plan))?;
+        if report.ranking_allowed {
+            return Err(CorpusError::new(format!(
+                "PSD benchmark workload {plan} unexpectedly enables ranking"
+            )));
+        }
+        reports.push(report);
+    }
+
+    Ok(BenchmarkSuiteReport {
+        schema_version: BENCHMARK_SUITE_SCHEMA_VERSION.to_owned(),
+        suite_id: suite.suite_id,
+        ranking_allowed: suite.ranking_allowed,
+        canonical_report_platform: suite.canonical_report_platform,
+        environment: BenchmarkEnvironment {
+            os: env::consts::OS.to_owned(),
+            arch: env::consts::ARCH.to_owned(),
+        },
+        reports,
+    })
 }
 
 pub fn load_benchmark_plan(path: &Path) -> Result<BenchmarkPlan, CorpusError> {
@@ -239,13 +357,18 @@ pub fn run_benchmark(corpus_path: &Path, plan_path: &Path) -> Result<BenchmarkRe
             plan.measured_iterations,
         );
 
-        let (warm_parse, layer_export_materialize) = match descriptor.id.as_str() {
-            "rust-native" => (
-                run_rawpsd_warm_parse(&input, plan.warmup_iterations, plan.measured_iterations),
-                unsupported_layer_export(
-                    "rawpsd 0.2.2 exposes low-level image data but the M3 adapter does not yet provide a normalized RGBA layer-export contract",
-                ),
-            ),
+        let (warm_parse, layer_export_materialize, peak_rss_bytes) = match descriptor.id.as_str() {
+            "rust-native" => {
+                let warm_parse =
+                    run_rawpsd_warm_parse(&input, plan.warmup_iterations, plan.measured_iterations);
+                (
+                    warm_parse,
+                    unsupported_layer_export(
+                        "rawpsd 0.2.2 exposes low-level image data but the M3 adapter does not yet provide a normalized RGBA layer-export contract",
+                    ),
+                    process_peak_rss_bytes(),
+                )
+            }
             "psd-tools" => match run_psd_tools_external(
                 &input,
                 plan.warmup_iterations,
@@ -272,6 +395,7 @@ pub fn run_benchmark(corpus_path: &Path, plan_path: &Path) -> Result<BenchmarkRe
             cold_inspect,
             warm_parse,
             layer_export_materialize,
+            peak_rss_bytes,
         });
     }
 
@@ -508,7 +632,11 @@ fn run_external_command(
 
 fn external_reports(
     observation: ExternalBenchmarkObservation,
-) -> (DurationOperationReport, LayerExportOperationReport) {
+) -> (
+    DurationOperationReport,
+    LayerExportOperationReport,
+    Option<u64>,
+) {
     let warm_parse = measured_duration(observation.warm_parse_samples_ms);
     let samples_ms = observation.layer_export_samples_ms;
     let summary = summarize_samples(&samples_ms);
@@ -524,13 +652,18 @@ fn external_reports(
             export_checksum_sha256: Some(observation.export_checksum_sha256),
             diagnostic: None,
         },
+        Some(observation.peak_rss_bytes),
     )
 }
 
 fn external_failure_reports(
     status: BenchmarkStatus,
     diagnostic: String,
-) -> (DurationOperationReport, LayerExportOperationReport) {
+) -> (
+    DurationOperationReport,
+    LayerExportOperationReport,
+    Option<u64>,
+) {
     (
         failed_duration(status, diagnostic.clone()),
         LayerExportOperationReport {
@@ -542,6 +675,7 @@ fn external_failure_reports(
             export_checksum_sha256: None,
             diagnostic: Some(diagnostic),
         },
+        None,
     )
 }
 
@@ -608,6 +742,49 @@ fn summarize_samples(samples: &[f64]) -> Option<DurationSummary> {
     })
 }
 
+#[cfg(unix)]
+fn process_peak_rss_bytes() -> Option<u64> {
+    let mut usage = std::mem::MaybeUninit::<libc::rusage>::zeroed();
+    let result = unsafe { libc::getrusage(libc::RUSAGE_SELF, usage.as_mut_ptr()) };
+    if result != 0 {
+        return None;
+    }
+    let usage = unsafe { usage.assume_init() };
+    let raw = u64::try_from(usage.ru_maxrss).ok()?;
+
+    #[cfg(target_os = "macos")]
+    {
+        Some(raw)
+    }
+    #[cfg(not(target_os = "macos"))]
+    {
+        raw.checked_mul(1024)
+    }
+}
+
+#[cfg(windows)]
+fn process_peak_rss_bytes() -> Option<u64> {
+    use windows_sys::Win32::System::ProcessStatus::{
+        GetProcessMemoryInfo, PROCESS_MEMORY_COUNTERS,
+    };
+    use windows_sys::Win32::System::Threading::GetCurrentProcess;
+
+    let mut counters = std::mem::MaybeUninit::<PROCESS_MEMORY_COUNTERS>::zeroed();
+    let size = u32::try_from(std::mem::size_of::<PROCESS_MEMORY_COUNTERS>()).ok()?;
+    let handle = unsafe { GetCurrentProcess() };
+    let ok = unsafe { GetProcessMemoryInfo(handle, counters.as_mut_ptr(), size) };
+    if ok == 0 {
+        return None;
+    }
+    let counters = unsafe { counters.assume_init() };
+    u64::try_from(counters.PeakWorkingSetSize).ok()
+}
+
+#[cfg(not(any(unix, windows)))]
+fn process_peak_rss_bytes() -> Option<u64> {
+    None
+}
+
 fn validate_benchmark_report(
     report: &BenchmarkReport,
     plan: &BenchmarkPlan,
@@ -643,6 +820,12 @@ fn validate_benchmark_report(
             &candidate.warm_parse,
             expected_samples,
         )?;
+        if candidate.peak_rss_bytes.unwrap_or(0) == 0 {
+            return Err(CorpusError::new(format!(
+                "PSD benchmark candidate {} did not report peak RSS",
+                candidate.candidate.id
+            )));
+        }
 
         if export_selected.contains(&candidate.candidate.id) {
             let export = &candidate.layer_export_materialize;
@@ -703,6 +886,14 @@ mod tests {
         Path::new(env!("CARGO_MANIFEST_DIR")).join("../../docs/data/psd-benchmark-plan-v1.json")
     }
 
+    fn representative_suite_path() -> PathBuf {
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../docs/data/psd-benchmark-suite-v2.json")
+    }
+
+    fn controlled_report_path() -> PathBuf {
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../docs/data/psd-benchmark-report-v2.json")
+    }
+
     #[test]
     fn committed_benchmark_plan_is_valid_and_non_ranking() {
         let plan = load_benchmark_plan(&committed_plan_path())
@@ -712,6 +903,62 @@ mod tests {
         assert!(!plan.ranking_allowed);
         assert_eq!(plan.candidates.len(), 3);
         assert_eq!(plan.layer_export_candidates.len(), 2);
+    }
+
+    #[test]
+    fn representative_suite_is_valid_and_non_ranking() {
+        let suite = load_benchmark_suite_plan(&representative_suite_path())
+            .expect("representative benchmark suite should load");
+        assert_eq!(suite.schema_version, BENCHMARK_SUITE_SCHEMA_VERSION);
+        assert_eq!(suite.suite_id, "m3-representative-v2");
+        assert!(!suite.ranking_allowed);
+        assert_eq!(suite.canonical_report_platform, "ubuntu-latest");
+        assert_eq!(suite.plans.len(), 7);
+    }
+
+    #[test]
+    fn controlled_report_is_non_ranking_and_records_high_bit_divergence() {
+        let content =
+            fs::read_to_string(controlled_report_path()).expect("controlled report should exist");
+        let value: serde_json::Value =
+            serde_json::from_str(&content).expect("controlled report should parse");
+
+        assert_eq!(value["schema_version"], "1");
+        assert_eq!(value["report_id"], "m3-controlled-benchmark-v2");
+        assert_eq!(value["ranking_allowed"], false);
+        assert_eq!(value["source"]["workflow_run_id"], 36135069883_u64);
+
+        let workloads = value["workloads"]
+            .as_array()
+            .expect("controlled report workloads should be an array");
+        assert_eq!(workloads.len(), 7);
+
+        for fixture_id in ["bench-high-bit-rgb", "bench-high-bit-psb"] {
+            let workload = workloads
+                .iter()
+                .find(|workload| workload["fixture_id"] == fixture_id)
+                .expect("high-bit workload should be present");
+            let candidates = workload["candidates"]
+                .as_array()
+                .expect("candidate list should be an array");
+            let psd_tools = candidates
+                .iter()
+                .find(|candidate| candidate["candidate_id"] == "psd-tools")
+                .expect("psd-tools high-bit evidence should exist");
+            let ag_psd = candidates
+                .iter()
+                .find(|candidate| candidate["candidate_id"] == "typescript-psd")
+                .expect("ag-psd high-bit evidence should exist");
+
+            assert_ne!(
+                psd_tools["total_rgba_bytes"], ag_psd["total_rgba_bytes"],
+                "high-bit export must remain explicitly non-equivalent until normalized"
+            );
+            assert_ne!(
+                psd_tools["export_checksum_sha256"], ag_psd["export_checksum_sha256"],
+                "high-bit export fingerprint divergence must remain explicit"
+            );
+        }
     }
 
     #[test]

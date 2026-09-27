@@ -152,6 +152,7 @@ See:
 - [Agent guide](docs/agent-guide.md)
 - [Roadmap](docs/roadmap.md)
 - [PSD candidate comparison](docs/psd-candidate-comparison.md)
+- [PSD controlled benchmark](docs/psd-controlled-benchmark-report.md)
 - [Engine strategy ADR](docs/decisions/0001-engine-strategy.md)
 
 ## 中文简介

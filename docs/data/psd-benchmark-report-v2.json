@@ -1,0 +1,239 @@
+{
+  "schema_version": "1",
+  "report_id": "m3-controlled-benchmark-v2",
+  "source": {
+    "workflow_run_id": 36135069883,
+    "workflow": "PSD Spike",
+    "source_head": "9ba3501546b7939188972f2ddd2d92951227f689",
+    "artifact_name": "psd-benchmark-representative-ubuntu",
+    "artifact_digest": "sha256:30649888dfe0ae88d5f2b8925ead3092986d9e52501ca3986da8a0f97cf668c2"
+  },
+  "environment": {
+    "os": "linux",
+    "arch": "x86_64"
+  },
+  "canonical_report_platform": "ubuntu-latest",
+  "ranking_allowed": false,
+  "workloads": [
+    {
+      "fixture_id": "bench-baseline-rgb",
+      "fixture_path": "upstream/psd-tools/background-red-opacity-80.psd",
+      "fixture_bytes": 500483,
+      "candidates": [
+        {
+          "candidate_id": "rust-native",
+          "cold_inspect_median_ms": 62.248926,
+          "warm_parse_median_ms": 62.449101,
+          "layer_export_status": "unsupported",
+          "layer_export_median_ms": null,
+          "exported_layer_count": null,
+          "total_rgba_bytes": null,
+          "export_checksum_sha256": null,
+          "peak_rss_bytes": 142454784
+        },
+        {
+          "candidate_id": "psd-tools",
+          "cold_inspect_median_ms": 280.356556,
+          "warm_parse_median_ms": 1.176843,
+          "layer_export_status": "measured",
+          "layer_export_median_ms": 12.918257,
+          "exported_layer_count": 2,
+          "total_rgba_bytes": 5846568,
+          "export_checksum_sha256": "b3c4da59148201f466aaca0ac6706573acda309dd9eaa3de7bb93c9180a45506",
+          "peak_rss_bytes": 62980096
+        },
+        {
+          "candidate_id": "typescript-psd",
+          "cold_inspect_median_ms": 57.036287,
+          "warm_parse_median_ms": 0.443566,
+          "layer_export_status": "measured",
+          "layer_export_median_ms": 11.629686,
+          "exported_layer_count": 2,
+          "total_rgba_bytes": 5846568,
+          "export_checksum_sha256": "b3c4da59148201f466aaca0ac6706573acda309dd9eaa3de7bb93c9180a45506",
+          "peak_rss_bytes": 78483456
+        }
+      ]
+    },
+    {
+      "fixture_id": "bench-advanced-blending",
+      "fixture_path": "upstream/psd-tools/advanced-blending.psd",
+      "fixture_bytes": 961076,
+      "candidates": [
+        {
+          "candidate_id": "psd-tools",
+          "cold_inspect_median_ms": 273.606751,
+          "warm_parse_median_ms": 5.438719,
+          "layer_export_status": "measured",
+          "layer_export_median_ms": 6.014583,
+          "exported_layer_count": 2,
+          "total_rgba_bytes": 2305176,
+          "export_checksum_sha256": "969a1112e841903d938076d073f5b24ad3ef22b14f5028373fe9df5a818dfad2",
+          "peak_rss_bytes": 54214656
+        },
+        {
+          "candidate_id": "typescript-psd",
+          "cold_inspect_median_ms": 82.891669,
+          "warm_parse_median_ms": 4.433536,
+          "layer_export_status": "measured",
+          "layer_export_median_ms": 5.124113,
+          "exported_layer_count": 2,
+          "total_rgba_bytes": 2305176,
+          "export_checksum_sha256": "969a1112e841903d938076d073f5b24ad3ef22b14f5028373fe9df5a818dfad2",
+          "peak_rss_bytes": 76697600
+        }
+      ]
+    },
+    {
+      "fixture_id": "bench-masks",
+      "fixture_path": "upstream/psd-tools/masks2.psd",
+      "fixture_bytes": 815749,
+      "candidates": [
+        {
+          "candidate_id": "psd-tools",
+          "cold_inspect_median_ms": 304.675834,
+          "warm_parse_median_ms": 28.64253,
+          "layer_export_status": "measured",
+          "layer_export_median_ms": 11.427555,
+          "exported_layer_count": 3,
+          "total_rgba_bytes": 3830732,
+          "export_checksum_sha256": "138a69b0ef47b21dd046857aafcb34069ed00a4bbf77d18f86bab9d224faa6ff",
+          "peak_rss_bytes": 59314176
+        },
+        {
+          "candidate_id": "typescript-psd",
+          "cold_inspect_median_ms": 66.846992,
+          "warm_parse_median_ms": 4.596029,
+          "layer_export_status": "measured",
+          "layer_export_median_ms": 7.261568,
+          "exported_layer_count": 3,
+          "total_rgba_bytes": 3830732,
+          "export_checksum_sha256": "138a69b0ef47b21dd046857aafcb34069ed00a4bbf77d18f86bab9d224faa6ff",
+          "peak_rss_bytes": 75104256
+        }
+      ]
+    },
+    {
+      "fixture_id": "bench-layer-effects",
+      "fixture_path": "upstream/psd-tools/layer-effects.psd",
+      "fixture_bytes": 735149,
+      "candidates": [
+        {
+          "candidate_id": "psd-tools",
+          "cold_inspect_median_ms": 412.828705,
+          "warm_parse_median_ms": 129.909286,
+          "layer_export_status": "measured",
+          "layer_export_median_ms": 10.874538,
+          "exported_layer_count": 12,
+          "total_rgba_bytes": 2959228,
+          "export_checksum_sha256": "e4840d04e2d02ce095db12b51018725ea656a6743ce21a98c2bc0d6d768d753a",
+          "peak_rss_bytes": 58445824
+        },
+        {
+          "candidate_id": "typescript-psd",
+          "cold_inspect_median_ms": 95.134976,
+          "warm_parse_median_ms": 14.650095,
+          "layer_export_status": "measured",
+          "layer_export_median_ms": 7.512873,
+          "exported_layer_count": 12,
+          "total_rgba_bytes": 2959228,
+          "export_checksum_sha256": "e4840d04e2d02ce095db12b51018725ea656a6743ce21a98c2bc0d6d768d753a",
+          "peak_rss_bytes": 76312576
+        }
+      ]
+    },
+    {
+      "fixture_id": "bench-smart-object",
+      "fixture_path": "upstream/psd-tools/placed-layer.psd",
+      "fixture_bytes": 114796,
+      "candidates": [
+        {
+          "candidate_id": "psd-tools",
+          "cold_inspect_median_ms": 268.481191,
+          "warm_parse_median_ms": 2.127646,
+          "layer_export_status": "measured",
+          "layer_export_median_ms": 1.950546,
+          "exported_layer_count": 4,
+          "total_rgba_bytes": 383792,
+          "export_checksum_sha256": "15e558c1edc1010b2a87dc78202d0b3751056e0ccd790f665f426f963a2e4a19",
+          "peak_rss_bytes": 46804992
+        },
+        {
+          "candidate_id": "typescript-psd",
+          "cold_inspect_median_ms": 60.214601,
+          "warm_parse_median_ms": 0.906159,
+          "layer_export_status": "measured",
+          "layer_export_median_ms": 1.193575,
+          "exported_layer_count": 4,
+          "total_rgba_bytes": 383792,
+          "export_checksum_sha256": "15e558c1edc1010b2a87dc78202d0b3751056e0ccd790f665f426f963a2e4a19",
+          "peak_rss_bytes": 62713856
+        }
+      ]
+    },
+    {
+      "fixture_id": "bench-high-bit-rgb",
+      "fixture_path": "upstream/psd-tools/posterize-16bit-rgb.psd",
+      "fixture_bytes": 415176,
+      "candidates": [
+        {
+          "candidate_id": "psd-tools",
+          "cold_inspect_median_ms": 271.666492,
+          "warm_parse_median_ms": 2.783247,
+          "layer_export_status": "measured",
+          "layer_export_median_ms": 45.198989,
+          "exported_layer_count": 5,
+          "total_rgba_bytes": 196192,
+          "export_checksum_sha256": "8d2621c3f081d7a7173c442df7392ec4fc428aa2eb800b03a1a5a84f1646047a",
+          "peak_rss_bytes": 46993408
+        },
+        {
+          "candidate_id": "typescript-psd",
+          "cold_inspect_median_ms": 58.661941,
+          "warm_parse_median_ms": 0.645303,
+          "layer_export_status": "measured",
+          "layer_export_median_ms": 7.550711,
+          "exported_layer_count": 5,
+          "total_rgba_bytes": 392384,
+          "export_checksum_sha256": "ef6b589126b511bb2703d7e1df7e2d08f861acb1dee435b553d3c68dcbd4ad09",
+          "peak_rss_bytes": 78905344
+        }
+      ]
+    },
+    {
+      "fixture_id": "bench-high-bit-psb",
+      "fixture_path": "upstream/psd-tools/32bit.psb",
+      "fixture_bytes": 282992,
+      "candidates": [
+        {
+          "candidate_id": "psd-tools",
+          "cold_inspect_median_ms": 269.544264,
+          "warm_parse_median_ms": 1.230221,
+          "layer_export_status": "measured",
+          "layer_export_median_ms": 60.356341,
+          "exported_layer_count": 1,
+          "total_rgba_bytes": 60000,
+          "export_checksum_sha256": "137150ac2f1e5486e7489cecdcb71212c8978d4fff70154f9c56d6c67e3ae695",
+          "peak_rss_bytes": 46071808
+        },
+        {
+          "candidate_id": "typescript-psd",
+          "cold_inspect_median_ms": 57.027428,
+          "warm_parse_median_ms": 0.529596,
+          "layer_export_status": "measured",
+          "layer_export_median_ms": 3.838667,
+          "exported_layer_count": 1,
+          "total_rgba_bytes": 240000,
+          "export_checksum_sha256": "b39f0ed8bed3c91df753a100123afff6e04628ac4ff8002986a31ffdccdb0cad",
+          "peak_rss_bytes": 66801664
+        }
+      ]
+    }
+  ],
+  "observations": {
+    "eight_bit_export_consistency": "psd-tools and ag-psd matched exported layer count, RGBA byte count, and SHA-256 on baseline, advanced blending, masks, layer-effects, and Smart Object workloads.",
+    "high_bit_export_divergence": "16-bit PSD and 32-bit PSB produced different RGBA byte counts and fingerprints between psd-tools and ag-psd; high-bit-depth export normalization is not yet cross-engine equivalent.",
+    "performance_interpretation": "Timing is canonical Ubuntu GitHub-hosted-runner evidence only. It is not a universal ranking.",
+    "memory_interpretation": "peak_rss_bytes is benchmark-worker/process peak RSS, not a whole-application memory budget."
+  }
+}

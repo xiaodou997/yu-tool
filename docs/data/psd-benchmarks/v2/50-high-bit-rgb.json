@@ -1,0 +1,16 @@
+{
+  "schema_version": "1",
+  "fixture_id": "bench-high-bit-rgb",
+  "warmup_iterations": 1,
+  "measured_iterations": 5,
+  "candidates": [
+    "psd-tools",
+    "typescript-psd"
+  ],
+  "layer_export_candidates": [
+    "psd-tools",
+    "typescript-psd"
+  ],
+  "ranking_allowed": false,
+  "purpose": "16-bit RGB PSD workload."
+}

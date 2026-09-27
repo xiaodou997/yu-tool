@@ -1,0 +1,17 @@
+{
+  "schema_version": "1",
+  "fixture_id": "bench-baseline-rgb",
+  "warmup_iterations": 1,
+  "measured_iterations": 5,
+  "candidates": [
+    "rust-native",
+    "psd-tools",
+    "typescript-psd"
+  ],
+  "layer_export_candidates": [
+    "psd-tools",
+    "typescript-psd"
+  ],
+  "ranking_allowed": false,
+  "purpose": "Shared 8-bit RGB baseline on a ~500 KB PSD; includes all three candidates."
+}

@@ -7,6 +7,8 @@ on:
       - "fixtures/psd/**"
       - "docs/data/psd-candidate-comparison-v1.json"
       - "docs/data/psd-benchmark-plan-v1.json"
+      - "docs/data/psd-benchmark-suite-v2.json"
+      - "docs/data/psd-benchmarks/**"
       - ".github/workflows/psd-spike.yml"
   workflow_dispatch:
 
@@ -119,4 +121,34 @@ jobs:
         with:
           name: psd-benchmark-${{ runner.os }}
           path: target/psd-benchmark-report.json
+          if-no-files-found: error
+
+
+  representative-benchmark-suite:
+    name: representative benchmark suite / ubuntu-latest
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Install pinned psd-tools runtime
+        run: python -m pip install --disable-pip-version-check "psd-tools==1.20.0"
+      - name: Install pinned ag-psd runtime
+        working-directory: crates/yu-psd-spike/adapters/typescript
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Run representative benchmark suite
+        env:
+          YU_PSD_TOOLS_PYTHON: python
+          YU_TYPESCRIPT_PSD_NODE: node
+        run: cargo run -p yu-psd-spike -- benchmark-suite docs/data/psd-benchmark-suite-v2.json target/psd-benchmark-suite-v2.json
+      - name: Upload representative benchmark evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: psd-benchmark-representative-ubuntu
+          path: target/psd-benchmark-suite-v2.json
           if-no-files-found: error

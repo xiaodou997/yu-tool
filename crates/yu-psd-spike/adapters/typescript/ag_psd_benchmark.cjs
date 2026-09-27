@@ -175,5 +175,6 @@ process.stdout.write(
     exported_layer_count: Number(layerCount),
     total_rgba_bytes: Number(byteCount),
     export_checksum_sha256: checksum,
+    peak_rss_bytes: process.resourceUsage().maxRSS * 1024,
   })
 );

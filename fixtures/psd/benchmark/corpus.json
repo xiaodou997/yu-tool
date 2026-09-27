@@ -1,0 +1,138 @@
+{
+  "schema_version": "1",
+  "fixtures": [
+    {
+      "id": "bench-baseline-rgb",
+      "path": "upstream/psd-tools/background-red-opacity-80.psd",
+      "format": "psd",
+      "features": [
+        "simple_pixel_layers"
+      ],
+      "expected": {
+        "parse": "accept"
+      },
+      "provenance": {
+        "kind": "redistributable",
+        "source": "psd-tools benchmark fixture",
+        "license": "MIT",
+        "redistributable": true,
+        "upstream_commit": "f1256273ffb9b39b9efa19d486c86f594c831f42",
+        "upstream_path": "tests/psd_files/background-red-opacity-80.psd"
+      }
+    },
+    {
+      "id": "bench-advanced-blending",
+      "path": "upstream/psd-tools/advanced-blending.psd",
+      "format": "psd",
+      "features": [
+        "blend_modes"
+      ],
+      "expected": {
+        "parse": "accept"
+      },
+      "provenance": {
+        "kind": "redistributable",
+        "source": "psd-tools benchmark fixture",
+        "license": "MIT",
+        "redistributable": true,
+        "upstream_commit": "f1256273ffb9b39b9efa19d486c86f594c831f42",
+        "upstream_path": "tests/psd_files/advanced-blending.psd"
+      }
+    },
+    {
+      "id": "bench-masks",
+      "path": "upstream/psd-tools/masks2.psd",
+      "format": "psd",
+      "features": [
+        "masks"
+      ],
+      "expected": {
+        "parse": "accept"
+      },
+      "provenance": {
+        "kind": "redistributable",
+        "source": "psd-tools benchmark fixture",
+        "license": "MIT",
+        "redistributable": true,
+        "upstream_commit": "f1256273ffb9b39b9efa19d486c86f594c831f42",
+        "upstream_path": "tests/psd_files/masks2.psd"
+      }
+    },
+    {
+      "id": "bench-layer-effects",
+      "path": "upstream/psd-tools/layer-effects.psd",
+      "format": "psd",
+      "features": [
+        "effects"
+      ],
+      "expected": {
+        "parse": "accept"
+      },
+      "provenance": {
+        "kind": "redistributable",
+        "source": "psd-tools benchmark fixture",
+        "license": "MIT",
+        "redistributable": true,
+        "upstream_commit": "f1256273ffb9b39b9efa19d486c86f594c831f42",
+        "upstream_path": "tests/psd_files/layer_effects.psd"
+      }
+    },
+    {
+      "id": "bench-smart-object",
+      "path": "upstream/psd-tools/placed-layer.psd",
+      "format": "psd",
+      "features": [
+        "smart_object_metadata"
+      ],
+      "expected": {
+        "parse": "accept"
+      },
+      "provenance": {
+        "kind": "redistributable",
+        "source": "psd-tools benchmark fixture",
+        "license": "MIT",
+        "redistributable": true,
+        "upstream_commit": "f1256273ffb9b39b9efa19d486c86f594c831f42",
+        "upstream_path": "tests/psd_files/placedLayer.psd"
+      }
+    },
+    {
+      "id": "bench-high-bit-rgb",
+      "path": "upstream/psd-tools/posterize-16bit-rgb.psd",
+      "format": "psd",
+      "features": [
+        "high_bit_depth"
+      ],
+      "expected": {
+        "parse": "accept"
+      },
+      "provenance": {
+        "kind": "redistributable",
+        "source": "psd-tools benchmark fixture",
+        "license": "MIT",
+        "redistributable": true,
+        "upstream_commit": "f1256273ffb9b39b9efa19d486c86f594c831f42",
+        "upstream_path": "tests/psd_files/adjustments/posterize_16bits_rgb.psd"
+      }
+    },
+    {
+      "id": "bench-high-bit-psb",
+      "path": "upstream/psd-tools/32bit.psb",
+      "format": "psb",
+      "features": [
+        "high_bit_depth"
+      ],
+      "expected": {
+        "parse": "accept"
+      },
+      "provenance": {
+        "kind": "redistributable",
+        "source": "psd-tools benchmark fixture",
+        "license": "MIT",
+        "redistributable": true,
+        "upstream_commit": "f1256273ffb9b39b9efa19d486c86f594c831f42",
+        "upstream_path": "tests/psd_files/32bit.psb"
+      }
+    }
+  ]
+}

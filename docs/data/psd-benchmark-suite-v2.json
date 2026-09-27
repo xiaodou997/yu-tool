@@ -1,0 +1,17 @@
+{
+  "schema_version": "1",
+  "suite_id": "m3-representative-v2",
+  "corpus_path": "fixtures/psd/benchmark/corpus.json",
+  "ranking_allowed": false,
+  "canonical_report_platform": "ubuntu-latest",
+  "plans": [
+    "docs/data/psd-benchmarks/v2/00-baseline-rgb.json",
+    "docs/data/psd-benchmarks/v2/10-advanced-blending.json",
+    "docs/data/psd-benchmarks/v2/20-masks.json",
+    "docs/data/psd-benchmarks/v2/30-layer-effects.json",
+    "docs/data/psd-benchmarks/v2/40-smart-object.json",
+    "docs/data/psd-benchmarks/v2/50-high-bit-rgb.json",
+    "docs/data/psd-benchmarks/v2/60-high-bit-psb.json"
+  ],
+  "purpose": "Representative M3 benchmark suite. Produce comparable evidence without declaring a performance winner."
+}
