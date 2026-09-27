@@ -1,0 +1,106 @@
+{
+  "schema_version": "1",
+  "status": "accepted",
+  "milestone": "M3",
+  "decision_date": "2026-09-27",
+  "primary_engine": {
+    "engine_id": "ag-psd",
+    "candidate_id": "typescript-psd",
+    "version": "31.0.2",
+    "provider_class": "managed",
+    "runtime": "node",
+    "runtime_version": "22",
+    "package_policy": "self_contained_managed_runtime",
+    "auto_install": false,
+    "auto_activate": false,
+    "default_for": [
+      "psd.inspect",
+      "psd.tree",
+      "psd.layer.list",
+      "psd.layer.info",
+      "psd.layer.export"
+    ]
+  },
+  "compatibility_engine": {
+    "engine_id": "psd-tools",
+    "candidate_id": "psd-tools",
+    "version": "1.20.0",
+    "runtime": "python",
+    "runtime_version": "3.12",
+    "role": "reference_and_explicit_compatibility",
+    "production_default": false,
+    "automatic_fallback": false
+  },
+  "deferred_candidate": {
+    "engine_id": "rawpsd",
+    "candidate_id": "rust-native",
+    "version": "0.2.2",
+    "production_default": false,
+    "reason": "corpus_v1_coverage_4_of_7_and_no_normalized_layer_export"
+  },
+  "resolution_policy": {
+    "automatic_fallback_between_psd_engines": false,
+    "selected_engine_visible_in_results": true,
+    "missing_primary_engine_behavior": "structured_engine_unavailable_with_install_hint"
+  },
+  "v0_1_contract": {
+    "inspect": {
+      "status": "target",
+      "formats": [
+        "psd",
+        "psb"
+      ]
+    },
+    "tree": {
+      "status": "target",
+      "formats": [
+        "psd",
+        "psb"
+      ]
+    },
+    "layer_list": {
+      "status": "target",
+      "formats": [
+        "psd",
+        "psb"
+      ]
+    },
+    "layer_info": {
+      "status": "target",
+      "formats": [
+        "psd",
+        "psb"
+      ]
+    },
+    "layer_export": {
+      "status": "partial",
+      "source_bit_depths": [
+        8
+      ],
+      "normalized_pixel_format": "rgba8",
+      "output_container": "png",
+      "semantic": "materialized_layer_bitmap",
+      "full_render_fidelity_guarantee": false
+    },
+    "render": {
+      "status": "deferred"
+    },
+    "mutation": {
+      "status": "deferred"
+    }
+  },
+  "high_bit_depth_policy": {
+    "inspect_tree_list": "implementation_must_be_conformance_tested_before_release_claim",
+    "layer_export": "unsupported_in_v0_1",
+    "reason": "psd-tools_and_ag-psd_produced_non_equivalent_16_and_32_bit_materializations"
+  },
+  "evidence": {
+    "candidate_comparison": "docs/data/psd-candidate-comparison-v1.json",
+    "controlled_benchmark": "docs/data/psd-benchmark-report-v2.json",
+    "candidate_conformance": {
+      "psd_tools": "7/7",
+      "rawpsd": "4/7",
+      "ag_psd": "7/7"
+    }
+  }
+}
