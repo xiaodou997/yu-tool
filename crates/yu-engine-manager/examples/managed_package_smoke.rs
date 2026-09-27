@@ -53,9 +53,10 @@ fn temp_root() -> PathBuf {
 
 fn main() -> Result<(), Box<dyn Error>> {
     let mut args = std::env::args_os().skip(1);
-    let manifest_path = PathBuf::from(args.next().ok_or(
-        "usage: managed_package_smoke <manifest.json> <package.zip> <fixture.psd>",
-    )?);
+    let manifest_path = PathBuf::from(
+        args.next()
+            .ok_or("usage: managed_package_smoke <manifest.json> <package.zip> <fixture.psd>")?,
+    );
     let package_path = PathBuf::from(args.next().ok_or("missing package.zip")?);
     let fixture_path = PathBuf::from(args.next().ok_or("missing fixture.psd")?);
     if args.next().is_some() {
