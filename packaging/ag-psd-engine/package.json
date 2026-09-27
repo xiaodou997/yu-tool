@@ -1,0 +1,10 @@
+{
+  "name": "yu-managed-ag-psd-engine-build",
+  "private": true,
+  "version": "0.0.0",
+  "dependencies": {
+    "ag-psd": "31.0.2",
+    "base64-js": "1.5.1",
+    "pako": "2.1.0"
+  }
+}
