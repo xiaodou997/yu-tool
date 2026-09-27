@@ -522,6 +522,47 @@ mod tests {
     }
 
     #[test]
+    fn committed_contract_snapshot_guards_v1_semantics() {
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../docs/data/psd-capability-contract-v1.json");
+        let content = std::fs::read_to_string(path).expect("PSD contract snapshot should exist");
+        let snapshot: serde_json::Value =
+            serde_json::from_str(&content).expect("PSD contract snapshot should parse");
+
+        assert_eq!(snapshot["schema_version"], "1");
+        assert_eq!(snapshot["psd_contract_version"], PSD_CONTRACT_VERSION);
+        assert_eq!(snapshot["external_engine_protocol_version"], "1");
+        assert_eq!(
+            snapshot["layer_id"]["traversal"],
+            "logical_layer_tree_preorder_depth_first"
+        );
+        assert_eq!(snapshot["layer_id"]["identity"], "independent_of_layer_name");
+        assert_eq!(
+            snapshot["capabilities"]["psd.layer.export"]["v0_1_scope"]["normalized_pixel_format"],
+            "rgba8"
+        );
+        assert_eq!(
+            snapshot["capabilities"]["psd.layer.export"]["v0_1_scope"]["high_bit_depth"],
+            "unsupported"
+        );
+        assert_eq!(snapshot["protocol"]["transport"], "one_process_one_request");
+        assert_eq!(snapshot["protocol"]["business_error_exit_code"], 0);
+        assert_eq!(snapshot["protocol"]["malformed_transport_exit_code"], 2);
+        assert_eq!(snapshot["protocol"]["request_id_must_round_trip"], true);
+        assert_eq!(
+            snapshot["reference_adapter"]["implemented_capabilities"]
+                .as_array()
+                .expect("implemented capabilities should be an array")
+                .len(),
+            4
+        );
+        assert_eq!(
+            snapshot["reference_adapter"]["deferred_capabilities"][0],
+            PSD_LAYER_EXPORT
+        );
+    }
+
+    #[test]
     fn tree_shape_serializes_without_backend_specific_fields() {
         let tree = assign_stable_layer_ids(vec![draft("Background", vec![])]).unwrap();
         let result = PsdTreeResult {
