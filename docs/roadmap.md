@@ -137,7 +137,13 @@ Progress:
 - [x] TypeScript/Node candidate integration (ag-psd 31.0.2);
 - [x] candidate comparison report v1 (conformance, distribution, maintenance evidence);
 - [x] controlled performance/memory benchmark report v2;
-- [x] PSD engine strategy decision (ADR 0006: ag-psd Managed primary, psd-tools reference/compatibility).
+- [x] PSD engine strategy decision (ADR 0006: ag-psd Managed primary, psd-tools reference/compatibility);
+- [x] PSD capability contract v1;
+- [x] External Engine Protocol v1;
+- [ ] Managed ag-psd package prototype;
+- [ ] runtime wiring for inspect / tree / layer list / layer info;
+- [ ] 8-bit layer export implementation;
+- [ ] M3 implementation freeze.
 
 Build a representative fixture corpus covering, where legally distributable:
 
