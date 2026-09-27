@@ -1063,11 +1063,7 @@ fn summarize(fixtures: &[FixtureReport]) -> ReportSummary {
 mod tests {
     use super::*;
     use serde::{Serialize, de::DeserializeOwned};
-    use std::{
-        io::Write,
-        path::PathBuf,
-        process::Stdio,
-    };
+    use std::{io::Write, path::PathBuf, process::Stdio};
     use yu_capability_psd::{
         PSD_CONTRACT_VERSION, PsdFormat as ContractPsdFormat, PsdInspectResult, PsdLayerId,
         PsdLayerInfoResult, PsdLayerListResult, PsdTreeResult, flatten_layer_tree,
@@ -1116,8 +1112,8 @@ mod tests {
         let node = env::var_os("YU_TYPESCRIPT_PSD_NODE")
             .filter(|value| !value.is_empty())
             .unwrap_or_else(|| OsString::from("node"));
-        let script = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("adapters/typescript/ag_psd_protocol.cjs");
+        let script =
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("adapters/typescript/ag_psd_protocol.cjs");
         let mut child = Command::new(node)
             .arg(script)
             .stdin(Stdio::piped())
@@ -1130,9 +1126,7 @@ mod tests {
             .stdin
             .take()
             .expect("protocol stdin should exist")
-            .write_all(
-                &serde_json::to_vec(request).expect("protocol request should serialize"),
-            )
+            .write_all(&serde_json::to_vec(request).expect("protocol request should serialize"))
             .expect("protocol request should write");
 
         let output = child
@@ -1160,7 +1154,10 @@ mod tests {
         match response {
             ExternalEngineResponse::Ok { result, .. } => result,
             ExternalEngineResponse::Error { error, .. } => {
-                panic!("unexpected protocol error: {:?}: {}", error.code, error.message)
+                panic!(
+                    "unexpected protocol error: {:?}: {}",
+                    error.code, error.message
+                )
             }
         }
     }
@@ -1522,10 +1519,7 @@ mod tests {
         assert_eq!(psb_result.document.format, ContractPsdFormat::Psb);
         assert_eq!(psb_result.document.layer_count, 2);
 
-        let tree = tree_engine_request(
-            "protocol-tree",
-            group_psd.to_string_lossy().into_owned(),
-        );
+        let tree = tree_engine_request("protocol-tree", group_psd.to_string_lossy().into_owned());
         let tree_result = expect_protocol_ok(run_ag_psd_protocol::<_, PsdTreeResult>(&tree));
         assert_eq!(tree_result.contract_version, PSD_CONTRACT_VERSION);
         let flat_tree = flatten_layer_tree(&tree_result.layers);
@@ -1537,9 +1531,7 @@ mod tests {
             );
         }
         assert!(
-            flat_tree
-                .iter()
-                .any(|layer| layer.parent_id.is_some()),
+            flat_tree.iter().any(|layer| layer.parent_id.is_some()),
             "nested-group fixture should expose parent relationships"
         );
 
@@ -1547,8 +1539,7 @@ mod tests {
             "protocol-list",
             duplicate_psd.to_string_lossy().into_owned(),
         );
-        let list_result =
-            expect_protocol_ok(run_ag_psd_protocol::<_, PsdLayerListResult>(&list));
+        let list_result = expect_protocol_ok(run_ag_psd_protocol::<_, PsdLayerListResult>(&list));
         assert_eq!(list_result.layers.len(), 2);
         assert_eq!(list_result.layers[0].name, "X");
         assert_eq!(list_result.layers[1].name, "X");
@@ -1560,8 +1551,7 @@ mod tests {
             duplicate_psd.to_string_lossy().into_owned(),
             PsdLayerId::from_index(2).unwrap(),
         );
-        let info_result =
-            expect_protocol_ok(run_ag_psd_protocol::<_, PsdLayerInfoResult>(&info));
+        let info_result = expect_protocol_ok(run_ag_psd_protocol::<_, PsdLayerInfoResult>(&info));
         assert_eq!(info_result.layer.id.as_str(), "L0002");
         assert_eq!(info_result.layer.name, "X");
 
@@ -1571,8 +1561,7 @@ mod tests {
             PsdLayerId::from_index(1).unwrap(),
             "ignored.png",
         );
-        let response =
-            run_ag_psd_protocol::<_, serde_json::Value>(&export);
+        let response = run_ag_psd_protocol::<_, serde_json::Value>(&export);
         match response {
             ExternalEngineResponse::Error { error, .. } => {
                 assert_eq!(error.code, ExternalEngineErrorCode::UnsupportedCapability);
