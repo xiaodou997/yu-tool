@@ -1,3 +1,5 @@
+mod psd;
+
 use clap::{Parser, Subcommand};
 use serde::Serialize;
 use std::{
@@ -45,6 +47,11 @@ enum Command {
     Image {
         #[command(subcommand)]
         command: ImageCommand,
+    },
+    /// Read PSD/PSB metadata and layers through an activated managed engine.
+    Psd {
+        #[command(subcommand)]
+        command: psd::PsdCommand,
     },
 }
 
@@ -97,7 +104,25 @@ enum ImageCommand {
 }
 
 fn main() -> impl Termination {
-    let cli = Cli::parse();
+    let args: Vec<_> = std::env::args_os().collect();
+    let requested_json = args
+        .iter()
+        .take_while(|arg| *arg != "--")
+        .any(|arg| arg == "--json");
+    let cli = match Cli::try_parse_from(args) {
+        Ok(cli) => cli,
+        Err(error) => {
+            if error.use_stderr() && requested_json {
+                render_error(
+                    &YuError::new(ErrorCode::InvalidArgument, error.to_string()),
+                    true,
+                );
+            } else {
+                let _ = error.print();
+            }
+            return ExitCode::from(if error.use_stderr() { 2 } else { 0 });
+        }
+    };
     let json = cli.json;
 
     match run(cli) {
@@ -114,6 +139,7 @@ fn run(cli: Cli) -> Result<(), YuError> {
 
     match cli.command {
         Command::Doctor => render_doctor(&registry, cli.json),
+        Command::Psd { command } => psd::run(command, cli.json),
         Command::Capabilities => {
             render_capabilities(&registry, cli.json);
             Ok(())
@@ -171,7 +197,8 @@ fn render_doctor(registry: &RuntimeRegistry, json: bool) -> Result<(), YuError> 
         .iter()
         .map(EngineInventoryEntry::descriptor)
         .collect::<Vec<_>>();
-    let report = registry.doctor_report_with_engines(&descriptors);
+    let mut report = registry.doctor_report_with_engines(&descriptors);
+    report.capabilities = effective_capabilities(registry).len();
     let warnings = inventory_warnings(&inventory);
 
     if json {
@@ -210,17 +237,23 @@ fn render_doctor(registry: &RuntimeRegistry, json: bool) -> Result<(), YuError> 
     Ok(())
 }
 
+fn effective_capabilities(registry: &RuntimeRegistry) -> Vec<yu_core::CapabilityDescriptor> {
+    let mut capabilities = registry.capabilities().to_vec();
+    if let Ok(manager) = EngineManager::discover() {
+        capabilities.extend(yu_runtime_psd::available_capabilities(&manager));
+    }
+    capabilities
+}
+
 fn render_capabilities(registry: &RuntimeRegistry, json: bool) {
+    let capabilities = effective_capabilities(registry);
     if json {
-        print_json(&ResultEnvelope::new(
-            "runtime.capabilities",
-            registry.capabilities(),
-        ));
+        print_json(&ResultEnvelope::new("runtime.capabilities", &capabilities));
         return;
     }
 
     println!("{:<24} {:<16} DESCRIPTION", "CAPABILITY", "ENGINES");
-    for capability in registry.capabilities() {
+    for capability in &capabilities {
         println!(
             "{:<24} {:<16} {}",
             capability.id,

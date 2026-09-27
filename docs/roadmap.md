@@ -141,7 +141,7 @@ Progress:
 - [x] PSD capability contract v1;
 - [x] External Engine Protocol v1;
 - [x] Managed ag-psd package prototype (Node 22.23.3 + ag-psd 31.0.2; Linux x64 / macOS arm64 / Windows x64);
-- [ ] runtime wiring for inspect / tree / layer list / layer info;
+- [x] runtime wiring for inspect / tree / layer list / layer info (PR #22; bounded Protocol v1, active-version capability checks, public CLI);
 - [ ] 8-bit layer export implementation;
 - [ ] M3 implementation freeze.
 

@@ -44,6 +44,8 @@ pub struct InstalledVersion {
 pub struct ManagedEngineCommand {
     pub engine_id: String,
     pub version: String,
+    /// Capabilities of this exact active version, not the inventory's version union.
+    pub capabilities: Vec<String>,
     pub working_dir: PathBuf,
     pub entrypoint: PathBuf,
     pub args: Vec<String>,
@@ -185,6 +187,7 @@ impl EngineManager {
         Ok(Some(ManagedEngineCommand {
             engine_id: descriptor.id.clone(),
             version: state.active_version,
+            capabilities: metadata.capabilities,
             working_dir,
             entrypoint,
             args: metadata.args,

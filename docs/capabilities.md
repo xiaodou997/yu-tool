@@ -74,10 +74,10 @@ Node/ag-psd remain optional and must not become YuTool core dependencies. The pr
 
 | Capability | v0.1 target | Selected strategy |
 | --- | --- | --- |
-| `psd.inspect` | Planned | Managed ag-psd |
-| `psd.tree` | Planned | Managed ag-psd |
-| `psd.layer.list` | Planned | Managed ag-psd |
-| `psd.layer.info` | Planned | Managed ag-psd |
+| `psd.inspect` | Supported | Active Managed ag-psd; metadata only |
+| `psd.tree` | Supported | Active Managed ag-psd; canonical logical tree |
+| `psd.layer.list` | Supported | Active Managed ag-psd; preorder IDs |
+| `psd.layer.info` | Supported | Active Managed ag-psd; explicit layer ID |
 | `psd.layer.export` | Partial target | 8-bit materialized layer bitmap → RGBA8/PNG via ag-psd |
 | `psd.render` | Deferred | no v0.1 fidelity promise |
 | high-bit layer export | Unsupported in v0.1 | normalization contract unresolved |
@@ -87,6 +87,8 @@ Node/ag-psd remain optional and must not become YuTool core dependencies. The pr
 | layer move/delete | Future | mutation safety not frozen |
 | text-layer editing | Future/Research | must be capability-tested |
 | Smart Object editing | Future/Research | must be capability-tested |
+
+PR #22 exposes these four read-only operations through the public CLI. Effective capabilities use the exact active version, not the inventory union of all installed versions. This does not promise arbitrary PSD feature coverage or full rendering fidelity. The package is still a prototype with CI artifacts and placeholder distribution URLs; no public catalog is claimed.
 
 Compatibility roles:
 

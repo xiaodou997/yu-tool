@@ -8,6 +8,7 @@ members = [
     "crates/yu-engine-image-rs",
     "crates/yu-engine-manager",
     "crates/yu-psd-spike",
+    "crates/yu-runtime-psd",
 ]
 resolver = "2"
 
