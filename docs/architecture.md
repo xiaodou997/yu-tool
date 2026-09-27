@@ -224,6 +224,35 @@ A provider can wrap:
 
 The engine contract must hide runtime-specific invocation from capability callers.
 
+## External engine process protocol
+
+External language runtimes cross a versioned process boundary rather than being called ad hoc from capability code.
+
+Protocol v1 is defined in `docs/external-engine-protocol-v1.md` and `yu-engine-api`.
+
+The v1 model is:
+
+```text
+YuTool Rust runtime
+        │
+        ├─ spawn selected engine entrypoint
+        ├─ JSON request → stdin
+        ├─ JSON response ← stdout
+        └─ diagnostics ← stderr
+```
+
+One process handles one request in v1. Valid capability errors are represented in the JSON response; non-zero process exit is reserved for transport/process failure.
+
+The protocol envelope is capability-neutral. Domain crates such as `yu-capability-psd` own the typed payload/result contracts.
+
+This keeps:
+
+- backend-specific runtime details outside the CLI contract;
+- request IDs correlated across process boundaries;
+- stdout machine-only;
+- paths and user values out of shell interpolation;
+- engine replacement possible without changing public capability schemas.
+
 ## Managed runtime layout
 
 A possible managed-runtime layout:
