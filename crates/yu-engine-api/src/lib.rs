@@ -53,7 +53,6 @@ pub struct EngineDescriptor {
     pub capabilities: Vec<String>,
 }
 
-
 pub const EXTERNAL_ENGINE_PROTOCOL_VERSION: &str = "1";
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -65,11 +64,7 @@ pub struct ExternalEngineRequest<T> {
 }
 
 impl<T> ExternalEngineRequest<T> {
-    pub fn new(
-        request_id: impl Into<String>,
-        capability: impl Into<String>,
-        payload: T,
-    ) -> Self {
+    pub fn new(request_id: impl Into<String>, capability: impl Into<String>, payload: T) -> Self {
         Self {
             protocol_version: EXTERNAL_ENGINE_PROTOCOL_VERSION.to_owned(),
             request_id: request_id.into(),
@@ -230,9 +225,9 @@ fn validate_protocol_version(value: &str) -> Result<(), ExternalEngineProtocolEr
 fn validate_request_id(value: &str) -> Result<(), ExternalEngineProtocolError> {
     if value.is_empty()
         || value.len() > 128
-        || !value.bytes().all(|byte| {
-            byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'_' | b'.' | b':')
-        })
+        || !value
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'_' | b'.' | b':'))
     {
         return Err(ExternalEngineProtocolError::new(
             "external engine request_id must be 1..=128 safe ASCII characters",
@@ -245,9 +240,7 @@ fn validate_capability_id(value: &str) -> Result<(), ExternalEngineProtocolError
     if value.is_empty()
         || value.len() > 128
         || !value.bytes().all(|byte| {
-            byte.is_ascii_lowercase()
-                || byte.is_ascii_digit()
-                || matches!(byte, b'.' | b'_' | b'-')
+            byte.is_ascii_lowercase() || byte.is_ascii_digit() || matches!(byte, b'.' | b'_' | b'-')
         })
     {
         return Err(ExternalEngineProtocolError::new(
