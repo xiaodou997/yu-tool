@@ -273,6 +273,7 @@ fn install_fixture_engine(data_home: &Path, version: &str) {
             sha256: fixture_sha256(&bytes),
             archive: ArchiveKind::Raw,
             entrypoint: "bin/fixture".to_owned(),
+            args: Vec::new(),
         }],
     };
     let manager = EngineManager::new(ManagedLayout::new(data_home), target);
