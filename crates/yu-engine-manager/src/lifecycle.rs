@@ -44,6 +44,7 @@ pub struct InstalledVersion {
 pub struct ManagedEngineCommand {
     pub engine_id: String,
     pub version: String,
+    pub working_dir: PathBuf,
     pub entrypoint: PathBuf,
     pub args: Vec<String>,
 }
@@ -175,15 +176,16 @@ impl EngineManager {
 
         let metadata = self.read_installed_metadata(&descriptor.id, &state.active_version)?;
         ensure_metadata_matches_target(self, &metadata)?;
-        let entrypoint = self
+        let working_dir = self
             .layout()
-            .engine_version_dir(&descriptor.id, &state.active_version)
-            .join(&metadata.entrypoint);
+            .engine_version_dir(&descriptor.id, &state.active_version);
+        let entrypoint = working_dir.join(&metadata.entrypoint);
         ensure_real_file(&entrypoint, "engine entrypoint")?;
 
         Ok(Some(ManagedEngineCommand {
             engine_id: descriptor.id.clone(),
             version: state.active_version,
+            working_dir,
             entrypoint,
             args: metadata.args,
         }))
@@ -828,6 +830,11 @@ mod tests {
             .expect("active command should exist");
         assert_eq!(command.engine_id, "fixture-engine");
         assert_eq!(command.version, "2.0.0");
+        assert!(
+            command
+                .working_dir
+                .ends_with("engines/fixture-engine/2.0.0")
+        );
         assert!(command.entrypoint.ends_with("bin/fixture"));
         assert!(command.args.is_empty());
 
