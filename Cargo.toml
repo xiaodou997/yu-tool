@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "crates/yu-capability-image",
+    "crates/yu-capability-psd",
     "crates/yu-cli",
     "crates/yu-core",
     "crates/yu-engine-api",
