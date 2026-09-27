@@ -4,6 +4,8 @@ const fs = require("node:fs");
 
 const PROTOCOL_VERSION = "1";
 const CONTRACT_VERSION = "1";
+const EXPECTED_NODE_MAJOR = "22";
+const EXPECTED_AG_PSD_VERSION = "31.0.2";
 
 const SUPPORTED_CAPABILITIES = new Set([
   "psd.inspect",
@@ -78,6 +80,34 @@ function requireInputPath(payload) {
   return payload.input_path;
 }
 
+function loadPinnedAgPsd() {
+  const actualNodeMajor = process.versions.node.split(".")[0];
+  if (actualNodeMajor !== EXPECTED_NODE_MAJOR) {
+    throw {
+      code: "ENGINE_INCOMPATIBLE",
+      message: `Node.js major mismatch: expected ${EXPECTED_NODE_MAJOR}, got ${process.versions.node}`,
+    };
+  }
+
+  try {
+    const api = require("ag-psd");
+    const version = require("ag-psd/package.json").version;
+    if (version !== EXPECTED_AG_PSD_VERSION) {
+      throw {
+        code: "ENGINE_INCOMPATIBLE",
+        message: `ag-psd version mismatch: expected ${EXPECTED_AG_PSD_VERSION}, got ${version}`,
+      };
+    }
+    return api;
+  } catch (error) {
+    if (error && error.code === "ENGINE_INCOMPATIBLE") throw error;
+    throw {
+      code: "ENGINE_INCOMPATIBLE",
+      message: `ag-psd runtime is unavailable: ${error instanceof Error ? error.message : String(error)}`,
+    };
+  }
+}
+
 function readDocument(inputPath) {
   let buffer;
   try {
@@ -108,15 +138,7 @@ function readDocument(inputPath) {
     };
   }
 
-  let readPsd;
-  try {
-    ({ readPsd } = require("ag-psd"));
-  } catch (error) {
-    throw {
-      code: "EXECUTION_FAILED",
-      message: `ag-psd is unavailable: ${error instanceof Error ? error.message : String(error)}`,
-    };
-  }
+  const { readPsd } = loadPinnedAgPsd();
 
   try {
     const psd = readPsd(buffer, {
@@ -298,10 +320,14 @@ function handleRequest(request) {
 
     case "psd.layer.info": {
       const layerId = request.payload.layer_id;
+      const layerIndex =
+        typeof layerId === "string" && /^L\d{4,}$/.test(layerId)
+          ? Number(layerId.slice(1))
+          : NaN;
       if (
-        typeof layerId !== "string" ||
-        !/^L(?:\d{4}|\d{5,})$/.test(layerId) ||
-        layerId === "L0000"
+        !Number.isSafeInteger(layerIndex) ||
+        layerIndex <= 0 ||
+        makeLayerId(layerIndex) !== layerId
       ) {
         return responseError(
           request.request_id,
