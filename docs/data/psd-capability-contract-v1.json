@@ -1,0 +1,150 @@
+{
+  "schema_version": "1",
+  "psd_contract_version": "1",
+  "external_engine_protocol_version": "1",
+  "layer_id": {
+    "format": "L + decimal index, zero-padded to at least 4 digits",
+    "examples": [
+      "L0001",
+      "L0042",
+      "L9999",
+      "L10000"
+    ],
+    "indexing": "one_based",
+    "traversal": "logical_layer_tree_preorder_depth_first",
+    "root_depth": 1,
+    "group_position": "group_before_descendants",
+    "identity": "independent_of_layer_name",
+    "duplicate_names": "allowed"
+  },
+  "capabilities": {
+    "psd.inspect": {
+      "status": "frozen",
+      "request_fields": [
+        "input_path"
+      ],
+      "result_fields": [
+        "contract_version",
+        "document"
+      ]
+    },
+    "psd.tree": {
+      "status": "frozen",
+      "request_fields": [
+        "input_path"
+      ],
+      "result_fields": [
+        "contract_version",
+        "document",
+        "layers"
+      ]
+    },
+    "psd.layer.list": {
+      "status": "frozen",
+      "request_fields": [
+        "input_path"
+      ],
+      "result_fields": [
+        "contract_version",
+        "document",
+        "layers"
+      ]
+    },
+    "psd.layer.info": {
+      "status": "frozen",
+      "request_fields": [
+        "input_path",
+        "layer_id"
+      ],
+      "result_fields": [
+        "contract_version",
+        "document",
+        "layer"
+      ]
+    },
+    "psd.layer.export": {
+      "status": "schema_frozen_implementation_deferred",
+      "request_fields": [
+        "input_path",
+        "layer_id",
+        "output_path"
+      ],
+      "result_fields": [
+        "contract_version",
+        "layer_id",
+        "output_path",
+        "width",
+        "height",
+        "pixel_format",
+        "container"
+      ],
+      "v0_1_scope": {
+        "source_bit_depth": 8,
+        "normalized_pixel_format": "rgba8",
+        "container": "png",
+        "high_bit_depth": "unsupported"
+      }
+    }
+  },
+  "document_fields": [
+    "format",
+    "width",
+    "height",
+    "channels",
+    "bits_per_channel",
+    "color_mode",
+    "layer_count",
+    "maximum_tree_depth"
+  ],
+  "layer_summary_fields": [
+    "id",
+    "parent_id",
+    "depth",
+    "name",
+    "kind",
+    "visible",
+    "bounds",
+    "has_pixel_mask",
+    "has_vector_mask",
+    "child_count"
+  ],
+  "protocol": {
+    "transport": "one_process_one_request",
+    "request_channel": "stdin",
+    "response_channel": "stdout",
+    "diagnostics_channel": "stderr",
+    "request_shape": [
+      "protocol_version",
+      "request_id",
+      "capability",
+      "payload"
+    ],
+    "response_status": [
+      "ok",
+      "error"
+    ],
+    "valid_request_exit_code": 0,
+    "business_error_exit_code": 0,
+    "malformed_transport_exit_code": 2,
+    "max_request_bytes": 4194304,
+    "stdout_rule": "exactly one JSON response object and no decoration",
+    "stderr_rule": "diagnostics only",
+    "shell_interpolation": false,
+    "request_id_must_round_trip": true
+  },
+  "reference_adapter": {
+    "engine": "ag-psd",
+    "version": "31.0.2",
+    "runtime": "Node.js 22",
+    "location": "crates/yu-psd-spike/adapters/typescript/ag_psd_protocol.cjs",
+    "implemented_capabilities": [
+      "psd.inspect",
+      "psd.tree",
+      "psd.layer.list",
+      "psd.layer.info"
+    ],
+    "deferred_capabilities": [
+      "psd.layer.export"
+    ]
+  }
+}
