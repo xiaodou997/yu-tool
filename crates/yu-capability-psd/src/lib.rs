@@ -354,12 +354,8 @@ fn assign_layer_ids_at_depth(
             .ok_or_else(|| PsdContractError::new("PSD layer ID space exhausted"))?;
 
         let child_count = draft.children.len();
-        let children = assign_layer_ids_at_depth(
-            draft.children,
-            Some(id.clone()),
-            depth + 1,
-            next_index,
-        )?;
+        let children =
+            assign_layer_ids_at_depth(draft.children, Some(id.clone()), depth + 1, next_index)?;
 
         result.push(PsdLayerNode {
             layer: PsdLayerSummary {
@@ -437,7 +433,12 @@ mod tests {
 
     #[test]
     fn layer_ids_are_canonical_and_round_trip_json() {
-        for (index, expected) in [(1, "L0001"), (42, "L0042"), (9999, "L9999"), (10000, "L10000")] {
+        for (index, expected) in [
+            (1, "L0001"),
+            (42, "L0042"),
+            (9999, "L9999"),
+            (10000, "L10000"),
+        ] {
             let id = PsdLayerId::from_index(index).unwrap();
             assert_eq!(id.as_str(), expected);
             assert_eq!(id.index(), index);
@@ -506,7 +507,10 @@ mod tests {
             inspect_engine_request("req-1", "/tmp/a.psd").capability,
             PSD_INSPECT
         );
-        assert_eq!(tree_engine_request("req-2", "/tmp/a.psd").capability, PSD_TREE);
+        assert_eq!(
+            tree_engine_request("req-2", "/tmp/a.psd").capability,
+            PSD_TREE
+        );
         assert_eq!(
             layer_list_engine_request("req-3", "/tmp/a.psd").capability,
             PSD_LAYER_LIST
@@ -536,7 +540,10 @@ mod tests {
             snapshot["layer_id"]["traversal"],
             "logical_layer_tree_preorder_depth_first"
         );
-        assert_eq!(snapshot["layer_id"]["identity"], "independent_of_layer_name");
+        assert_eq!(
+            snapshot["layer_id"]["identity"],
+            "independent_of_layer_name"
+        );
         assert_eq!(
             snapshot["capabilities"]["psd.layer.export"]["v0_1_scope"]["normalized_pixel_format"],
             "rgba8"
