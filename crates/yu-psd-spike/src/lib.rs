@@ -1074,8 +1074,7 @@ mod tests {
     }
 
     fn committed_strategy_path() -> PathBuf {
-        Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../docs/data/psd-engine-strategy-v1.json")
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../docs/data/psd-engine-strategy-v1.json")
     }
 
     struct ExpectedObservationAdapter;
