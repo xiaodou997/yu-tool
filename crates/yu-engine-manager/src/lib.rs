@@ -10,7 +10,7 @@ pub use installer::{
 };
 pub use lifecycle::{
     ActivationReceipt, DeactivationReceipt, INSTALL_METADATA_FILE, InstalledEngineMetadata,
-    InstalledVersion, LIFECYCLE_SCHEMA_VERSION, RemovalReceipt,
+    InstalledVersion, LIFECYCLE_SCHEMA_VERSION, ManagedEngineCommand, RemovalReceipt,
 };
 
 use serde::{Deserialize, Serialize};
