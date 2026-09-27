@@ -221,7 +221,18 @@ yu psd tree design.psd
 yu psd tree design.psd --json
 ```
 
-A machine-readable result should expose stable selectors independent of duplicate layer names.
+A machine-readable result uses backend-independent layer IDs from PSD Capability Contract v1.
+
+IDs are assigned from the canonical logical layer tree using one-based depth-first pre-order traversal:
+
+```text
+L0001
+L0002
+...
+L10000
+```
+
+Layer names are presentation data only. Duplicate names are valid and must never be used as an implicit selector.
 
 Example shape:
 
@@ -258,7 +269,7 @@ yu psd layer list design.psd --json
 yu psd layer info design.psd --id L0007
 ```
 
-Future selectors may include `--path` and `--name`, but ambiguous names must never silently select an arbitrary layer.
+Future selectors may include `--path` and `--name`, but ambiguous names must never silently select an arbitrary layer. The canonical `--id` remains the stable v1 selector for one parsed logical tree.
 
 ### `yu psd layer export` — planned / partial v0.1 contract
 
