@@ -229,7 +229,7 @@ M3 strategy work is complete after this ADR lands.
 
 Implementation should proceed in this order:
 
-1. define the stable PSD capability/result schema and engine protocol;
+1. ~~define the stable PSD capability/result schema and engine protocol~~ — completed by PR #20;
 2. package ag-psd 31.0.2 + private Node 22 runtime as a Managed engine prototype;
 3. wire `psd.inspect`, `psd.tree`, and `psd.layer.list`;
 4. add stable backend-independent layer IDs;

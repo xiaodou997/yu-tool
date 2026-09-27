@@ -85,6 +85,10 @@ jobs:
         env:
           YU_TYPESCRIPT_PSD_NODE: node
         run: cargo test -p yu-psd-spike ag_psd_candidate_matches_committed_corpus -- --ignored --nocapture
+      - name: Run ag-psd external protocol v1 conformance
+        env:
+          YU_TYPESCRIPT_PSD_NODE: node
+        run: cargo test -p yu-psd-spike ag_psd_protocol_v1_conforms_to_psd_contract -- --ignored --nocapture
 
 
   benchmark-contract:

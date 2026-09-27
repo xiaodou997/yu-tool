@@ -141,7 +141,7 @@ report structured result
 
 YuTool has completed the **M2 Engine Manager baseline** and the **M3 PSD Engine Strategy** evidence/decision phase.
 
-The current runtime includes the Rust core, the built-in raster engine, verified Managed Engine installation/lifecycle, per-engine mutation locking, and unified Built-in/Managed/System discovery. M3 evaluated psd-tools 1.20.0 (7/7 corpus v1), rawpsd 0.2.2 (4/7), and ag-psd 31.0.2 (7/7), added representative timing/RSS/export evidence, and accepted ADR 0006: ag-psd is the preferred optional Managed PSD engine for v0.1, psd-tools remains the independent reference/compatibility path, and high-bit-depth layer export is deferred until its pixel contract is normalized. The built-in raster scope remains intentionally small: PNG, JPEG, and WebP.
+The current runtime includes the Rust core, the built-in raster engine, verified Managed Engine installation/lifecycle, per-engine mutation locking, and unified Built-in/Managed/System discovery. M3 evaluated psd-tools 1.20.0 (7/7 corpus v1), rawpsd 0.2.2 (4/7), and ag-psd 31.0.2 (7/7), added representative timing/RSS/export evidence, and accepted ADR 0006: ag-psd is the preferred optional Managed PSD engine for v0.1, psd-tools remains the independent reference/compatibility path, and high-bit-depth layer export is deferred until its pixel contract is normalized. The PSD capability schema and one-shot external-engine JSON protocol are now frozen as v1 contracts before the Managed ag-psd package is introduced. The built-in raster scope remains intentionally small: PNG, JPEG, and WebP.
 
 See:
 
@@ -155,6 +155,8 @@ See:
 - [PSD controlled benchmark](docs/psd-controlled-benchmark-report.md)
 - [Engine strategy ADR](docs/decisions/0001-engine-strategy.md)
 - [PSD engine strategy ADR](docs/decisions/0006-psd-engine-strategy.md)
+- [PSD capability contract v1](docs/psd-capability-contract-v1.md)
+- [External engine protocol v1](docs/external-engine-protocol-v1.md)
 
 ## 中文简介
 

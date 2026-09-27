@@ -1,10 +1,11 @@
 [package]
-name = "yu-engine-api"
+name = "yu-capability-psd"
 version.workspace = true
 edition.workspace = true
 
 [dependencies]
 serde.workspace = true
+yu-engine-api = { path = "../yu-engine-api" }
 
 [dev-dependencies]
 serde_json.workspace = true
