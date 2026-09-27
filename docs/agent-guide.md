@@ -116,7 +116,8 @@ Managed engine installation should be an explicit action.
 If a required engine is unavailable, an agent may suggest or request:
 
 \`\`\`bash
-yu engine install <engine-id>
+yu engine install --manifest ./trusted-engine-manifest.json
+yu engine activate <engine-id> <version>
 \`\`\`
 
 Agents should not bypass YuTool and silently install system packages unless the user explicitly requests system-level installation.
@@ -170,6 +171,10 @@ An unavailable capability is different from a corrupt input. Agents should surfa
 
 PSD/PSB support can vary significantly by document feature and engine.
 
+PR #22 supports read-only inspect/tree/layer-list/layer-info through the active Managed ag-psd package. Use `--id L0001` rather than a name, and keep the selected engine/version with the result. Export/render/mutation are not executable yet. Missing or inactive engines require explicit installation/activation; do not retry using an implicit alternative. `--timeout-secs` defaults to 30 and is bounded to 1..3600.
+
+In JSON mode, success is one stdout envelope; errors, including argument errors, are one stderr envelope. Selected PSD engine metadata may be attached to failures. Do not treat an engine's inventory-wide capability list as the active version's execution contract.
+
 Agents should:
 
 - inspect first;
@@ -196,11 +201,10 @@ yu capabilities --json
 # Inspect
 yu psd tree poster.psd --json
 
-# Export one selected layer
-yu psd layer export poster.psd --id L0012 -o logo.png --json
+# Inspect one selected layer (read-only)
+yu psd layer info poster.psd --id L0012 --json
 
-# Validate exported file
-yu image info logo.png --json
+# Export and render remain future capabilities; do not invoke them yet.
 \`\`\`
 
 The caller only needs to understand YuTool's interface; engine-specific details remain behind the runtime.

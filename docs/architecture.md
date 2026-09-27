@@ -253,6 +253,27 @@ This keeps:
 - paths and user values out of shell interpolation;
 - engine replacement possible without changing public capability schemas.
 
+## Read-only PSD runtime (PR #22)
+
+`yu-cli` parses commands and renders results. `yu-runtime-psd` owns PSD routing and the bounded external process adapter. `yu-capability-psd` and `yu-engine-api` retain their frozen v1 contracts; `yu-engine-manager` retains package ownership and lifecycle.
+
+```text
+yu psd <read-only command>
+  -> yu-runtime-psd
+  -> EngineManager::active_command()
+  -> exact active version capability check
+  -> fixed entrypoint + argv + package working directory
+  -> Protocol v1 request/response
+  -> typed PSD result and semantic validation
+  -> schema-v1 success/error envelope
+```
+
+`ManagedEngineCommand.capabilities` is additive and belongs to the same version snapshot as its command. Inventory capabilities remain the union of valid installed versions for M2 compatibility; they are not execution authorization. A concurrent activation cannot silently change a resolved command's reported version. Concurrent removal/filesystem failure can still make execution fail; there is no automatic retry against a different version.
+
+The runtime canonicalizes caller input and engine paths before switching the child working directory. It clears `NODE_OPTIONS` and `NODE_PATH`, uses stdin JSON rather than interpolated shell input, and bounds request/stdout/stderr sizes. Three I/O workers avoid pipe backpressure deadlock; the operation deadline includes waiting for EOF. Unix process groups and Windows Job Objects provide owned-process cleanup, including ordinary children that retain pipe handles. This is lifecycle containment of a trusted installed engine, not a sandbox against deliberately escaping executable code; package provenance still matters.
+
+The four exposed capabilities are the intersection of wired read-only operations and the active version's declarations. No probing or installation occurs during effective capability enumeration. JSON errors may add selected engine metadata without changing existing fields or error codes.
+
 ## Managed runtime layout
 
 A possible managed-runtime layout:

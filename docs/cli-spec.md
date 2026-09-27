@@ -1,6 +1,6 @@
 # CLI Specification
 
-> Status: **M2 frozen baseline / v0.1 evolving**
+> Status: **M2 frozen baseline + M3 read-only PSD CLI / v0.1 evolving**
 
 The public executable is:
 
@@ -8,7 +8,7 @@ The public executable is:
 yu
 ```
 
-This document defines the public command model through the M2 frozen baseline. Commands explicitly marked **planned** belong to later milestones.
+This document defines the public command model through the M2 frozen baseline and PR #22 read-only PSD runtime. Commands explicitly marked **planned** belong to later milestones.
 
 ## Design rules
 
@@ -44,6 +44,8 @@ yu capabilities --json
 ```
 
 This reports **effective capabilities on the current machine**, not merely features known to the source code.
+
+PSD capabilities are added only when the activated Managed ag-psd version has a valid entrypoint and declares them. This is a metadata-based readiness check, not a parsing health probe. Inactive versions' capability declarations cannot make an operation executable. `yu doctor` uses this same effective capability count; Engine Inventory retains its M2 union-of-installed-versions metadata semantics.
 
 ### `yu engine list`
 
@@ -201,20 +203,24 @@ yu image convert input.png -o output.webp
 
 ## PSD commands
 
-ADR 0006 selects `ag-psd 31.0.2` as the preferred v0.1 Managed PSD engine. The commands below remain planned until the Managed package and public capability schema are implemented.
+ADR 0006 selects `ag-psd 31.0.2` as the preferred v0.1 Managed PSD engine. PR #22 wires the four read-only commands below to the explicitly activated Managed package. Export and rendering remain planned/deferred.
+
+All four commands accept `--engine ag-psd`, `--json`, and `--timeout-secs <1..3600>` (default: 30). Input paths are resolved from the caller's working directory, must identify a regular file, and must be representable as UTF-8 by Protocol v1. Commands never modify the source file. Names are passed as JSON data, not shell commands.
+
+The timeout covers engine process and protocol I/O, not filesystem discovery or package installation. Request/stdout/stderr limits are 64 KiB / 16 MiB / 64 KiB. Oversized output, timeouts, non-zero process exits, invalid transport, or invalid typed results return `EXECUTION_FAILED` (exit 1). Node runtime override variables `NODE_OPTIONS` and `NODE_PATH` are not inherited.
 
 The default production path must not require a system Node.js installation. If no compatible active Managed PSD engine exists, commands return a structured `ENGINE_UNAVAILABLE` result rather than silently installing or activating one.
 
 PSD execution does not silently fail over to psd-tools. Use explicit `--engine` selection for an alternate implementation when such a provider is productized.
 
-### `yu psd inspect` — planned
+### `yu psd inspect`
 
 ```bash
 yu psd inspect design.psd
 yu psd inspect design.psd --json
 ```
 
-### `yu psd tree` — planned
+### `yu psd tree`
 
 ```bash
 yu psd tree design.psd
@@ -240,36 +246,40 @@ Example shape:
 {
   "schema_version": "1",
   "operation": "psd.tree",
-  "document": {
-    "width": 1920,
-    "height": 1080
+  "engine": {"id": "ag-psd", "provider": "managed", "version": "31.0.2+node22.23.3"},
+  "result": {
+    "contract_version": "1",
+    "document": {
+      "format": "psd", "width": 1920, "height": 1080,
+      "channels": 3, "bits_per_channel": 8, "color_mode": "rgb",
+      "layer_count": 1, "maximum_tree_depth": 1
+    },
+    "layers": [{
+      "id": "L0001", "depth": 1, "name": "Background", "kind": "pixel",
+      "visible": true, "has_pixel_mask": false, "has_vector_mask": false,
+      "child_count": 0, "children": []
+    }]
   },
-  "layers": [
-    {
-      "id": "L0001",
-      "name": "Background",
-      "kind": "pixel",
-      "visible": true,
-      "children": []
-    }
-  ]
+  "warnings": []
 }
 ```
 
-### `yu psd layer list` — planned
+### `yu psd layer list`
 
 ```bash
 yu psd layer list design.psd
 yu psd layer list design.psd --json
 ```
 
-### `yu psd layer info` — planned
+### `yu psd layer info`
 
 ```bash
 yu psd layer info design.psd --id L0007
 ```
 
 Future selectors may include `--path` and `--name`, but ambiguous names must never silently select an arbitrary layer. The canonical `--id` remains the stable v1 selector for one parsed logical tree.
+
+Malformed/non-canonical IDs and IDs absent from the document return `INVALID_ARGUMENT` (exit 2). Invalid/corrupt files return `INVALID_INPUT` (exit 2). Missing/inactive/broken engine state returns `ENGINE_UNAVAILABLE` (exit 3); a valid active version that does not advertise the requested operation returns `ENGINE_INCOMPATIBLE` (exit 3). Alternate PSD engines are not wired in this build and are never used as fallback.
 
 ### `yu psd layer export` — planned / partial v0.1 contract
 
@@ -350,6 +360,8 @@ Do not include terminal decoration or progress output in JSON mode.
 ## Structured errors
 
 JSON-mode failures are emitted to stderr.
+
+Once a PSD engine command has been selected, failures also include optional top-level `engine` metadata (`id`, `provider`, `version`). Pre-selection errors keep the original schema-v1 error shape. Argument parser failures are structured when `--json` is present before the `--` positional separator; help/version output remains human-readable and exits 0.
 
 Example:
 

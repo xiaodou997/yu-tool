@@ -1,2 +1,3 @@
 /target
+/packaging/ag-psd-engine/node_modules/
 .DS_Store

@@ -97,6 +97,8 @@ impl fmt::Display for ErrorCode {
 pub struct YuError {
     pub code: ErrorCode,
     pub message: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub engine: Option<EngineRef>,
 }
 
 impl YuError {
@@ -104,7 +106,13 @@ impl YuError {
         Self {
             code,
             message: message.into(),
+            engine: None,
         }
+    }
+
+    pub fn with_engine(mut self, engine: &EngineDescriptor) -> Self {
+        self.engine = Some(engine.into());
+        self
     }
 
     pub const fn exit_code(&self) -> u8 {
@@ -124,6 +132,8 @@ impl Error for YuError {}
 pub struct ErrorEnvelope<'a> {
     pub schema_version: &'static str,
     pub error: ErrorBody<'a>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub engine: Option<&'a EngineRef>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -140,6 +150,7 @@ impl<'a> From<&'a YuError> for ErrorEnvelope<'a> {
                 code: error.code,
                 message: &error.message,
             },
+            engine: error.engine.as_ref(),
         }
     }
 }

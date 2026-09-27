@@ -6,6 +6,12 @@ on:
       - "packaging/ag-psd-engine/**"
       - "tools/build_ag_psd_managed_package.py"
       - "crates/yu-engine-manager/**"
+      - "Cargo.toml"
+      - "crates/yu-cli/**"
+      - "crates/yu-core/**"
+      - "crates/yu-engine-api/**"
+      - "crates/yu-capability-psd/**"
+      - "crates/yu-runtime-psd/**"
       - "crates/yu-psd-spike/adapters/typescript/ag_psd_protocol.cjs"
       - ".github/workflows/ag-psd-managed-package.yml"
   workflow_dispatch:
@@ -67,6 +73,12 @@ jobs:
           target/ag-psd-managed/${{ matrix.label }}/manifest-${{ matrix.label }}.json
           target/ag-psd-managed/${{ matrix.label }}/yu-engine-ag-psd-31.0.2-node22.23.3-${{ matrix.label }}.zip
           fixtures/psd/upstream/psd-tools/2layers.psd
+
+      - name: Exercise real PSD CLI with no system Node and sanitized Node environment
+        env:
+          YU_TEST_MANIFEST: ${{ github.workspace }}/target/ag-psd-managed/${{ matrix.label }}/manifest-${{ matrix.label }}.json
+          YU_TEST_PACKAGE: ${{ github.workspace }}/target/ag-psd-managed/${{ matrix.label }}/yu-engine-ag-psd-31.0.2-node22.23.3-${{ matrix.label }}.zip
+        run: cargo test -p yu-cli --test psd_managed -- --ignored --nocapture
 
       - name: Upload managed engine package
         uses: actions/upload-artifact@v4
