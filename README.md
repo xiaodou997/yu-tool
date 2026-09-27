@@ -139,9 +139,9 @@ report structured result
 
 ## Current status
 
-YuTool has completed the **M2 Engine Manager baseline** and is now building the **M3 PSD Engine Spike** harness before selecting a PSD engine.
+YuTool has completed the **M2 Engine Manager baseline** and the **M3 PSD Engine Strategy** evidence/decision phase.
 
-The current runtime includes the Rust core, the built-in raster engine, verified Managed Engine installation/lifecycle, per-engine mutation locking, and unified Built-in/Managed/System discovery. M3 now has an engine-neutral PSD fixture/conformance harness with three wired candidates: psd-tools 1.20.0 (7/7 corpus v1), rawpsd 0.2.2 (4/7), and ag-psd 31.0.2 (7/7). The comparison report records conformance and distribution evidence, but no PSD engine has been selected yet. The built-in raster scope remains intentionally small: PNG, JPEG, and WebP.
+The current runtime includes the Rust core, the built-in raster engine, verified Managed Engine installation/lifecycle, per-engine mutation locking, and unified Built-in/Managed/System discovery. M3 evaluated psd-tools 1.20.0 (7/7 corpus v1), rawpsd 0.2.2 (4/7), and ag-psd 31.0.2 (7/7), added representative timing/RSS/export evidence, and accepted ADR 0006: ag-psd is the preferred optional Managed PSD engine for v0.1, psd-tools remains the independent reference/compatibility path, and high-bit-depth layer export is deferred until its pixel contract is normalized. The built-in raster scope remains intentionally small: PNG, JPEG, and WebP.
 
 See:
 
@@ -154,6 +154,7 @@ See:
 - [PSD candidate comparison](docs/psd-candidate-comparison.md)
 - [PSD controlled benchmark](docs/psd-controlled-benchmark-report.md)
 - [Engine strategy ADR](docs/decisions/0001-engine-strategy.md)
+- [PSD engine strategy ADR](docs/decisions/0006-psd-engine-strategy.md)
 
 ## 中文简介
 
