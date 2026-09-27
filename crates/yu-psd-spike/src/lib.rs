@@ -1073,6 +1073,11 @@ mod tests {
             .join("../../docs/data/psd-candidate-comparison-v1.json")
     }
 
+    fn committed_strategy_path() -> PathBuf {
+        Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../docs/data/psd-engine-strategy-v1.json")
+    }
+
     struct ExpectedObservationAdapter;
 
     impl PsdCandidateAdapter for ExpectedObservationAdapter {
@@ -1137,6 +1142,61 @@ mod tests {
                 candidate.id
             );
         }
+    }
+
+    #[test]
+    fn committed_psd_engine_strategy_is_accepted_and_guarded() {
+        let content =
+            fs::read_to_string(committed_strategy_path()).expect("PSD strategy should exist");
+        let strategy: serde_json::Value =
+            serde_json::from_str(&content).expect("PSD strategy should parse");
+
+        assert_eq!(strategy["schema_version"], "1");
+        assert_eq!(strategy["status"], "accepted");
+        assert_eq!(strategy["milestone"], "M3");
+
+        let primary = &strategy["primary_engine"];
+        assert_eq!(primary["engine_id"], "ag-psd");
+        assert_eq!(primary["candidate_id"], "typescript-psd");
+        assert_eq!(primary["version"], AG_PSD_CANDIDATE_VERSION);
+        assert_eq!(primary["provider_class"], "managed");
+        assert_eq!(primary["runtime"], "node");
+        assert_eq!(primary["runtime_version"], AG_PSD_CANDIDATE_NODE_MAJOR);
+        assert_eq!(primary["auto_install"], false);
+        assert_eq!(primary["auto_activate"], false);
+
+        let compatibility = &strategy["compatibility_engine"];
+        assert_eq!(compatibility["engine_id"], "psd-tools");
+        assert_eq!(compatibility["version"], PSD_TOOLS_REFERENCE_VERSION);
+        assert_eq!(compatibility["runtime_version"], PSD_TOOLS_REFERENCE_PYTHON);
+        assert_eq!(compatibility["production_default"], false);
+        assert_eq!(compatibility["automatic_fallback"], false);
+
+        let deferred = &strategy["deferred_candidate"];
+        assert_eq!(deferred["engine_id"], "rawpsd");
+        assert_eq!(deferred["version"], RAWPSD_CANDIDATE_VERSION);
+        assert_eq!(deferred["production_default"], false);
+
+        assert_eq!(
+            strategy["resolution_policy"]["automatic_fallback_between_psd_engines"],
+            false
+        );
+        assert_eq!(
+            strategy["resolution_policy"]["selected_engine_visible_in_results"],
+            true
+        );
+
+        let export = &strategy["v0_1_contract"]["layer_export"];
+        assert_eq!(export["status"], "partial");
+        assert_eq!(export["normalized_pixel_format"], "rgba8");
+        assert_eq!(export["output_container"], "png");
+        assert_eq!(export["full_render_fidelity_guarantee"], false);
+        assert_eq!(
+            strategy["high_bit_depth_policy"]["layer_export"],
+            "unsupported_in_v0_1"
+        );
+        assert_eq!(strategy["v0_1_contract"]["render"]["status"], "deferred");
+        assert_eq!(strategy["v0_1_contract"]["mutation"]["status"], "deferred");
     }
 
     #[test]
