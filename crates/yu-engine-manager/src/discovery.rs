@@ -767,6 +767,7 @@ mod tests {
                 sha256: "a".repeat(64),
                 archive: ArchiveKind::Raw,
                 entrypoint: "bin/fixture".to_owned(),
+                args: Vec::new(),
             }],
         };
         write_install_metadata(
