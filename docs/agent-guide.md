@@ -204,7 +204,13 @@ yu psd tree poster.psd --json
 # Inspect one selected layer (read-only)
 yu psd layer info poster.psd --id L0012 --json
 
-# Export and render remain future capabilities; do not invoke them yet.
+# Export only when psd.layer.export is available on the explicitly active package.
+yu psd layer export poster.psd --id L0012 -o logo.png --json
+
+# Validate the generated raster image; preserve and report export warnings.
+yu image info logo.png --json
+
+# Rendering and PSD mutation remain deferred.
 \`\`\`
 
 The caller only needs to understand YuTool's interface; engine-specific details remain behind the runtime.

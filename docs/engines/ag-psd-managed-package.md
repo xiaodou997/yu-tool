@@ -2,7 +2,15 @@
 
 PR #21 turns the M3 engine strategy and Protocol v1 contract into an installable Managed Engine package prototype.
 
-## Frozen bundle
+## Current export-capable package (PR #23)
+
+PR #23 adds the distinct package version `31.0.2+node22.23.3.yu2`, retaining ag-psd 31.0.2, private Node 22.23.3 and the v1 protocols. It declares the four read-only operations plus `psd.layer.export` for stored 8-bit RGB layer bitmaps as RGBA8 PNG. Users must explicitly install and activate the new package; an old active package does not acquire export support merely because the CLI was updated.
+
+The current builder/source matrix emits this new package. Its Managed Package workflow runs the original lifecycle smoke and both actual-CLI read-only/export tests. Exact new package hashes and run outcomes belong to its generated metadata and PR acceptance receipt; **the PR #21 hashes below do not describe `.yu2`**. Distribution remains prototype-only with placeholder HTTPS URLs.
+
+See [PR #23 export semantics and testing](../testing/pr23-psd-layer-export.md).
+
+## Historical PR #21 frozen bundle
 
 ```text
 engine:          ag-psd
@@ -141,21 +149,19 @@ The generated manifests intentionally use an `https://example.invalid/` package 
 
 A later release/catalog step must publish the exact accepted ZIPs to stable HTTPS URLs and replace the prototype URLs without changing package contents.
 
-## Capabilities declared by the prototype
+## Capabilities declared by the historical PR #21 prototype
 
-The package advertises only the capabilities implemented by the Protocol v1 adapter:
+The original PR #21 package advertised only these four capabilities:
 
 - `psd.inspect`
 - `psd.tree`
 - `psd.layer.list`
 - `psd.layer.info`
 
-It does **not** advertise `psd.layer.export` yet.
-
-This prevents capability discovery from promising an operation that PR #20 intentionally left implementation-deferred.
+That original package does **not** advertise `psd.layer.export`. The current `.yu2` package adds it explicitly; discovery and execution use the activated version's declarations.
 
 
-## Accepted prototype receipt
+## Historical PR #21 accepted prototype receipt
 
 The accepted three-target prototype is frozen in:
 
