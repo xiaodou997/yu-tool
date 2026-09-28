@@ -157,6 +157,8 @@ See:
 - [Release preparation acceptance](docs/testing/pr25-release-readiness.md)
 - [Windows lifecycle investigation](docs/reliability/windows-lifecycle.md)
 - [Windows lifecycle acceptance checklist](docs/testing/pr26-windows-lifecycle.md)
+- [Explicit process cleanup scope](docs/reliability/explicit-process-cleanup.md)
+- [Explicit cleanup acceptance checklist](docs/testing/pr28-explicit-process-cleanup.md)
 - [PSD candidate comparison](docs/psd-candidate-comparison.md)
 - [PSD controlled benchmark](docs/psd-controlled-benchmark-report.md)
 - [Engine strategy ADR](docs/decisions/0001-engine-strategy.md)

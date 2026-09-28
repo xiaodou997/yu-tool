@@ -274,6 +274,12 @@ The runtime canonicalizes caller input and engine paths before switching the chi
 
 Effective PSD capabilities are the intersection of the five wired operations (four read-only operations and layer bitmap export) and the active version's declarations. No probing or installation occurs during effective capability enumeration. JSON errors may add selected engine metadata without changing existing fields or error codes.
 
+## Explicit process cleanup results (PR #28)
+
+The PSD transport separates `exchange()` from `Running::finish()` / `cleanup()`. After guard construction, success, early I/O setup failure and transport failure all pass through explicit cleanup. Execution and cleanup results are combined without overwriting the primary error. Cleanup failures cannot expose successful transport bytes to the response decoder or PNG publication path. Both completed cleanup outcomes are cached so Drop cannot repeat the attempt. Unwinding still uses Drop as a fallback.
+
+This is a result-propagation increment, not bounded cancellation: blocking wait/join and pre-guard attach-failure handling remain follow-up. A successful Job termination request is not whole-Job exit evidence. Private callable seams permit controlled worker failures and staging/publication tests; there are no user-facing fault flags or process-global test switches. See [cleanup scope](reliability/explicit-process-cleanup.md). Issue #27 remains open and release candidates stay blocked.
+
 ## PSD bitmap export (PR #23)
 
 The optional ag-psd adapter materializes only the selected layer's stored 8-bit RGB bitmap and encodes it as RGBA8 PNG without Canvas or an additional JavaScript package. The private Node runtime and upstream library versions are unchanged. Package identity advances to `31.0.2+node22.23.3.yu2` so old installed versions and the frozen PR #21 receipts remain distinct.

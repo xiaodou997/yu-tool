@@ -11,11 +11,12 @@ use std::{
     time::{Duration, Instant},
 };
 use yu_capability_psd::{
-    PSD_CONTRACT_VERSION, PSD_LAYER_EXPORT, PsdLayerExportResult, PsdLayerId,
-    layer_export_engine_request,
+    PSD_CONTRACT_VERSION, PSD_LAYER_EXPORT, PsdLayerExportRequest, PsdLayerExportResult,
+    PsdLayerId, layer_export_engine_request,
 };
 use yu_core::{EngineDescriptor, EngineState, ErrorCode, ResultEnvelope, YuError};
-use yu_engine_manager::EngineManager;
+use yu_engine_api::ExternalEngineRequest;
+use yu_engine_manager::{EngineManager, ManagedEngineCommand};
 
 const MAX_RGBA_BYTES: usize = 256 * 1024 * 1024;
 const MAX_PNG_BYTES: u64 = 320 * 1024 * 1024;
@@ -54,6 +55,32 @@ pub fn export_layer(
         capabilities: command.capabilities.clone(),
         ..descriptor()
     };
+    export_selected_with(
+        &mut command,
+        &selected,
+        input,
+        layer_id,
+        &destination,
+        timeout,
+        invoke,
+    )
+}
+
+// Keep private staging and publication behind the settled transport result. The injected
+// callable is private and enables tests without public fault flags or mutable global state.
+fn export_selected_with(
+    command: &mut ManagedEngineCommand,
+    selected: &EngineDescriptor,
+    input: String,
+    layer_id: PsdLayerId,
+    destination: &Path,
+    timeout: Duration,
+    invoke_engine: impl FnOnce(
+        &ManagedEngineCommand,
+        &ExternalEngineRequest<PsdLayerExportRequest>,
+        Duration,
+    ) -> Result<(serde_json::Value, Vec<String>), YuError>,
+) -> Result<ResultEnvelope<PsdLayerExportResult>, YuError> {
     let operation = || -> Result<ResultEnvelope<PsdLayerExportResult>, YuError> {
         if !command.capabilities.iter().any(|id| id == PSD_LAYER_EXPORT) {
             return Err(YuError::new(
@@ -61,7 +88,7 @@ pub fn export_layer(
                 "active ag-psd version does not declare psd.layer.export; explicitly install and activate the newer package",
             ));
         }
-        normalize_command(&mut command)?;
+        normalize_command(command)?;
         let stage = tempfile::Builder::new()
             .prefix(".yu-psd-export-")
             .tempdir_in(destination.parent().expect("validated output parent"))
@@ -81,7 +108,7 @@ pub fn export_layer(
             staged_text,
         );
         let started = Instant::now();
-        let (value, warnings) = invoke(&command, &request, timeout)?;
+        let (value, warnings) = invoke_engine(command, &request, timeout)?;
         let mut result: PsdLayerExportResult = decode(value)?;
         if result.contract_version != PSD_CONTRACT_VERSION
             || result.layer_id != layer_id
@@ -97,12 +124,12 @@ pub fn export_layer(
                 "export timed out before publishing verified PNG",
             ));
         }
-        publish(&staged_path, &destination)?;
+        publish(&staged_path, destination)?;
         result.output_path = destination
             .to_str()
             .expect("validated UTF-8 output")
             .to_owned();
-        let mut envelope = ResultEnvelope::new(PSD_LAYER_EXPORT, result).with_engine(&selected);
+        let mut envelope = ResultEnvelope::new(PSD_LAYER_EXPORT, result).with_engine(selected);
         envelope.warnings = warnings;
         if let Err(error) = stage.close() {
             envelope.warnings.push(format!(
@@ -111,7 +138,7 @@ pub fn export_layer(
         }
         Ok(envelope)
     };
-    operation().map_err(|error| error.with_engine(&selected))
+    operation().map_err(|error| error.with_engine(selected))
 }
 
 fn destination(output: &Path) -> Result<PathBuf, YuError> {

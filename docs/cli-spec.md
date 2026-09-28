@@ -149,6 +149,12 @@ On Windows, quarantine rename retries access/sharing/lock-denied errors for up t
 
 `YU_WINDOWS_LIFECYCLE_TRACE_DIR` enables best-effort separate JSON snapshot files for a PSD invocation's own Job and direct child. It must name an existing absolute directory; default execution does not create trace files. This developer diagnostic records PID/creation time, stage, version directory and basic Job counts without document contents. It is not a new stable result schema, a root-cause diagnosis, an unlocker or a completion guarantee. The existing process/timeout/removal policy remains unchanged. See [capture details](reliability/windows-occupancy-capture.md). Python occupancy collection is test-harness-only; Python is not added as a core or runtime-engine dependency.
 
+### Explicit PSD process cleanup outcome (PR #28)
+
+After the owned process guard is constructed, ordinary PSD transport returns explicitly settle cleanup before exposing a result. A process-group/Job termination error, direct-child observation/reap error, or I/O worker panic is no longer silently discarded. An otherwise successful operation becomes `EXECUTION_FAILED` (exit 1) on cleanup failure; an existing transport error remains first and the cleanup error is appended. Selected-engine metadata is retained. A PNG in private staging is not published when transport cleanup fails. Temporary-directory cleanup warnings after an already successful publication are a different, unchanged case.
+
+The optional Windows cleanup-end trace adds `cleanup_succeeded` and `cleanup_errors`; `workers_joined` counts returned joins, not proof of non-panicking threads. This developer trace is not a stable public error schema. Completed cleanup attempts are cached; Drop remains an unwind fallback, not an automatic retry. Blocking waits, creation-before-Job-assignment and whole-Job completion remain outside this increment. The 30-second execution setting and two-second quarantine budget are unchanged; neither proves a hard overall cleanup deadline. See [scope and remaining gaps](reliability/explicit-process-cleanup.md) and [acceptance](testing/pr28-explicit-process-cleanup.md).
+
 ## Image commands
 
 The first built-in raster engine is `raster-rs`.

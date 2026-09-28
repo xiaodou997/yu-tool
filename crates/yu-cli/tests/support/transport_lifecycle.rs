@@ -123,6 +123,8 @@ fn assert_owned_trace(root: &TempRoot) {
         .expect("enabled trace must observe cleanup end");
     assert_eq!(end["observations"]["direct_wait_succeeded"], true);
     assert_eq!(end["observations"]["workers_joined"], 3);
+    assert_eq!(end["observations"]["cleanup_succeeded"], true);
+    assert_eq!(end["observations"]["cleanup_errors"], serde_json::json!([]));
     assert_eq!(end["job"]["status"], "observed");
     assert!(end["child_created_filetime"].is_string());
     for stage in ["started", "cleanup_begin"] {

@@ -16,6 +16,10 @@ M3 is frozen at `c793279e3c131cae85adf73571590ab022b2ed05`; read [the freeze rec
 
 Read [release readiness](releasing/v0.1-readiness.md) before distributing a build. Explicit offline installation uses `engine install --manifest FILE --archive FILE`, then a separate activation. Use tracked lockfiles and `cargo --locked` subcommands; never delete the application's Cargo.lock to clean a worktree. Candidate metadata intentionally says `public_release_ready: false`. A repeated test or retry success is not proof that the Windows quarantine root cause is fixed. The [PR #25 checklist](testing/pr25-release-readiness.md) distinguishes core/debug tests from extracted release-binary evidence.
 
+## PSD cleanup failures
+
+PR #28 makes process cleanup an explicit part of the result: valid response bytes or an existing private staged PNG do not establish success when cleanup fails. Preserve the returned `EXECUTION_FAILED` and selected engine; do not publish a leftover private artifact or automatically retry against a different engine. This increment still uses blocking wait/join and does not prove Windows root-cause closure or release readiness. Read [cleanup scope](reliability/explicit-process-cleanup.md) and [the checklist](testing/pr28-explicit-process-cleanup.md).
+
 ## Recommended workflow
 
 Agents should use this sequence:

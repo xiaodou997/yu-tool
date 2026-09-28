@@ -79,3 +79,105 @@ fn symlink_artifacts_and_dangling_destinations_are_rejected() {
     );
     assert!(verify_png(&target, 1, 1).is_err());
 }
+
+fn selected_fixture(root: &Path) -> (ManagedEngineCommand, EngineDescriptor) {
+    let command = ManagedEngineCommand {
+        engine_id: ENGINE_ID.into(),
+        version: "cleanup-fixture".into(),
+        capabilities: vec![PSD_LAYER_EXPORT.into()],
+        working_dir: root.to_owned(),
+        entrypoint: std::env::current_exe().unwrap(),
+        args: Vec::new(),
+    };
+    let selected = EngineDescriptor {
+        state: EngineState::Ready,
+        version: Some(command.version.clone()),
+        capabilities: command.capabilities.clone(),
+        ..descriptor()
+    };
+    (command, selected)
+}
+
+#[test]
+fn cleanup_failure_prevents_export_publication_and_preserves_racing_output() {
+    for racing_writer in [false, true] {
+        let root = tempfile::tempdir().unwrap();
+        let source = root.path().join("source.psd");
+        fs::write(&source, b"unchanged input").unwrap();
+        let target = root.path().join("out.png");
+        let destination = destination(&target).unwrap();
+        let (mut command, selected) = selected_fixture(root.path());
+        let result = export_selected_with(
+            &mut command,
+            &selected,
+            canonical_input(&source).unwrap(),
+            PsdLayerId::from_index(1).unwrap(),
+            &destination,
+            Duration::from_secs(30),
+            |_, request, _| {
+                let staged = Path::new(&request.payload.output_path);
+                png_file(staged, png::ColorType::Rgba);
+                verify_png(staged, 1, 1).unwrap();
+                if racing_writer {
+                    fs::write(&target, b"competitor").unwrap();
+                }
+                // A real test child exits normally; a real owned worker panics in cleanup.
+                let error =
+                    crate::process::cleanup_tests::failed_cleanup_after_success(root.path());
+                Err(execution_error(error))
+            },
+        );
+        let error = result.unwrap_err();
+        assert_eq!(error.code, ErrorCode::ExecutionFailed);
+        assert!(error.message.contains("engine cleanup failed:"));
+        assert!(error.engine.is_some());
+        assert_eq!(fs::read(&source).unwrap(), b"unchanged input");
+        if racing_writer {
+            assert_eq!(fs::read(&target).unwrap(), b"competitor");
+        } else {
+            assert!(!target.exists());
+        }
+        assert!(!fs::read_dir(root.path()).unwrap().any(|e| {
+            e.unwrap()
+                .file_name()
+                .to_string_lossy()
+                .starts_with(".yu-psd-export-")
+        }));
+    }
+}
+
+#[test]
+fn selected_export_still_publishes_after_successful_transport_settlement() {
+    let root = tempfile::tempdir().unwrap();
+    let source = root.path().join("source.psd");
+    fs::write(&source, b"unchanged input").unwrap();
+    let target = root.path().join("out.png");
+    let (mut command, selected) = selected_fixture(root.path());
+    let result = export_selected_with(
+        &mut command,
+        &selected,
+        canonical_input(&source).unwrap(),
+        PsdLayerId::from_index(1).unwrap(),
+        &destination(&target).unwrap(),
+        Duration::from_secs(30),
+        |_, request, _| {
+            png_file(
+                Path::new(&request.payload.output_path),
+                png::ColorType::Rgba,
+            );
+            Ok((
+                serde_json::json!({"contract_version":"1", "layer_id":"L0001",
+                "output_path":request.payload.output_path, "width":1, "height":1,
+                "pixel_format":"rgba8", "container":"png"}),
+                Vec::new(),
+            ))
+        },
+    )
+    .unwrap();
+    assert_eq!(
+        PathBuf::from(&result.result.output_path),
+        fs::canonicalize(&target).unwrap()
+    );
+    verify_png(&target, 1, 1).unwrap();
+    assert_eq!(fs::read(&source).unwrap(), b"unchanged input");
+}
