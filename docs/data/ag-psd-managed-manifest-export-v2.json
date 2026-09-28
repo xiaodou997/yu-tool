@@ -1,0 +1,39 @@
+{
+  "schema_version": "1",
+  "id": "ag-psd",
+  "display_name": "YuTool Managed ag-psd Engine",
+  "version": "31.0.2+node22.23.3.yu2",
+  "capabilities": [
+    "psd.inspect",
+    "psd.tree",
+    "psd.layer.list",
+    "psd.layer.info",
+    "psd.layer.export"
+  ],
+  "packages": [
+    {
+      "target": {"os": "linux", "arch": "x86_64"},
+      "url": "https://example.invalid/yu-tool/ag-psd-engine-export-v2/yu-engine-ag-psd-31.0.2-node22.23.3.yu2-linux-x86_64.zip",
+      "sha256": "d3d420dde110f5774a7aba29ce3be1a6c41809b83c5732930c04b8c738b8bcb7",
+      "archive": "zip",
+      "entrypoint": "runtime/node",
+      "args": ["engine/ag_psd_protocol.cjs"]
+    },
+    {
+      "target": {"os": "macos", "arch": "aarch64"},
+      "url": "https://example.invalid/yu-tool/ag-psd-engine-export-v2/yu-engine-ag-psd-31.0.2-node22.23.3.yu2-macos-aarch64.zip",
+      "sha256": "cd1dc8caa0c8294114b39d8d5573e6d8647cd7aea09e094b073ad27afd7b406c",
+      "archive": "zip",
+      "entrypoint": "runtime/node",
+      "args": ["engine/ag_psd_protocol.cjs"]
+    },
+    {
+      "target": {"os": "windows", "arch": "x86_64"},
+      "url": "https://example.invalid/yu-tool/ag-psd-engine-export-v2/yu-engine-ag-psd-31.0.2-node22.23.3.yu2-windows-x86_64.zip",
+      "sha256": "07798e6b18de8d69902f5286d1dbccba557e59eb011625ae03f568ec0de1148c",
+      "archive": "zip",
+      "entrypoint": "runtime/node.exe",
+      "args": ["engine/ag_psd_protocol.cjs"]
+    }
+  ]
+}

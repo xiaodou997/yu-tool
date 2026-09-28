@@ -1,0 +1,119 @@
+{
+  "schema_version": "1",
+  "receipt_id": "m3-implementation-freeze-v1",
+  "status": "frozen",
+  "repository": "xiaodou997/yu-tool",
+  "freeze_pr": 24,
+  "source": {
+    "functional_baseline": "c793279e3c131cae85adf73571590ab022b2ed05",
+    "functional_tree": "3d42f311aa9d5cfca213ba6f852d9f9966767044",
+    "implementation_pr": 23,
+    "reviewed_head": "8ab0339d3d1483885de17cc8c90e30424fc9f241",
+    "reviewed_base": "87f0033af6a06094be523406578724f0a0327596",
+    "ci_checkout_merge": "a611547fe04fed6498fbaab4a5bd9f5e78dc0eea",
+    "merge_method": "squash",
+    "baseline_tree_equals_reviewed_head": true
+  },
+  "contracts": {
+    "cli": "yu",
+    "json_schema_version": "1",
+    "engine_manifest_version": "1",
+    "external_engine_protocol_version": "1",
+    "psd_contract_version": "1",
+    "layer_selector": "canonical_preorder_id",
+    "readonly_capabilities": ["psd.inspect", "psd.tree", "psd.layer.list", "psd.layer.info"],
+    "export_capability": "psd.layer.export",
+    "explicit_install_and_activation": true,
+    "automatic_fallback": false,
+    "exit_codes": {"success": 0, "execution_failure": 1, "invalid_input_or_argument": 2, "unavailable": 3}
+  },
+  "engine": {
+    "id": "ag-psd",
+    "provider": "managed",
+    "version": "31.0.2+node22.23.3.yu2",
+    "ag_psd_version": "31.0.2",
+    "node_version": "22.23.3",
+    "system_node_required": false,
+    "manifest_path": "docs/data/ag-psd-managed-manifest-export-v2.json"
+  },
+  "export": {
+    "source_bit_depth": 8,
+    "source_color_mode": "rgb",
+    "pixel_format": "rgba8",
+    "alpha": "straight",
+    "container": "png",
+    "geometry": "layer_local_bounds",
+    "semantics": "stored_layer_bitmap",
+    "not_applied": ["pixel_mask", "vector_mask", "layer_opacity", "blend_modes", "effects", "group_composition", "icc_conversion"],
+    "high_bit_depth": "unsupported",
+    "non_rgb": "unsupported",
+    "groups": "unsupported",
+    "empty_or_missing_bitmap": "unsupported",
+    "output_exists": "OUTPUT_CONFLICT",
+    "publication": "private_staging_then_validated_atomic_no_clobber_hard_link",
+    "overwrite": false,
+    "hard_links_required": true
+  },
+  "limits": {
+    "process_timeout_default_seconds": 30,
+    "process_timeout_max_seconds": 3600,
+    "request_bytes": 65536,
+    "stdout_bytes": 16777216,
+    "stderr_bytes": 65536,
+    "export_input_bytes": 536870912,
+    "rgba_bytes": 268435456,
+    "png_bytes": 335544320,
+    "windows_quarantine_retry_seconds": 2,
+    "whole_process_memory_guarantee": false,
+    "hard_filesystem_or_decoder_deadline": false
+  },
+  "implementation_workflows": [
+    {"name": "CI", "run_number": 99, "run_id": 36366437339, "head_sha": "8ab0339d3d1483885de17cc8c90e30424fc9f241", "status": "completed", "conclusion": "success"},
+    {"name": "Managed ag-psd Package", "run_number": 13, "run_id": 36366437379, "head_sha": "8ab0339d3d1483885de17cc8c90e30424fc9f241", "status": "completed", "conclusion": "success"},
+    {"name": "PSD Spike", "run_number": 43, "run_id": 36366437367, "head_sha": "8ab0339d3d1483885de17cc8c90e30424fc9f241", "status": "completed", "conclusion": "success"}
+  ],
+  "package_provenance": {
+    "workflow_run_id": 36366437379,
+    "manifest_assembly_job_id": 108754451624,
+    "manifest_recovery": "JSON object emitted by the successful assembly job; formatting normalized, values unchanged",
+    "manifest_actions_artifact_id": 10947493737,
+    "manifest_actions_artifact_sha256": "f23852d5757cfa326011c3962bc3f0d429911a44e5de00819f950ce5cd185ed0",
+    "actions_artifact_expiry_at_observation": "2026-12-27T01:33:43Z",
+    "targets": [
+      {"os": "linux", "arch": "x86_64", "job_id": 108753680709, "cli_tests_passed": 2, "package_sha256": "d3d420dde110f5774a7aba29ce3be1a6c41809b83c5732930c04b8c738b8bcb7", "actions_artifact_id": 10947885590, "actions_artifact_sha256": "1b5f4dec6b529cd5ccb8594406001dc61239d4098db29724978eab28d14ff806"},
+      {"os": "macos", "arch": "aarch64", "job_id": 108753680729, "cli_tests_passed": 2, "package_sha256": "cd1dc8caa0c8294114b39d8d5573e6d8647cd7aea09e094b073ad27afd7b406c", "actions_artifact_id": 10947890591, "actions_artifact_sha256": "98ff4f3148b09a3d08ede0f3126eac880818b682d7b806061fa11f9b8fae8f24"},
+      {"os": "windows", "arch": "x86_64", "job_id": 108753680515, "cli_tests_passed": 2, "package_sha256": "07798e6b18de8d69902f5286d1dbccba557e59eb011625ae03f568ec0de1148c", "actions_artifact_id": 10947880777, "actions_artifact_sha256": "141dbe3ae0f1a9a765f95dc15f2ebea53d8869601781a551b5a343bd6b1e13d5"}
+    ]
+  },
+  "acceptance": {
+    "readonly_corpus_entries": 7,
+    "simple_psd_psb_duplicate_fixtures": 3,
+    "layers_per_simple_fixture": 2,
+    "rgba_bytes_per_simple_fixture": 37860,
+    "simple_rgba_sha256": "bea0c17a1c85d0dfcaa95c7bd5f0df6184e3bc48c81e56078130d39af4e62062",
+    "independent_rgb8_workloads": 5,
+    "high_bit_rejection_workloads": 2,
+    "reference_engine": "psd-tools 1.20.0",
+    "source_preservation": true,
+    "lifecycle_cleanup": true,
+    "windows_held_directory_regression": true,
+    "review_local_tests": {"os": "macos", "arch": "aarch64", "passed": 113, "ignored_optional_runtime": 5, "real_package_executed_locally": false},
+    "receipt_comment_id": 5861807615
+  },
+  "historical_evidence_hash_normalization": "utf8_crlf_to_lf",
+  "historical_evidence": [
+    {"path": "docs/data/psd-benchmark-report-v2.json", "sha256": "a4166e6fac9f23b6403e518873aa270956f1c6c939936f5fa3b14d1afbf95720"},
+    {"path": "docs/data/ag-psd-managed-manifest-prototype-v1.json", "sha256": "68a89a51ccb920486fbb4979006255d8e6007de64db8d91d46b7e8d001b813e3"},
+    {"path": "docs/data/ag-psd-managed-package-prototype-v1.json", "sha256": "37ce0f7b3307c4956a3e88e013b2a64c0b084b2e072759691bd454351738a7cf"}
+  ],
+  "release": {
+    "status": "not_released",
+    "public_catalog": false,
+    "production_hosting": false,
+    "signing_and_notarization_accepted": false,
+    "whole_application_reproducible_build_accepted": false,
+    "project_license_decided": false,
+    "distribution": "prototype_ci_artifact_only",
+    "pending": ["persistent_artifact_retention", "trusted_https_release_manifests", "project_license_and_redistribution_review", "packaged_cli_release_acceptance", "dependency_lock_and_reproducibility_policy", "platform_signing_and_notarization_policy"]
+  }
+}

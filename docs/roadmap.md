@@ -118,9 +118,9 @@ M2 functional behavior is frozen at `d95ccae8cdaefd4ea63a35d39d6ec803748036e8`. 
 
 M3 may extend YuTool with PSD capabilities and new engines, but should not casually break the M2 lifecycle or inventory contracts.
 
-## M3 — PSD engine spike
+## M3 — PSD strategy and runtime
 
-**Goal:** select a practical PSD/PSB strategy based on fixtures rather than assumptions.
+**Goal:** select a practical PSD/PSB strategy based on fixtures, then prove a bounded Managed runtime and selected-layer RGBA8 PNG export.
 
 Progress:
 
@@ -143,7 +143,7 @@ Progress:
 - [x] Managed ag-psd package prototype (Node 22.23.3 + ag-psd 31.0.2; Linux x64 / macOS arm64 / Windows x64);
 - [x] runtime wiring for inspect / tree / layer list / layer info (PR #22; bounded Protocol v1, active-version capability checks, public CLI);
 - [x] 8-bit RGB layer bitmap export (PR #23; RGBA8 PNG, validated private staging, atomic no-clobber publication);
-- [ ] M3 implementation freeze.
+- [x] M3 implementation freeze (PR #24; functional baseline `c793279e3c131cae85adf73571590ab022b2ed05`, exact package/evidence snapshots and regression guards).
 
 Build a representative fixture corpus covering, where legally distributable:
 
@@ -189,7 +189,7 @@ Deliverables:
 
 Strategy exit criteria are now satisfied by ADR 0006 and the M3 evidence chain.
 
-The implementation target remains:
+The accepted implementation includes:
 
 ```bash
 yu psd inspect design.psd --json
@@ -199,6 +199,12 @@ yu psd layer export design.psd --id <id> -o layer.png --json
 ```
 
 using the selected Managed ag-psd engine strategy.
+
+### M3 Freeze
+
+M3 functional behavior is frozen at `c793279e3c131cae85adf73571590ab022b2ed05` (PR #23 squash merge). [Freeze receipt](milestones/m3-freeze.md), [machine-readable evidence](data/m3-implementation-freeze-v1.json) and [acceptance checklist](testing/pr24-m3-freeze.md) distinguish implemented behavior from release readiness. Four read-only commands plus partial 8-bit RGB stored-layer export are accepted; rendering, non-RGB/high-bit export and mutation remain outside the baseline.
+
+Before public distribution, separately address persistent artifacts/trusted HTTPS manifests, license decisions, packaged CLI acceptance, dependency-lock/reproducibility policy and platform signing/notarization. This is a release-readiness recommendation, not a redefinition of the M4/M5 capability milestones or permission to expand them automatically.
 
 ## M4 — Safe mutation
 

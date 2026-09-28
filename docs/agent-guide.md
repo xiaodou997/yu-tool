@@ -8,6 +8,10 @@ The public command is:
 yu
 \`\`\`
 
+## Accepted implementation baseline
+
+M3 is frozen at `c793279e3c131cae85adf73571590ab022b2ed05`; read [the freeze receipt](milestones/m3-freeze.md) and [machine-readable evidence](data/m3-implementation-freeze-v1.json) before claiming supported PSD behavior. Five operations are wired only through the exact active Managed package. Historical green checks are not proof for later changes, and prototype artifact URLs are not a public catalog. Rendering, high-bit/non-RGB export and mutation remain deferred.
+
 ## Recommended workflow
 
 Agents should use this sequence:

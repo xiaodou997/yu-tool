@@ -60,7 +60,7 @@ The first implementation deliberately favors a small, predictable dependency foo
 
 ## PSD / PSB
 
-M3 selected the v0.1 engine strategy in ADR 0006.
+M3 selected the v0.1 engine strategy in ADR 0006. The implemented five-operation baseline is frozen in [M3 Freeze](milestones/m3-freeze.md), with supported/partial/unsupported boundaries and exact evidence. Capability availability still depends on the active package; implementation freeze is not public release.
 
 Preferred production direction:
 
