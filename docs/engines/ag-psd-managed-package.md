@@ -8,7 +8,7 @@ PR #23 adds the distinct package version `31.0.2+node22.23.3.yu2`, retaining ag-
 
 The current builder/source matrix emits this new package. Its Managed Package workflow runs the original lifecycle smoke and both actual-CLI read-only/export tests. Exact new package hashes and run outcomes belong to its generated metadata and PR acceptance receipt; **the PR #21 hashes below do not describe `.yu2`**. Distribution remains prototype-only with placeholder HTTPS URLs.
 
-See [PR #23 export semantics and testing](../testing/pr23-psd-layer-export.md).
+See [PR #23 export semantics and testing](../testing/pr23-psd-layer-export.md). The accepted three-target `.yu2` manifest is now retained as [export manifest v2](../data/ag-psd-managed-manifest-export-v2.json), with source run, inner ZIP hashes and separate Actions wrapper digests in [M3 Freeze](../milestones/m3-freeze.md). These snapshots are prototype evidence, not hosted release manifests.
 
 ## Historical PR #21 frozen bundle
 
