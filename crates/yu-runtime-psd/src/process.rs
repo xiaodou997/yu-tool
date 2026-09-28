@@ -2,7 +2,11 @@
 use std::{
     io::{Read, Write},
     process::{Child, Command, Stdio},
-    sync::mpsc,
+    sync::{
+        Arc,
+        atomic::{AtomicUsize, Ordering},
+        mpsc,
+    },
     thread::{self, JoinHandle},
     time::{Duration, Instant},
 };
@@ -109,15 +113,20 @@ pub(crate) fn execute(
             })
             .map_err(|e| format!("cannot start engine input worker: {e}"))?,
     );
+    let stdout_bytes = Arc::new(AtomicUsize::new(0));
+    let stderr_bytes = Arc::new(AtomicUsize::new(0));
+    let stdout_progress = Arc::clone(&stdout_bytes);
+    let stderr_progress = Arc::clone(&stderr_bytes);
     let stdout_sender = sender.clone();
     running.workers.push(
         thread::Builder::new()
             .name("yu-psd-stdout".into())
             .spawn(move || {
-                let _ = stdout_sender.send(Event::Stdout(read_capped(
+                let _ = stdout_sender.send(Event::Stdout(read_capped_observed(
                     stdout,
                     MAX_STDOUT_BYTES,
                     "stdout",
+                    &stdout_progress,
                 )));
             })
             .map_err(|e| format!("cannot start engine stdout worker: {e}"))?,
@@ -126,10 +135,11 @@ pub(crate) fn execute(
         thread::Builder::new()
             .name("yu-psd-stderr".into())
             .spawn(move || {
-                let _ = sender.send(Event::Stderr(read_capped(
+                let _ = sender.send(Event::Stderr(read_capped_observed(
                     stderr,
                     MAX_STDERR_BYTES,
                     "stderr",
+                    &stderr_progress,
                 )));
             })
             .map_err(|e| format!("cannot start engine stderr worker: {e}"))?,
@@ -174,7 +184,7 @@ pub(crate) fn execute(
             // Snapshot before owned-process cleanup. Completion means EOF/event delivery,
             // not absence of partial bytes. Do not dump request or document contents.
             return Err(format!(
-                "engine timed out after {} ms; transport diagnostic: pid={}, elapsed_ms={}, spawn_ms={}, child_exited={}, stdin_complete={}, stdout_complete={}, stderr_complete={}",
+                "engine timed out after {} ms; transport diagnostic: pid={}, elapsed_ms={}, spawn_ms={}, child_exited={}, stdin_complete={}, stdout_complete={}, stderr_complete={}, phase={}, stdout_bytes={}, stderr_bytes={}",
                 timeout.as_millis(),
                 running.child.id(),
                 started.elapsed().as_millis(),
@@ -182,20 +192,52 @@ pub(crate) fn execute(
                 status.is_some(),
                 input_done,
                 stdout.is_some(),
-                stderr.is_some()
+                stderr.is_some(),
+                wait_phase(
+                    status.is_some(),
+                    input_done,
+                    stdout.is_some(),
+                    stderr.is_some()
+                ),
+                stdout_bytes.load(Ordering::Relaxed),
+                stderr_bytes.load(Ordering::Relaxed)
             ));
         }
         thread::sleep(Duration::from_millis(5).min(timeout.saturating_sub(started.elapsed())));
     }
 }
 
-fn read_capped(mut reader: impl Read, limit: usize, stream: &str) -> Result<Vec<u8>, String> {
+fn wait_phase(exited: bool, input: bool, stdout: bool, stderr: bool) -> &'static str {
+    if !exited {
+        "process_exit"
+    } else if !input {
+        "input_completion"
+    } else if !stdout || !stderr {
+        "pipe_eof"
+    } else {
+        "complete"
+    }
+}
+
+#[cfg(test)]
+fn read_capped(reader: impl Read, limit: usize, stream: &str) -> Result<Vec<u8>, String> {
+    read_capped_observed(reader, limit, stream, &AtomicUsize::new(0))
+}
+
+fn read_capped_observed(
+    mut reader: impl Read,
+    limit: usize,
+    stream: &str,
+    progress: &AtomicUsize,
+) -> Result<Vec<u8>, String> {
     let mut result = Vec::new();
     let mut buffer = [0u8; 8192];
     loop {
         match reader.read(&mut buffer) {
             Ok(0) => return Ok(result),
             Ok(count) => {
+                // Counts only; never include document or response bytes in diagnostics.
+                progress.fetch_add(count, Ordering::Relaxed);
                 if count > limit.saturating_sub(result.len()) {
                     return Err(format!("engine {stream} exceeds {limit} bytes"));
                 }
@@ -304,6 +346,27 @@ compile_error!("PSD managed process execution currently supports Unix and Window
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn lifecycle_wait_phase_distinguishes_exit_from_eof() {
+        assert_eq!(wait_phase(false, true, true, true), "process_exit");
+        assert_eq!(wait_phase(true, false, true, true), "input_completion");
+        assert_eq!(wait_phase(true, true, false, true), "pipe_eof");
+        assert_eq!(wait_phase(true, true, true, false), "pipe_eof");
+        assert_eq!(wait_phase(true, true, true, true), "complete");
+    }
+
+    #[test]
+    fn lifecycle_pipe_progress_is_observed_without_retaining_extra_output() {
+        let count = AtomicUsize::new(0);
+        assert_eq!(
+            read_capped_observed(&b"1234"[..], 4, "stdout", &count).unwrap(),
+            b"1234"
+        );
+        assert_eq!(count.load(Ordering::Relaxed), 4);
+        let count = AtomicUsize::new(0);
+        assert!(read_capped_observed(&b"12345"[..], 4, "stdout", &count).is_err());
+        assert_eq!(count.load(Ordering::Relaxed), 5);
+    }
     #[test]
     fn capped_reader_accepts_exact_limit_and_rejects_excess() {
         assert_eq!(read_capped(&b"1234"[..], 4, "stdout").unwrap(), b"1234");

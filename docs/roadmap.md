@@ -210,6 +210,10 @@ Before public distribution, separately address persistent artifacts/trusted HTTP
 
 Engineering preparation adds verified offline `--archive` installation, quarantine diagnostics/repeated lifecycle acceptance, locked Rust/npm dependencies and source-qualified CLI developer candidates tested after extraction. See [readiness and unaccepted gates](releasing/v0.1-readiness.md) and [test checklist](testing/pr25-release-readiness.md). This does not authorize public publishing or mark Windows root cause, licensing, signatures, minimum OS support or durable hosting as accepted. M3 historical evidence remains immutable.
 
+### Windows lifecycle investigation (PR #26)
+
+Separate diagnostics/reproduction work records process-exit versus pipe-EOF phases and output byte counts, adds controlled CLI cases including Windows directory occupancy, and retains finite repeated extracted-candidate runs with first-failure logs. See [investigation boundaries](reliability/windows-lifecycle.md) and [acceptance checklist](testing/pr26-windows-lifecycle.md). Native process/Job cleanup hardening and historical root-cause closure remain unimplemented; candidate promotion is prohibited.
+
 ## M4 — Safe mutation
 
 **Goal:** introduce modifications without compromising source-file safety.

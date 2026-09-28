@@ -1,12 +1,16 @@
 //! Native test engine, compiled by integration tests; never shipped with YuTool.
 use std::{io::{Read, Write}, process::{Command, Stdio}, thread, time::Duration};
 
+#[path = "lifecycle_fixture.rs"]
+mod lifecycle;
+
 fn string_field<'a>(request: &'a str, key: &str) -> &'a str {
     request.split(&format!("\"{key}\":\"")).nth(1).unwrap_or("").split('"').next().unwrap_or("")
 }
 
 fn main() {
     let mode = std::env::args().nth(1).unwrap_or_else(|| "ok".into());
+    if lifecycle::before_input(&mode) { return; }
     if mode == "sleep" || mode == "descendant" {
         thread::sleep(Duration::from_secs(20));
         return;
@@ -82,6 +86,7 @@ fn main() {
     }
     if mode == "bad-schema" { result = "\"contract_version\":\"1\"".into(); }
     let response = format!("{{\"protocol_version\":\"{protocol}\",\"request_id\":\"{request_id}\",\"status\":\"ok\",\"result\":{{{result}}},\"warnings\":[\"fixture warning\"]}}");
+    if lifecycle::respond(&mode, &response) { return; }
     print!("{response}");
     if mode == "multiple-json" { print!("{response}"); }
 }
