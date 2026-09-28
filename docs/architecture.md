@@ -272,7 +272,17 @@ yu psd <read-only command>
 
 The runtime canonicalizes caller input and engine paths before switching the child working directory. It clears `NODE_OPTIONS` and `NODE_PATH`, uses stdin JSON rather than interpolated shell input, and bounds request/stdout/stderr sizes. Three I/O workers avoid pipe backpressure deadlock; the operation deadline includes waiting for EOF. Unix process groups and Windows Job Objects provide owned-process cleanup, including ordinary children that retain pipe handles. This is lifecycle containment of a trusted installed engine, not a sandbox against deliberately escaping executable code; package provenance still matters.
 
-The four exposed capabilities are the intersection of wired read-only operations and the active version's declarations. No probing or installation occurs during effective capability enumeration. JSON errors may add selected engine metadata without changing existing fields or error codes.
+Effective PSD capabilities are the intersection of the five wired operations (four read-only operations and layer bitmap export) and the active version's declarations. No probing or installation occurs during effective capability enumeration. JSON errors may add selected engine metadata without changing existing fields or error codes.
+
+## PSD bitmap export (PR #23)
+
+The optional ag-psd adapter materializes only the selected layer's stored 8-bit RGB bitmap and encodes it as RGBA8 PNG without Canvas or an additional JavaScript package. The private Node runtime and upstream library versions are unchanged. Package identity advances to `31.0.2+node22.23.3.yu2` so old installed versions and the frozen PR #21 receipts remain distinct.
+
+`yu-runtime-psd` owns output safety: resolve the caller's input and output parent, reject existing destinations, allocate a private temporary directory beside the destination, send its staging path through the frozen export request, validate response correlation/ID/path, and fully decode the bounded PNG before publication. A hard link publishes the verified artifact atomically without overwriting another writer; unsupported filesystems fail closed. The final response substitutes the user's destination for the internal staging path. Ordinary errors drop the temporary directory; cleanup errors after successful publication become warnings rather than ambiguous failure reports.
+
+The process transport and exit-code model are shared with the read-only path. Bounds are 512 MiB input, 256 MiB RGBA pixels and 320 MiB encoded artifact, not a guarantee about combined process RSS. A deadline check prevents publication after process/validation timeout, but does not interrupt filesystem or PNG-decoder calls.
+
+Only trusted explicitly installed engines are executable. Staging and no-clobber publication are not an operating-system sandbox, nor a defense against malicious same-user replacement of parent directories. Full rendering, mask/effect application, ICC conversion and non-RGB/high-bit export remain outside this slice.
 
 ## Managed runtime layout
 

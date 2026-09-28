@@ -7,6 +7,9 @@ use std::{
 use support::{TempRoot, activate, error, install, run, success};
 use yu_engine_manager::{EngineManifest, sha256_file};
 
+#[path = "support/psd_export_managed.rs"]
+mod export_tests;
+
 fn fixture(relative: &str) -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/psd")
@@ -163,7 +166,7 @@ fn managed_package_readonly_cli() {
             .iter()
             .filter(|item| item["id"].as_str().unwrap().starts_with("psd."))
             .count(),
-        4
+        5
     );
     let info = success(run(&root.0, &["engine", "info", "ag-psd", "--json"]));
     assert_eq!(info["result"][0]["state"], "ready");

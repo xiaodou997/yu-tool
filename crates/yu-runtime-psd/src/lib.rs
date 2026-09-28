@@ -1,4 +1,6 @@
 //! Managed PSD routing and execution, independent of CLI parsing and rendering.
+mod export;
+pub use export::export_layer;
 mod process;
 mod validation;
 
@@ -96,6 +98,10 @@ pub fn available_capabilities(manager: &EngineManager) -> Vec<CapabilityDescript
     }
     READ_ONLY_CAPABILITIES
         .iter()
+        .chain(std::iter::once(&(
+            yu_capability_psd::PSD_LAYER_EXPORT,
+            "Export one stored 8-bit RGB layer bitmap as RGBA8 PNG.",
+        )))
         .filter(|(id, _)| {
             command
                 .capabilities
@@ -188,6 +194,15 @@ fn execute_selected(
             erase_payload(layer_info_engine_request(request_id, input, id.clone()))?
         }
     };
+    let (value, warnings) = invoke(command, &request, timeout)?;
+    Ok((decode_result(operation, value)?, warnings))
+}
+
+fn invoke<T: Serialize>(
+    command: &ManagedEngineCommand,
+    request: &ExternalEngineRequest<T>,
+    timeout: Duration,
+) -> Result<(Value, Vec<String>), YuError> {
     request
         .validate_header()
         .map_err(|e| execution_error(e.to_string()))?;
@@ -199,19 +214,18 @@ fn execute_selected(
                 "engine stdout is not one Protocol v1 response: {e}"
             ))
         })?;
-    validate_external_response(&request, &response).map_err(|e| execution_error(e.to_string()))?;
+    validate_external_response(request, &response).map_err(|e| execution_error(e.to_string()))?;
     match response {
         ExternalEngineResponse::Ok {
             result,
             mut warnings,
             ..
         } => {
-            let typed = decode_result(operation, result)?;
             let diagnostics = String::from_utf8_lossy(&output.stderr);
             if !diagnostics.trim().is_empty() {
                 warnings.push(format!("engine diagnostic: {}", diagnostics.trim()));
             }
-            Ok((typed, warnings))
+            Ok((result, warnings))
         }
         ExternalEngineResponse::Error { error, .. } => {
             let code = match error.code {

@@ -65,19 +65,19 @@ jobs:
           --node-modules packaging/ag-psd-engine/node_modules
           --protocol-adapter crates/yu-psd-spike/adapters/typescript/ag_psd_protocol.cjs
           --output-dir target/ag-psd-managed/${{ matrix.label }}
-          --package-base-url https://example.invalid/yu-tool/ag-psd-engine-prototype-v1
+          --package-base-url https://example.invalid/yu-tool/ag-psd-engine-export-v2
 
       - name: Install, activate, execute private runtime, and discover engine
         run: >-
           cargo run -p yu-engine-manager --example managed_package_smoke --
           target/ag-psd-managed/${{ matrix.label }}/manifest-${{ matrix.label }}.json
-          target/ag-psd-managed/${{ matrix.label }}/yu-engine-ag-psd-31.0.2-node22.23.3-${{ matrix.label }}.zip
+          target/ag-psd-managed/${{ matrix.label }}/yu-engine-ag-psd-31.0.2-node22.23.3.yu2-${{ matrix.label }}.zip
           fixtures/psd/upstream/psd-tools/2layers.psd
 
       - name: Exercise real PSD CLI with no system Node and sanitized Node environment
         env:
           YU_TEST_MANIFEST: ${{ github.workspace }}/target/ag-psd-managed/${{ matrix.label }}/manifest-${{ matrix.label }}.json
-          YU_TEST_PACKAGE: ${{ github.workspace }}/target/ag-psd-managed/${{ matrix.label }}/yu-engine-ag-psd-31.0.2-node22.23.3-${{ matrix.label }}.zip
+          YU_TEST_PACKAGE: ${{ github.workspace }}/target/ag-psd-managed/${{ matrix.label }}/yu-engine-ag-psd-31.0.2-node22.23.3.yu2-${{ matrix.label }}.zip
         run: cargo test -p yu-cli --test psd_managed -- --ignored --nocapture
 
       - name: Upload managed engine package
@@ -85,7 +85,7 @@ jobs:
         with:
           name: ag-psd-managed-package-${{ matrix.label }}
           path: |
-            target/ag-psd-managed/${{ matrix.label }}/yu-engine-ag-psd-31.0.2-node22.23.3-${{ matrix.label }}.zip
+            target/ag-psd-managed/${{ matrix.label }}/yu-engine-ag-psd-31.0.2-node22.23.3.yu2-${{ matrix.label }}.zip
             target/ag-psd-managed/${{ matrix.label }}/manifest-${{ matrix.label }}.json
           if-no-files-found: error
 

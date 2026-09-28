@@ -63,7 +63,7 @@
       ]
     },
     "psd.layer.export": {
-      "status": "schema_frozen_implementation_deferred",
+      "status": "implemented_partial",
       "request_fields": [
         "input_path",
         "layer_id",
@@ -141,10 +141,9 @@
       "psd.inspect",
       "psd.tree",
       "psd.layer.list",
-      "psd.layer.info"
-    ],
-    "deferred_capabilities": [
+      "psd.layer.info",
       "psd.layer.export"
-    ]
+    ],
+    "deferred_capabilities": []
   }
 }

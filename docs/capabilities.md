@@ -78,7 +78,7 @@ Node/ag-psd remain optional and must not become YuTool core dependencies. The pr
 | `psd.tree` | Supported | Active Managed ag-psd; canonical logical tree |
 | `psd.layer.list` | Supported | Active Managed ag-psd; preorder IDs |
 | `psd.layer.info` | Supported | Active Managed ag-psd; explicit layer ID |
-| `psd.layer.export` | Partial target | 8-bit materialized layer bitmap → RGBA8/PNG via ag-psd |
+| `psd.layer.export` | Partial | Active Managed ag-psd `.yu2`; stored 8-bit RGB bitmap → RGBA8/PNG; new output only |
 | `psd.render` | Deferred | no v0.1 fidelity promise |
 | high-bit layer export | Unsupported in v0.1 | normalization contract unresolved |
 | layer rename | Future | mutation safety not frozen |
@@ -88,7 +88,7 @@ Node/ag-psd remain optional and must not become YuTool core dependencies. The pr
 | text-layer editing | Future/Research | must be capability-tested |
 | Smart Object editing | Future/Research | must be capability-tested |
 
-PR #22 exposes these four read-only operations through the public CLI. Effective capabilities use the exact active version, not the inventory union of all installed versions. This does not promise arbitrary PSD feature coverage or full rendering fidelity. The package is still a prototype with CI artifacts and placeholder distribution URLs; no public catalog is claimed.
+PR #22 exposes the four read-only operations through the public CLI. PR #23 adds layer bitmap export to the separately versioned `31.0.2+node22.23.3.yu2` package. Effective capabilities use the exact active version, not the inventory union of all installed versions. This does not promise arbitrary PSD feature coverage or full rendering fidelity. The package is still a prototype with CI artifacts and placeholder distribution URLs; no public catalog is claimed.
 
 Compatibility roles:
 
@@ -96,7 +96,7 @@ Compatibility roles:
 - `rawpsd 0.2.2` remains experimental evidence and is not a v0.1 production engine;
 - YuTool does not silently fail over between PSD engines because output semantics can differ.
 
-The 8-bit export target means bitmap materialization, not Photoshop-equivalent full-document rendering.
+Export means stored bitmap materialization, not Photoshop-equivalent rendering. It does not apply masks, opacity, blending, effects, group composition or ICC conversion. Groups, absent/empty bitmaps, non-RGB modes and high-bit documents are rejected. PNG publication requires an existing output directory on a filesystem supporting hard links; existing destinations are never replaced. See the CLI specification and PR #23 test checklist for limits and verification.
 
 ## Engine-management capabilities
 

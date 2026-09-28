@@ -1645,8 +1645,13 @@ mod tests {
 
         let export = layer_export_engine_request(
             "protocol-export",
-            simple_psd.to_string_lossy().into_owned(),
-            PsdLayerId::from_index(1).unwrap(),
+            group_psd.to_string_lossy().into_owned(),
+            flat_tree
+                .iter()
+                .find(|layer| layer.child_count > 0)
+                .unwrap()
+                .id
+                .clone(),
             "ignored.png",
         );
         let response = run_ag_psd_protocol::<_, serde_json::Value>(&export);
@@ -1655,7 +1660,7 @@ mod tests {
                 assert_eq!(error.code, ExternalEngineErrorCode::UnsupportedCapability);
             }
             ExternalEngineResponse::Ok { .. } => {
-                panic!("PR #20 protocol adapter must not silently implement layer export")
+                panic!("bitmap export must not silently composite groups")
             }
         }
     }

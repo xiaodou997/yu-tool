@@ -171,7 +171,7 @@ An unavailable capability is different from a corrupt input. Agents should surfa
 
 PSD/PSB support can vary significantly by document feature and engine.
 
-PR #22 supports read-only inspect/tree/layer-list/layer-info through the active Managed ag-psd package. Use `--id L0001` rather than a name, and keep the selected engine/version with the result. Export/render/mutation are not executable yet. Missing or inactive engines require explicit installation/activation; do not retry using an implicit alternative. `--timeout-secs` defaults to 30 and is bounded to 1..3600.
+PR #22 supports read-only inspect/tree/layer-list/layer-info through the active Managed ag-psd package. Use `--id L0001` rather than a name, and keep the selected engine/version with the result. PR #23 adds `yu psd layer export <file> --id <id> -o <new.png>` for stored 8-bit RGB layer bitmaps through the `.yu2` package. This preserves raw bitmap alpha but does not apply masks, effects, opacity, blending or ICC conversion; report the returned warning. Groups, absent bitmaps and other bit depths/color modes are unsupported. The destination must not exist, and its parent filesystem must support hard links. Rendering and mutation remain deferred. Missing or inactive engines require explicit installation/activation; do not retry using an implicit alternative. `--timeout-secs` defaults to 30 and is bounded to 1..3600.
 
 In JSON mode, success is one stdout envelope; errors, including argument errors, are one stderr envelope. Selected PSD engine metadata may be attached to failures. Do not treat an engine's inventory-wide capability list as the active version's execution contract.
 

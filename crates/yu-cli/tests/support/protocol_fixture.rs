@@ -45,6 +45,23 @@ fn main() {
         print!("{{\"protocol_version\":\"{protocol}\",\"request_id\":\"{request_id}\",\"status\":\"error\",\"error\":{{\"code\":\"{code}\",\"message\":\"fixture business error\"}}}}");
         return;
     }
+    if string_field(&input, "capability") == "psd.layer.export" && mode.starts_with("export-") {
+        // Paths here are generated ASCII test staging names; retain JSON escaping in the response.
+        let encoded_path = string_field(&input, "output_path");
+        let path = encoded_path.replace("\\\\", "\\");
+        if mode == "export-partial" {
+            std::fs::write(&path, b"partial PNG").unwrap();
+            print!("{{\"protocol_version\":\"1\",\"request_id\":\"{request_id}\",\"status\":\"error\",\"error\":{{\"code\":\"EXECUTION_FAILED\",\"message\":\"partial artifact\"}}}}");
+            return;
+        }
+        if mode == "export-garbage" { std::fs::write(&path, b"not PNG").unwrap(); }
+        else { std::fs::copy(std::env::args().nth(2).unwrap(), &path).unwrap(); }
+        let id = if mode == "export-wrong-layer" { "L0002" } else { string_field(&input, "layer_id") };
+        let output_path = if mode == "export-wrong-path" { "other.png" } else { encoded_path };
+        let width = if mode == "export-wrong-size" { 3 } else { 2 };
+        print!("{{\"protocol_version\":\"1\",\"request_id\":\"{request_id}\",\"status\":\"ok\",\"result\":{{\"contract_version\":\"1\",\"layer_id\":\"{id}\",\"output_path\":\"{output_path}\",\"width\":{width},\"height\":1,\"pixel_format\":\"rgba8\",\"container\":\"png\"}}}}");
+        return;
+    }
     let document = r#"{"format":"psd","width":2,"height":3,"channels":3,"bits_per_channel":8,"color_mode":"rgb","layer_count":2,"maximum_tree_depth":1}"#;
     let layer = |id: &str| format!(r#"{{"id":"{id}","depth":1,"name":"same","kind":"pixel","visible":true,"has_pixel_mask":false,"has_vector_mask":false,"child_count":0}}"#);
     let a = layer("L0001");
