@@ -222,6 +222,10 @@ First lifecycle-hardening increment: explicitly settle owned cleanup, retain pri
 
 This main-derived diagnostics increment refines verified batch resource users into bounded, timestamped single-file observations, with separate real-Windows calibration. It is not #29 startup integration, a directory-blocker proof, bounded runtime cleanup or release approval. See [scope](reliability/windows-resource-attribution.md) and [acceptance](testing/pr30-windows-resource-attribution.md). Historical OS5/timeout evidence and issue #27 remain open; #29's failed independent gate is not waived.
 
+### Bounded process waiting and cancellable I/O (PR #31)
+
+Independent runtime change on main after #30: nonblocking pipe pump, stop-and-close cancellation, bounded direct-child and Windows Job settlement, and preserved explicit cleanup/error/publication semantics. No #29 startup code or additional occupancy investigation is included. [Scope](reliability/bounded-process-io.md) and [acceptance](testing/pr31-bounded-process-io.md) distinguish tested transport bounds from hard OS-call guarantees and historical root-cause closure. Issue #27 remains open; no candidate promotion.
+
 ## M4 — Safe mutation
 
 **Goal:** introduce modifications without compromising source-file safety.

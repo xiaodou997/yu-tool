@@ -161,6 +161,8 @@ See:
 - [Explicit cleanup acceptance checklist](docs/testing/pr28-explicit-process-cleanup.md)
 - [Windows single-file resource attribution](docs/reliability/windows-resource-attribution.md)
 - [Resource attribution acceptance checklist](docs/testing/pr30-windows-resource-attribution.md)
+- [Bounded process wait and cancellable I/O](docs/reliability/bounded-process-io.md)
+- [Bounded transport acceptance checklist](docs/testing/pr31-bounded-process-io.md)
 - [PSD candidate comparison](docs/psd-candidate-comparison.md)
 - [PSD controlled benchmark](docs/psd-controlled-benchmark-report.md)
 - [Engine strategy ADR](docs/decisions/0001-engine-strategy.md)

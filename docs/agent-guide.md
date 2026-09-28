@@ -18,7 +18,7 @@ Read [release readiness](releasing/v0.1-readiness.md) before distributing a buil
 
 ## PSD cleanup failures
 
-PR #28 makes process cleanup an explicit part of the result: valid response bytes or an existing private staged PNG do not establish success when cleanup fails. Preserve the returned `EXECUTION_FAILED` and selected engine; do not publish a leftover private artifact or automatically retry against a different engine. This increment still uses blocking wait/join and does not prove Windows root-cause closure or release readiness. Read [cleanup scope](reliability/explicit-process-cleanup.md) and [the checklist](testing/pr28-explicit-process-cleanup.md).
+PR #28 makes process cleanup an explicit part of the result: valid response bytes or an existing private staged PNG do not establish success when cleanup fails. Preserve the returned `EXECUTION_FAILED` and selected engine; do not publish a leftover private artifact or automatically retry against a different engine. PR #31 replaces blocking transport workers with nonblocking endpoints and a shared two-second cleanup observation budget. It does not merge #29 or prove Windows root-cause closure/release readiness. Read [current scope](reliability/bounded-process-io.md) and [acceptance](testing/pr31-bounded-process-io.md); do not treat a cleanup deadline error as evidence all processes exited.
 
 ## Recommended workflow
 

@@ -270,7 +270,7 @@ yu psd <read-only command>
 
 `ManagedEngineCommand.capabilities` is additive and belongs to the same version snapshot as its command. Inventory capabilities remain the union of valid installed versions for M2 compatibility; they are not execution authorization. A concurrent activation cannot silently change a resolved command's reported version. Concurrent removal/filesystem failure can still make execution fail; there is no automatic retry against a different version.
 
-The runtime canonicalizes caller input and engine paths before switching the child working directory. It clears `NODE_OPTIONS` and `NODE_PATH`, uses stdin JSON rather than interpolated shell input, and bounds request/stdout/stderr sizes. Three I/O workers avoid pipe backpressure deadlock; the operation deadline includes waiting for EOF. Unix process groups and Windows Job Objects provide owned-process cleanup, including ordinary children that retain pipe handles. This is lifecycle containment of a trusted installed engine, not a sandbox against deliberately escaping executable code; package provenance still matters.
+The runtime canonicalizes caller input and engine paths before switching the child working directory. It clears `NODE_OPTIONS` and `NODE_PATH`, uses stdin JSON rather than interpolated shell input, and bounds request/stdout/stderr sizes. PR #31 replaces the three blocking I/O workers with one fair nonblocking pipe pump; the operation deadline still includes EOF. Unix process groups and Windows Job Objects provide owned-process cleanup. This is lifecycle containment of a trusted installed engine, not a sandbox against deliberately escaping executable code; package provenance still matters.
 
 Effective PSD capabilities are the intersection of the five wired operations (four read-only operations and layer bitmap export) and the active version's declarations. No probing or installation occurs during effective capability enumeration. JSON errors may add selected engine metadata without changing existing fields or error codes.
 
@@ -279,6 +279,10 @@ Effective PSD capabilities are the intersection of the five wired operations (fo
 The PSD transport separates `exchange()` from `Running::finish()` / `cleanup()`. After guard construction, success, early I/O setup failure and transport failure all pass through explicit cleanup. Execution and cleanup results are combined without overwriting the primary error. Cleanup failures cannot expose successful transport bytes to the response decoder or PNG publication path. Both completed cleanup outcomes are cached so Drop cannot repeat the attempt. Unwinding still uses Drop as a fallback.
 
 This is a result-propagation increment, not bounded cancellation: blocking wait/join and pre-guard attach-failure handling remain follow-up. A successful Job termination request is not whole-Job exit evidence. Private callable seams permit controlled worker failures and staging/publication tests; there are no user-facing fault flags or process-global test switches. See [cleanup scope](reliability/explicit-process-cleanup.md). Issue #27 remains open and release candidates stay blocked.
+
+## Bounded transport cleanup (PR #31)
+
+PR #31 additionally bounds child/Windows Job exit polling to one shared two-second cleanup deadline and closes all local I/O endpoints before waiting. There are no production I/O worker joins or pending overlapped buffers; failed completion confirmation remains an error and blocks publication. The original #28 limits above describe that historical increment; see [current transport scope](reliability/bounded-process-io.md) and ADR0009 for the new cancellation policy and OS-call limitations. PR #29 startup assignment remains separate and unmerged.
 
 ## PSD bitmap export (PR #23)
 

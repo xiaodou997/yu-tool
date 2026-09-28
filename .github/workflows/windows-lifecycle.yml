@@ -60,6 +60,8 @@ jobs:
       - uses: dtolnay/rust-toolchain@1.98.1
       - name: Validate Windows resource observation against test-owned handles
         run: python -B -m unittest discover -s tools -p "test_windows_occupancy.py" -v
+      - name: Verify bounded process and retained-peer I/O controls
+        run: cargo test --locked -p yu-runtime-psd --lib process::bounded_tests -- --nocapture
       - name: Install locked engine build dependencies
         working-directory: packaging/ag-psd-engine
         run: npm ci --ignore-scripts --no-audit --no-fund
