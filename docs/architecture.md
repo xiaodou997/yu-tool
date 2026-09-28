@@ -284,6 +284,8 @@ The process transport and exit-code model are shared with the read-only path. Bo
 
 Only trusted explicitly installed engines are executable. Staging and no-clobber publication are not an operating-system sandbox, nor a defense against malicious same-user replacement of parent directories. Full rendering, mask/effect application, ICC conversion and non-RGB/high-bit export remain outside this slice.
 
+Windows engine removal retains the existing mutation lock and quarantine-before-delete ordering. Quarantine rename alone may retry OS errors 5/32/33 for up to two seconds to tolerate temporary sharing conflicts. The exact source/destination remain fixed; persistent errors preserve the original directory and there is no copy/delete fallback. This does not identify which external process held a handle or grant permission to remove an active engine.
+
 ## Managed runtime layout
 
 A possible managed-runtime layout:

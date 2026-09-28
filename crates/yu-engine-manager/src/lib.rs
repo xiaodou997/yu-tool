@@ -2,6 +2,7 @@ mod discovery;
 mod installer;
 mod lifecycle;
 mod lock;
+mod quarantine;
 
 pub use discovery::EngineInventoryEntry;
 pub use installer::{

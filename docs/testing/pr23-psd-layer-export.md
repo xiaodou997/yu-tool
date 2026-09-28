@@ -60,6 +60,12 @@ For the five 8-bit representative workloads, decoded PNG bytes, exported count a
 
 The 16-bit PSD and 32-bit PSB workloads must return `UNSUPPORTED_CAPABILITY` without output. The test also rejects group composition, nonexistent IDs and malformed files, verifies every source hash remains unchanged, rejects overwrites, and deactivates/removes the installed package.
 
+## Windows quarantine regression
+
+Managed Package run 36365913796 passed the Windows pixel-export test but failed the read-only test at engine removal: quarantine rename returned OS error 5. The log did not identify the handle owner. Engine Manager now retries only the same atomic Windows rename for access/sharing/lock errors within a two-second budget, retaining the per-engine mutation lock. Persistent or other failures still return an error without deleting the source version.
+
+Ordinary tests cover immediate success, the three retryable Windows codes, non-retryable errors and deadline exhaustion. A Windows-only test holds a real directory handle without FILE_SHARE_DELETE, verifies that bounded failure preserves the source, then releases the handle and verifies successful quarantine. Both real-package tests must still pass unchanged; do not waive their cleanup assertions.
+
 ## Evidence recording
 
 Ordinary tests intentionally ignore optional-runtime tests. A green ordinary Rust gate alone is not evidence of real PSD export. Record exact feature head and completed workflow runs in the PR acceptance receipt, distinguishing local tests from GitHub-hosted package tests. The adapter changed in this slice, so standalone PSD Spike conformance must also be checked.

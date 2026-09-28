@@ -324,7 +324,7 @@ impl EngineManager {
             ManagerError::Io(format!("cannot create lifecycle trash directory: {error}"))
         })?;
 
-        fs::rename(&version_dir, &trash).map_err(|error| {
+        crate::quarantine::rename(&version_dir, &trash).map_err(|error| {
             ManagerError::Io(format!(
                 "cannot quarantine {} {} before removal: {error}",
                 descriptor.id, version

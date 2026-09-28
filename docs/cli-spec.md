@@ -134,6 +134,8 @@ yu engine remove imagemagick 7.1.1
 
 The active version cannot be removed. Built-in and system engines are outside the managed lifecycle and are never uninstalled by this command.
 
+On Windows, quarantine rename retries access/sharing/lock-denied errors for up to two seconds while retaining the engine mutation lock. A persistent failure remains an error and preserves the installed version; no copy/delete fallback or privilege change is attempted. Other errors and non-Windows renames are not retried.
+
 ## Image commands
 
 The first built-in raster engine is `raster-rs`.

@@ -1,0 +1,166 @@
+//! Keep quarantine atomic while tolerating briefly held Windows sharing handles.
+use std::{fs, io, path::Path};
+
+/// The caller holds the per-engine mutation lock and has checked ownership,
+/// activation, metadata and paths. Retry only this same rename; never copy or
+/// delete the original version when quarantine cannot be completed.
+pub(crate) fn rename(source: &Path, destination: &Path) -> io::Result<()> {
+    #[cfg(windows)]
+    {
+        retry_windows_rename(
+            || fs::rename(source, destination),
+            std::time::Duration::from_secs(2),
+        )
+    }
+    #[cfg(not(windows))]
+    {
+        fs::rename(source, destination)
+    }
+}
+
+#[cfg(any(windows, test))]
+fn retry_windows_rename(
+    mut operation: impl FnMut() -> io::Result<()>,
+    budget: std::time::Duration,
+) -> io::Result<()> {
+    use std::{
+        thread,
+        time::{Duration, Instant},
+    };
+    let started = Instant::now();
+    loop {
+        match operation() {
+            Ok(()) => return Ok(()),
+            Err(error) => {
+                // WinError.h: ACCESS_DENIED, SHARING_VIOLATION, LOCK_VIOLATION.
+                // Access denied may also be permanent; the deadline preserves
+                // that failure instead of treating it as successful cleanup.
+                if !matches!(error.raw_os_error(), Some(5 | 32 | 33)) || started.elapsed() >= budget
+                {
+                    return Err(error);
+                }
+                thread::sleep(
+                    Duration::from_millis(25).min(budget.saturating_sub(started.elapsed())),
+                );
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::time::Duration;
+
+    #[test]
+    fn successful_quarantine_is_not_repeated() {
+        let mut calls = 0;
+        retry_windows_rename(
+            || {
+                calls += 1;
+                Ok(())
+            },
+            Duration::from_secs(1),
+        )
+        .unwrap();
+        assert_eq!(calls, 1);
+    }
+
+    #[test]
+    fn windows_sharing_failures_retry_without_changing_the_operation() {
+        let mut calls = 0;
+        let errors = [5, 32, 33];
+        retry_windows_rename(
+            || {
+                calls += 1;
+                if calls <= errors.len() {
+                    Err(io::Error::from_raw_os_error(errors[calls - 1]))
+                } else {
+                    Ok(())
+                }
+            },
+            Duration::from_secs(1),
+        )
+        .unwrap();
+        assert_eq!(calls, 4);
+    }
+
+    #[test]
+    fn unrelated_errors_are_not_retried() {
+        let mut calls = 0;
+        let error = retry_windows_rename(
+            || {
+                calls += 1;
+                Err(io::Error::from_raw_os_error(2))
+            },
+            Duration::from_secs(1),
+        )
+        .unwrap_err();
+        assert_eq!(calls, 1);
+        assert_eq!(error.raw_os_error(), Some(2));
+    }
+
+    #[test]
+    fn exhausted_retry_budget_preserves_the_error() {
+        let mut calls = 0;
+        let error = retry_windows_rename(
+            || {
+                calls += 1;
+                Err(io::Error::from_raw_os_error(5))
+            },
+            Duration::ZERO,
+        )
+        .unwrap_err();
+        assert_eq!(calls, 1);
+        assert_eq!(error.raw_os_error(), Some(5));
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn windows_directory_handle_blocks_quarantine_until_released() {
+        use std::{
+            os::windows::fs::OpenOptionsExt,
+            thread,
+            time::{SystemTime, UNIX_EPOCH},
+        };
+        use windows_sys::Win32::Storage::FileSystem::{
+            FILE_FLAG_BACKUP_SEMANTICS, FILE_SHARE_READ, FILE_SHARE_WRITE,
+        };
+        let root = std::env::temp_dir().join(format!(
+            "yu-quarantine-sharing-{}-{}",
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        let source = root.join("version");
+        let target = root.join("quarantined");
+        fs::create_dir_all(&source).unwrap();
+        fs::write(source.join("sentinel"), b"keep intact").unwrap();
+        // Without FILE_SHARE_DELETE, a live directory handle denies rename.
+        let held = fs::OpenOptions::new()
+            .read(true)
+            .share_mode(FILE_SHARE_READ | FILE_SHARE_WRITE)
+            .custom_flags(FILE_FLAG_BACKUP_SEMANTICS)
+            .open(&source)
+            .unwrap();
+        let error =
+            retry_windows_rename(|| fs::rename(&source, &target), Duration::from_millis(50))
+                .expect_err("a held directory must not be treated as removed");
+        assert!(matches!(error.raw_os_error(), Some(5 | 32 | 33)));
+        assert!(source.is_dir());
+        assert!(!target.exists());
+        assert_eq!(fs::read(source.join("sentinel")).unwrap(), b"keep intact");
+        let releaser = thread::spawn(move || {
+            thread::sleep(Duration::from_millis(100));
+            drop(held);
+        });
+        let outcome = rename(&source, &target);
+        releaser.join().unwrap();
+        outcome.unwrap();
+        assert!(!source.exists());
+        assert_eq!(fs::read(target.join("sentinel")).unwrap(), b"keep intact");
+        fs::remove_dir_all(root).unwrap();
+    }
+}
