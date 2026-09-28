@@ -48,11 +48,17 @@ windows-lifecycle-report/
       04-selection.json
       05-resource-users.json
       06-correlation.json
+      07-file-attribution-events.jsonl
+      08-file-attribution.json
       collector.log
       report.json
 ```
 
 The count of captures alone is not success evidence; inspect per-capture status, stage coverage and timestamps. The workflow retains this directory even when a test fails. No public candidate promotion occurs.
+
+## Bounded single-file follow-up (PR #30)
+
+The initial batch query above is retained unchanged. A diagnostics-only refinement now seeks at most one single-file witness for each verified batch identity, using fresh sessions, at most16 extra queries and a3-second scheduling budget inside the existing10-second collector supervisor. Starts and completions are journaled separately; incomplete/missing summaries never imply no occupancy. This does not identify directory-only handles, prove share-mode conflict or retroactively attribute the #29 failure. See [full scope and calibration](windows-resource-attribution.md) and [acceptance](../testing/pr30-windows-resource-attribution.md).
 
 ## Primary references
 
