@@ -214,6 +214,10 @@ Engineering preparation adds verified offline `--archive` installation, quaranti
 
 Separate diagnostics/reproduction work records process-exit versus pipe-EOF phases and output byte counts, adds controlled CLI cases including Windows directory occupancy, and retains finite repeated extracted-candidate runs with first-failure logs. See [investigation boundaries](reliability/windows-lifecycle.md) and [acceptance checklist](testing/pr26-windows-lifecycle.md). Native process/Job cleanup hardening and historical root-cause closure remain unimplemented; candidate promotion is prohibited.
 
+### Explicit process cleanup result propagation (PR #28)
+
+First lifecycle-hardening increment: explicitly settle owned cleanup, retain primary and cleanup errors, and reject success/artifact publication on cleanup failure. Controlled tests reproduce swallowed worker failure before the change. [Scope and deferred work](reliability/explicit-process-cleanup.md) and [acceptance](testing/pr28-explicit-process-cleanup.md) separate this implemented error path from creation-time Job assignment, bounded I/O cancellation, enforced whole-Job completion and historical OS5/timeout attribution. Issue #27 stays open; no release promotion.
+
 ## M4 — Safe mutation
 
 **Goal:** introduce modifications without compromising source-file safety.

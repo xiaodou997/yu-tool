@@ -15,6 +15,10 @@ use yu_engine_manager::ManagedEngineCommand;
 #[cfg(windows)]
 mod windows_trace;
 
+#[cfg(test)]
+#[path = "process_cleanup_tests.rs"]
+pub(super) mod cleanup_tests;
+
 pub(crate) const MAX_REQUEST_BYTES: usize = 64 * 1024;
 pub(crate) const MAX_STDOUT_BYTES: usize = 16 * 1024 * 1024;
 pub(crate) const MAX_STDERR_BYTES: usize = 64 * 1024;
@@ -34,12 +38,21 @@ struct Running {
     child: Child,
     containment: Containment,
     workers: Vec<JoinHandle<()>>,
+    cleanup_result: Option<Result<(), String>>,
     #[cfg(windows)]
     trace: Option<windows_trace::Trace>,
 }
 
-impl Drop for Running {
-    fn drop(&mut self) {
+impl Running {
+    fn finish<T>(&mut self, execution: Result<T, String>) -> Result<T, String> {
+        combine_execution_and_cleanup(execution, self.cleanup())
+    }
+
+    // Result propagation only: blocking wait/join and whole-Job completion remain follow-up.
+    fn cleanup(&mut self) -> Result<(), String> {
+        if let Some(result) = &self.cleanup_result {
+            return result.clone();
+        }
         #[cfg(windows)]
         if let Some(trace) = &self.trace {
             trace.record(
@@ -49,15 +62,35 @@ impl Drop for Running {
                 serde_json::json!({"workers":self.workers.len()}),
             );
         }
-        // Close inherited pipes as well as the direct child before joining I/O workers.
-        self.containment.terminate();
-        let _ = self.child.kill();
+        let mut errors = Vec::new();
+        if let Err(error) = self.containment.terminate() {
+            errors.push(error);
+        }
+        // Resolve a kill/exit race only by successfully observing the child's exit.
+        match self.child.try_wait() {
+            Ok(Some(_)) => {}
+            status => {
+                if let Err(error) = status {
+                    errors.push(format!("cannot observe child before cleanup: {error}"));
+                }
+                if let Err(error) = self.child.kill()
+                    && !matches!(self.child.try_wait(), Ok(Some(_)))
+                {
+                    errors.push(format!("cannot terminate direct child: {error}"));
+                }
+            }
+        }
         let wait_result = self.child.wait();
-        let _ = &wait_result;
+        if let Err(error) = &wait_result {
+            errors.push(format!("cannot reap direct child: {error}"));
+        }
         #[cfg(windows)]
         let mut joined_workers = 0;
-        for worker in self.workers.drain(..) {
-            let _ = worker.join();
+        for (index, worker) in self.workers.drain(..).enumerate() {
+            // Do not include panic payloads in the returned error or trace.
+            if worker.join().is_err() {
+                errors.push(format!("engine I/O worker {index} panicked"));
+            }
             #[cfg(windows)]
             {
                 joined_workers += 1;
@@ -65,7 +98,45 @@ impl Drop for Running {
         }
         #[cfg(windows)]
         if let Some(trace) = &self.trace {
-            trace.record(&self.child, &self.containment.job, "cleanup_end", serde_json::json!({"direct_wait_succeeded":wait_result.is_ok(), "workers_joined":joined_workers}));
+            trace.record(
+                &self.child,
+                &self.containment.job,
+                "cleanup_end",
+                serde_json::json!({
+                    "direct_wait_succeeded":wait_result.is_ok(), "workers_joined":joined_workers,
+                    "cleanup_succeeded":errors.is_empty(), "cleanup_errors":&errors,
+                }),
+            );
+        }
+        let result = if errors.is_empty() {
+            Ok(())
+        } else {
+            Err(errors.join("; "))
+        };
+        // Both outcomes are final for this attempt; Drop must not retry or hide a failure.
+        self.cleanup_result = Some(result.clone());
+        result
+    }
+}
+
+impl Drop for Running {
+    fn drop(&mut self) {
+        if self.cleanup_result.is_none() {
+            // Fallback for unwinding only. Ordinary returns go through finish().
+            let _ = self.cleanup();
+        }
+    }
+}
+
+fn combine_execution_and_cleanup<T>(
+    execution: Result<T, String>,
+    cleanup: Result<(), String>,
+) -> Result<T, String> {
+    match (execution, cleanup) {
+        (result, Ok(())) => result,
+        (Ok(_), Err(cleanup)) => Err(format!("engine cleanup failed: {cleanup}")),
+        (Err(execution), Err(cleanup)) => {
+            Err(format!("{execution}; engine cleanup failed: {cleanup}"))
         }
     }
 }
@@ -74,6 +145,16 @@ pub(crate) fn execute(
     installed: &ManagedEngineCommand,
     request: Vec<u8>,
     timeout: Duration,
+) -> Result<Output, String> {
+    execute_with_setup(installed, request, timeout, |_| {})
+}
+
+// Private seam for controlled resource failures; no public option or environment switch.
+fn execute_with_setup(
+    installed: &ManagedEngineCommand,
+    request: Vec<u8>,
+    timeout: Duration,
+    setup: impl FnOnce(&mut Running),
 ) -> Result<Output, String> {
     if request.len() > MAX_REQUEST_BYTES {
         return Err("external engine request exceeds 64 KiB".to_owned());
@@ -110,9 +191,22 @@ pub(crate) fn execute(
         child,
         containment,
         workers: Vec::new(),
+        cleanup_result: None,
         #[cfg(windows)]
         trace,
     };
+    setup(&mut running);
+    let execution = exchange(&mut running, request, timeout, started, spawn_elapsed_ms);
+    running.finish(execution)
+}
+
+fn exchange(
+    running: &mut Running,
+    request: Vec<u8>,
+    timeout: Duration,
+    started: Instant,
+    spawn_elapsed_ms: u128,
+) -> Result<Output, String> {
     let mut stdin = running
         .child
         .stdin
@@ -301,10 +395,20 @@ impl Containment {
         }
         Ok(Self { group })
     }
-    fn terminate(&self) {
+    fn terminate(&self) -> Result<(), String> {
         // SAFETY: spawn created a separate group with this positive child PID.
-        unsafe {
-            libc::kill(-self.group, libc::SIGKILL);
+        let result = unsafe { libc::kill(-self.group, libc::SIGKILL) };
+        if result == 0 {
+            return Ok(());
+        }
+        let error = std::io::Error::last_os_error();
+        if error.raw_os_error() == Some(libc::ESRCH) {
+            // Normal completion can leave no remaining process group to terminate.
+            Ok(())
+        } else {
+            Err(format!(
+                "cannot terminate owned engine process group: {error}"
+            ))
         }
     }
 }
@@ -360,11 +464,19 @@ impl Containment {
         }
         Ok(Self { job })
     }
-    fn terminate(&self) {
+    fn terminate(&self) -> Result<(), String> {
         use std::os::windows::io::AsRawHandle;
         // SAFETY: the job handle is live and belongs only to this invocation.
-        unsafe {
-            windows_sys::Win32::System::JobObjects::TerminateJobObject(self.job.as_raw_handle(), 1);
+        let result = unsafe {
+            windows_sys::Win32::System::JobObjects::TerminateJobObject(self.job.as_raw_handle(), 1)
+        };
+        if result == 0 {
+            Err(format!(
+                "cannot terminate owned engine job: {}",
+                std::io::Error::last_os_error()
+            ))
+        } else {
+            Ok(())
         }
     }
 }
