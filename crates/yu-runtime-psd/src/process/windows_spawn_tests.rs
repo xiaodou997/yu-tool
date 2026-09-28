@@ -72,6 +72,12 @@ fn fixture_child() {
         seen.is_some() && serde_json::to_value(seen.unwrap()).unwrap() == config["identity"]
     });
     let descendant = if config["descendant"] == true {
+        // This test requires the parent to exit before its descendant. The invocation Job
+        // owns termination; the descendant also has a finite 20s lifetime as a test backstop.
+        #[expect(
+            clippy::zombie_processes,
+            reason = "Windows startup fixture deliberately leaves its descendant to the invocation Job, not to a parent wait"
+        )]
         let child = Command::new(std::env::current_exe().unwrap())
             .args(["--exact", DESCENDANT_TEST, "--nocapture"])
             .stdin(Stdio::null())

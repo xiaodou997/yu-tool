@@ -30,6 +30,8 @@ The Job-list attribute requires Windows 10/Server 2016 or newer. Passing current
 - A real child checks quoted argv, Unicode/spaced cwd, sanitized Node override state and non-inheritance of an unrelated test-created file handle. File identity is queried without reading contents, changing sharing, or closing foreign handles.
 - Portable serialization tests cover empty arguments, escaping, bounds, environment preservation and rejected malformed data. Existing #28 cleanup regressions and PSD no-clobber/pixel/real-package checks remain active.
 
+The immediate-descendant fixture deliberately does not wait for that child: the parent must be able to exit first, and its invocation Job owns termination with a finite 20s fixture backstop. A statement-local `expect(clippy::zombie_processes)` documents exactly that test arrangement; production Clippy policy and lifecycle assertions are unchanged. This expectation is itself checked by Clippy rather than disabling the lint globally.
+
 Two native helper tests return immediately in ordinary discovery; the four actual native startup cases run on Windows. The independent workflow also executes the startup module before its unchanged three-pass extracted-CLI probe. Exact-head results belong in the PR receipt, not predeclared here.
 
 ## Remaining independent work
