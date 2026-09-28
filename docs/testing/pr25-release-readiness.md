@@ -28,6 +28,8 @@ cargo test --locked -p yu-cli --test psd_managed -- --ignored --nocapture
 
 Record source commit, run ID/attempt, target, completed cycles, quarantine retries, three test results, package digest and candidate checksum. On a failure, retain the original diagnostic and mark that target unaccepted. Reruns do not establish a root-cause fix. Do not claim local real-package execution from hosted evidence.
 
+The Package15 Windows release run exposed a 30-second `inspect` timeout after successful debug lifecycle/read-only/export testing. Keep that original run as a failure. Cycle/action progress and transport timeout fields identify which phase/pipe/child state is observed on later failures. The ordinary one-second silent-engine/inherited-pipe regressions assert these fields and retain their existing cleanup/deadline bounds. No deadline or test-parallelism relaxation is permitted to relabel the original failure as fixed.
+
 ## Archive / release boundary
 
 Check that candidate ZIP extraction rejects unexpected names, symlinks/special files, duplicate names and binary tampering. Verify the inner candidate checksum, not the Actions wrapper checksum. Run `smoke/bin/yu --version` and confirm build-info source/target. The archive has no engine bundled and no accepted signing/license status. Existing candidate destinations must not be overwritten.
