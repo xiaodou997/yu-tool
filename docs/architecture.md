@@ -286,6 +286,12 @@ Only trusted explicitly installed engines are executable. Staging and no-clobber
 
 Windows engine removal retains the existing mutation lock and quarantine-before-delete ordering. Quarantine rename alone may retry OS errors 5/32/33 for up to two seconds to tolerate temporary sharing conflicts. The exact source/destination remain fixed; persistent errors preserve the original directory and there is no copy/delete fallback. This does not identify which external process held a handle or grant permission to remove an active engine.
 
+## Explicit offline installation and release preparation (PR #25)
+
+`LocalArchiveDownloader` is an explicit input transport for the existing `EngineInstaller`, selected only by `engine install --archive`. It binds to the chosen manifest URL, stages a bounded regular file and leaves digest/target/archive validation and ownership/activation rules unchanged. It does not introduce HTTP fallback, execute downloaded code during install or bypass the managed lifecycle. Quarantine observations are additive diagnostics; the two-second Windows policy is unchanged.
+
+The developer-candidate builder performs a locked release build on clean committed source and smoke-tests a fixed-layout extracted CLI archive. It records source/compiler/lock hashes, not signing or license approval. Actual PSD acceptance is repeated against that extracted release binary. Release preparation is distinct from runtime capability expansion and public distribution.
+
 ## Managed runtime layout
 
 A possible managed-runtime layout:

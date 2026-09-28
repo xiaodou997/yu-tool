@@ -9,6 +9,8 @@ use yu_engine_manager::{EngineManifest, sha256_file};
 
 #[path = "support/psd_export_managed.rs"]
 mod export_tests;
+#[path = "support/psd_lifecycle_managed.rs"]
+mod lifecycle_tests;
 
 fn fixture(relative: &str) -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))

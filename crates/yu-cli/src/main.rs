@@ -15,7 +15,7 @@ use yu_core::{
 use yu_engine_image_rs::{ENGINE_ID as RASTER_ENGINE_ID, RustImageEngine};
 use yu_engine_manager::{
     EngineInstaller, EngineInventoryEntry, EngineManager, EngineManifest, HttpDownloader,
-    ManagerError,
+    LocalArchiveDownloader, ManagerError,
 };
 
 #[derive(Debug, Parser)]
@@ -65,6 +65,9 @@ enum EngineCommand {
     Install {
         #[arg(long)]
         manifest: PathBuf,
+        /// Use this local archive without network access; manifest verification still applies.
+        #[arg(long)]
+        archive: Option<PathBuf>,
     },
     /// List installed versions of a managed engine.
     Versions { engine: String },
@@ -151,8 +154,8 @@ fn run(cli: Cli) -> Result<(), YuError> {
             command: EngineCommand::Info { engine },
         } => render_engine_info(&registry, &engine, cli.json),
         Command::Engine {
-            command: EngineCommand::Install { manifest },
-        } => render_engine_install(&manifest, cli.json),
+            command: EngineCommand::Install { manifest, archive },
+        } => render_engine_install(&manifest, archive.as_deref(), cli.json),
         Command::Engine {
             command: EngineCommand::Versions { engine },
         } => render_engine_versions(&engine, cli.json),
@@ -380,12 +383,27 @@ fn inventory_warnings(inventory: &[EngineInventoryEntry]) -> Vec<String> {
         .collect()
 }
 
-fn render_engine_install(manifest_path: &Path, json: bool) -> Result<(), YuError> {
+fn render_engine_install(
+    manifest_path: &Path,
+    archive: Option<&Path>,
+    json: bool,
+) -> Result<(), YuError> {
     let manifest = read_manifest(manifest_path)?;
     let manager = EngineManager::discover().map_err(map_manager_error)?;
-    let downloader = HttpDownloader::new().map_err(map_manager_error)?;
-    let installer = EngineInstaller::new(manager, downloader);
-    let receipt = installer.install(&manifest).map_err(map_manager_error)?;
+    let receipt = if let Some(archive) = archive {
+        let package = manifest.package_for(manager.target()).ok_or_else(|| {
+            YuError::new(
+                ErrorCode::EngineIncompatible,
+                "manifest has no package for this platform",
+            )
+        })?;
+        let downloader = LocalArchiveDownloader::new(archive, &package.url);
+        EngineInstaller::new(manager, downloader).install(&manifest)
+    } else {
+        let downloader = HttpDownloader::new().map_err(map_manager_error)?;
+        EngineInstaller::new(manager, downloader).install(&manifest)
+    }
+    .map_err(map_manager_error)?;
 
     if json {
         print_json(&ResultEnvelope::new("engine.install", receipt));

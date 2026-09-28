@@ -356,6 +356,17 @@ fn timeout_covers_silent_engines_and_inherited_output_pipes() {
                 .unwrap()
                 .contains("timed out")
         );
+        let message = value["error"]["message"].as_str().unwrap();
+        for field in [
+            "transport diagnostic:",
+            "spawn_ms=",
+            "child_exited=",
+            "stdin_complete=",
+            "stdout_complete=",
+            "stderr_complete=",
+        ] {
+            assert!(message.contains(field), "missing {field}: {message}");
+        }
         assert!(
             started.elapsed() < Duration::from_secs(8),
             "cleanup exceeded timeout budget for {mode}"

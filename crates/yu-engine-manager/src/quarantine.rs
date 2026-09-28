@@ -1,21 +1,42 @@
 //! Keep quarantine atomic while tolerating briefly held Windows sharing handles.
-use std::{fs, io, path::Path};
+#[cfg(any(windows, test))]
+use std::io;
+use std::{fs, path::Path};
 
 /// The caller holds the per-engine mutation lock and has checked ownership,
 /// activation, metadata and paths. Retry only this same rename; never copy or
 /// delete the original version when quarantine cannot be completed.
-pub(crate) fn rename(source: &Path, destination: &Path) -> io::Result<()> {
-    #[cfg(windows)]
-    {
-        retry_windows_rename(
-            || fs::rename(source, destination),
-            std::time::Duration::from_secs(2),
-        )
-    }
-    #[cfg(not(windows))]
-    {
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
+pub struct QuarantineObservation {
+    pub attempts: u32,
+    pub elapsed_ms: u64,
+}
+
+pub(crate) fn rename(source: &Path, destination: &Path) -> Result<QuarantineObservation, String> {
+    let started = std::time::Instant::now();
+    let mut attempts = 0;
+    let mut operation = || {
+        attempts += 1;
         fs::rename(source, destination)
-    }
+    };
+    #[cfg(windows)]
+    let result = retry_windows_rename(&mut operation, std::time::Duration::from_secs(2));
+    #[cfg(not(windows))]
+    let result = operation();
+    let observation = QuarantineObservation {
+        attempts,
+        elapsed_ms: started.elapsed().as_millis().try_into().unwrap_or(u64::MAX),
+    };
+    result.map(|()| observation).map_err(|error| {
+        let metadata = fs::symlink_metadata(source).ok();
+        let cwd_inside_source = std::env::current_dir().ok().and_then(|cwd| {
+            let source = fs::canonicalize(source).ok()?;
+            Some(cwd.starts_with(source))
+        });
+        format!("{error}; quarantine diagnostic: attempts={attempts}, elapsed_ms={}, os_error={:?}, source={:?}, destination={:?}, source_present={}, source_readonly={:?}, cwd_inside_source={cwd_inside_source:?}; original version was not deleted; lock owner is unknown",
+            started.elapsed().as_millis(), error.raw_os_error(), source, destination,
+            metadata.is_some(), metadata.map(|m| m.permissions().readonly()))
+    })
 }
 
 #[cfg(any(windows, test))]

@@ -66,6 +66,7 @@ pub(crate) fn execute(
     let mut child = command
         .spawn()
         .map_err(|e| format!("cannot start engine: {e}"))?;
+    let spawn_elapsed_ms = started.elapsed().as_millis();
     let containment = match Containment::attach(&child) {
         Ok(value) => value,
         Err(error) => {
@@ -170,7 +171,19 @@ pub(crate) fn execute(
             return Ok(output);
         }
         if started.elapsed() >= timeout {
-            return Err(format!("engine timed out after {} ms", timeout.as_millis()));
+            // Snapshot before owned-process cleanup. Completion means EOF/event delivery,
+            // not absence of partial bytes. Do not dump request or document contents.
+            return Err(format!(
+                "engine timed out after {} ms; transport diagnostic: pid={}, elapsed_ms={}, spawn_ms={}, child_exited={}, stdin_complete={}, stdout_complete={}, stderr_complete={}",
+                timeout.as_millis(),
+                running.child.id(),
+                started.elapsed().as_millis(),
+                spawn_elapsed_ms,
+                status.is_some(),
+                input_done,
+                stdout.is_some(),
+                stderr.is_some()
+            ));
         }
         thread::sleep(Duration::from_millis(5).min(timeout.saturating_sub(started.elapsed())));
     }

@@ -1,6 +1,7 @@
 mod discovery;
 mod installer;
 mod lifecycle;
+mod local_archive;
 mod lock;
 mod quarantine;
 
@@ -13,6 +14,8 @@ pub use lifecycle::{
     ActivationReceipt, DeactivationReceipt, INSTALL_METADATA_FILE, InstalledEngineMetadata,
     InstalledVersion, LIFECYCLE_SCHEMA_VERSION, ManagedEngineCommand, RemovalReceipt,
 };
+pub use local_archive::LocalArchiveDownloader;
+pub use quarantine::QuarantineObservation;
 
 use serde::{Deserialize, Serialize};
 use std::{
