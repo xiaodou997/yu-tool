@@ -7,10 +7,7 @@ use std::{
     sync::atomic::{AtomicU64, Ordering},
     time::{SystemTime, UNIX_EPOCH},
 };
-use yu_engine_manager::{
-    Downloader, EngineInstaller, EngineManager, EngineManifest, EngineTarget, ManagedLayout,
-    ManagerError,
-};
+use yu_engine_manager::{EngineManager, EngineManifest, EngineTarget, ManagedLayout};
 static NEXT: AtomicU64 = AtomicU64::new(1);
 
 pub struct TempRoot(pub PathBuf);
@@ -38,33 +35,32 @@ impl Drop for TempRoot {
     }
 }
 
-struct LocalDownloader {
-    path: PathBuf,
-    url: String,
-}
-impl Downloader for LocalDownloader {
-    fn download(&self, url: &str, destination: &Path) -> Result<u64, ManagerError> {
-        if url != self.url {
-            return Err(ManagerError::Download("unexpected test URL".into()));
-        }
-        fs::copy(&self.path, destination).map_err(|e| ManagerError::Io(e.to_string()))
-    }
-}
 pub fn install(root: &TempRoot, manifest: &EngineManifest, archive: &Path) {
-    let package = manifest.package_for(&EngineTarget::current()).unwrap();
-    EngineInstaller::new(
-        root.manager(),
-        LocalDownloader {
-            path: archive.to_owned(),
-            url: package.url.clone(),
-        },
-    )
-    .install(manifest)
-    .expect("test package must pass real installer verification");
+    let path = root.0.join("install-manifest.json");
+    fs::write(&path, serde_json::to_vec(manifest).unwrap()).unwrap();
+    success(run(
+        &root.0,
+        &[
+            "engine",
+            "install",
+            "--manifest",
+            path.to_str().unwrap(),
+            "--archive",
+            archive.to_str().unwrap(),
+            "--json",
+        ],
+    ));
+}
+
+pub fn cli_binary() -> PathBuf {
+    let path = std::env::var_os("YU_TEST_CLI")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| PathBuf::from(env!("CARGO_BIN_EXE_yu")));
+    fs::canonicalize(path).expect("test CLI must exist")
 }
 
 pub fn run(root: &Path, args: &[&str]) -> Output {
-    Command::new(env!("CARGO_BIN_EXE_yu"))
+    Command::new(cli_binary())
         .args(args)
         .env("YU_DATA_HOME", root)
         .env("PATH", "")

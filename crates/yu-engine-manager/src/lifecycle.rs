@@ -71,6 +71,7 @@ pub struct RemovalReceipt {
     pub engine_id: String,
     pub version: String,
     pub cleanup_complete: bool,
+    pub quarantine: crate::quarantine::QuarantineObservation,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub cleanup_path: Option<PathBuf>,
 }
@@ -324,7 +325,7 @@ impl EngineManager {
             ManagerError::Io(format!("cannot create lifecycle trash directory: {error}"))
         })?;
 
-        crate::quarantine::rename(&version_dir, &trash).map_err(|error| {
+        let quarantine = crate::quarantine::rename(&version_dir, &trash).map_err(|error| {
             ManagerError::Io(format!(
                 "cannot quarantine {} {} before removal: {error}",
                 descriptor.id, version
@@ -347,6 +348,7 @@ impl EngineManager {
             engine_id: descriptor.id.clone(),
             version: version.to_owned(),
             cleanup_complete,
+            quarantine,
             cleanup_path,
         })
     }

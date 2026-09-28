@@ -7,6 +7,9 @@ on:
       - "tools/build_ag_psd_managed_package.py"
       - "crates/yu-engine-manager/**"
       - "Cargo.toml"
+      - "Cargo.lock"
+      - "rust-toolchain.toml"
+      - "tools/build_cli_candidate.py"
       - "crates/yu-cli/**"
       - "crates/yu-core/**"
       - "crates/yu-engine-api/**"
@@ -30,14 +33,20 @@ jobs:
             runner: ubuntu-latest
             target_os: linux
             target_arch: x86_64
+            rust_target: x86_64-unknown-linux-gnu
+            binary_name: yu
           - label: macos-aarch64
             runner: macos-latest
             target_os: macos
             target_arch: aarch64
+            rust_target: aarch64-apple-darwin
+            binary_name: yu
           - label: windows-x86_64
             runner: windows-latest
             target_os: windows
             target_arch: x86_64
+            rust_target: x86_64-pc-windows-msvc
+            binary_name: yu.exe
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v7
@@ -50,11 +59,11 @@ jobs:
         with:
           node-version: "22.23.3"
 
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@1.98.1
 
       - name: Install pinned package dependencies
         working-directory: packaging/ag-psd-engine
-        run: npm install --ignore-scripts --no-audit --no-fund
+        run: npm ci --ignore-scripts --no-audit --no-fund
 
       - name: Build verified self-contained package
         run: >-
@@ -69,7 +78,7 @@ jobs:
 
       - name: Install, activate, execute private runtime, and discover engine
         run: >-
-          cargo run -p yu-engine-manager --example managed_package_smoke --
+          cargo run --locked -p yu-engine-manager --example managed_package_smoke --
           target/ag-psd-managed/${{ matrix.label }}/manifest-${{ matrix.label }}.json
           target/ag-psd-managed/${{ matrix.label }}/yu-engine-ag-psd-31.0.2-node22.23.3.yu2-${{ matrix.label }}.zip
           fixtures/psd/upstream/psd-tools/2layers.psd
@@ -78,7 +87,31 @@ jobs:
         env:
           YU_TEST_MANIFEST: ${{ github.workspace }}/target/ag-psd-managed/${{ matrix.label }}/manifest-${{ matrix.label }}.json
           YU_TEST_PACKAGE: ${{ github.workspace }}/target/ag-psd-managed/${{ matrix.label }}/yu-engine-ag-psd-31.0.2-node22.23.3.yu2-${{ matrix.label }}.zip
-        run: cargo test -p yu-cli --test psd_managed -- --ignored --nocapture
+        run: cargo test --locked -p yu-cli --test psd_managed -- --ignored --nocapture
+
+      - name: Build and verify isolated CLI developer candidate
+        run: >-
+          python -B tools/build_cli_candidate.py
+          --target ${{ matrix.rust_target }}
+          --output-dir target/cli-candidate/${{ matrix.label }}
+
+      - name: Run PSD and ten-cycle lifecycle acceptance against extracted release binary
+        env:
+          YU_TEST_CLI: ${{ github.workspace }}/target/cli-candidate/${{ matrix.label }}/smoke/bin/${{ matrix.binary_name }}
+          YU_TEST_MANIFEST: ${{ github.workspace }}/target/ag-psd-managed/${{ matrix.label }}/manifest-${{ matrix.label }}.json
+          YU_TEST_PACKAGE: ${{ github.workspace }}/target/ag-psd-managed/${{ matrix.label }}/yu-engine-ag-psd-31.0.2-node22.23.3.yu2-${{ matrix.label }}.zip
+        run: cargo test --locked -p yu-cli --test psd_managed -- --ignored --nocapture
+
+      - name: Upload validated CLI developer candidate (not a release)
+        uses: actions/upload-artifact@v4
+        with:
+          name: yu-cli-candidate-${{ matrix.label }}
+          path: |
+            target/cli-candidate/${{ matrix.label }}/*.zip
+            target/cli-candidate/${{ matrix.label }}/SHA256SUMS
+            target/cli-candidate/${{ matrix.label }}/candidate.json
+          if-no-files-found: error
+          retention-days: 30
 
       - name: Upload managed engine package
         uses: actions/upload-artifact@v4

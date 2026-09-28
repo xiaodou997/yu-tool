@@ -105,6 +105,15 @@ yu engine install --manifest ./imagemagick.json --json
 
 Installation is explicit and does not activate the version automatically.
 
+For an explicitly supplied local package (PR #25):
+
+```bash
+yu engine install --manifest ./manifest.json --archive ./engine.zip --json
+```
+
+This path performs no download and never falls back to HTTP. It still validates Manifest v1, exact target, the SHA-256 of bounded staged bytes and archive safety. Manifest HTTPS URLs remain required as identity metadata but are not dereferenced. The local archive must be a regular non-symlink file and is not modified. Source size is capped at 512 MiB. Installation and activation remain separate; no engine executes during installation. Unpack the outer Actions artifact first and supply the inner engine archive.
+
+
 ### `yu engine versions`
 
 ```bash
@@ -134,7 +143,7 @@ yu engine remove imagemagick 7.1.1
 
 The active version cannot be removed. Built-in and system engines are outside the managed lifecycle and are never uninstalled by this command.
 
-On Windows, quarantine rename retries access/sharing/lock-denied errors for up to two seconds while retaining the engine mutation lock. A persistent failure remains an error and preserves the installed version; no copy/delete fallback or privilege change is attempted. Other errors and non-Windows renames are not retried.
+On Windows, quarantine rename retries access/sharing/lock-denied errors for up to two seconds while retaining the engine mutation lock. A persistent failure remains an error and preserves the installed version; no copy/delete fallback or privilege change is attempted. Other errors and non-Windows renames are not retried. Successful JSON removal receipts additionally expose `quarantine.attempts` and `quarantine.elapsed_ms`. A failed quarantine reports raw OS error and bounded diagnostic observations of paths/attributes/current directory in the message; it keeps the existing error code and does not claim a lock owner. See [v0.1 preparation](releasing/v0.1-readiness.md).
 
 ## Image commands
 

@@ -153,6 +153,8 @@ See:
 - [Roadmap](docs/roadmap.md)
 - [M3 implementation freeze](docs/milestones/m3-freeze.md)
 - [M3 freeze acceptance checklist](docs/testing/pr24-m3-freeze.md)
+- [v0.1 release preparation](docs/releasing/v0.1-readiness.md)
+- [Release preparation acceptance](docs/testing/pr25-release-readiness.md)
 - [PSD candidate comparison](docs/psd-candidate-comparison.md)
 - [PSD controlled benchmark](docs/psd-controlled-benchmark-report.md)
 - [Engine strategy ADR](docs/decisions/0001-engine-strategy.md)
@@ -175,7 +177,7 @@ yu psd layer info design.psd --id L0001 --engine ag-psd --timeout-secs 30 --json
 yu psd layer export design.psd --id L0001 -o layer.png --json
 ```
 
-The PR #21 prototype manifests contain placeholder download URLs; the install command above requires a manifest pointing to a real trusted package location. Local/CI verification uses the package builder and a test-only local downloader, not an undocumented public distribution service. See [PR #22 testing checklist](docs/testing/pr22-psd-readonly-cli.md).
+Prototype manifests contain placeholder download URLs. Online install requires a real trusted HTTPS location; PR #25 also supports explicit verified offline installation with `yu engine install --manifest manifest.json --archive engine.zip --json`, followed by separate activation. Supply the inner engine ZIP, not the outer Actions artifact wrapper. Current actual-CLI tests use this public offline path. See [v0.1 preparation](docs/releasing/v0.1-readiness.md).
 
 Export requires the newer `.yu2` package and a new `.png` destination on a hard-link-capable filesystem. It copies the stored layer bitmap only, without applying masks, effects, opacity, blending or ICC conversion. Groups, absent bitmaps, non-RGB and high-bit sources are unsupported. See [PR #23 export checklist](docs/testing/pr23-psd-layer-export.md).
 

@@ -206,6 +206,10 @@ M3 functional behavior is frozen at `c793279e3c131cae85adf73571590ab022b2ed05` (
 
 Before public distribution, separately address persistent artifacts/trusted HTTPS manifests, license decisions, packaged CLI acceptance, dependency-lock/reproducibility policy and platform signing/notarization. This is a release-readiness recommendation, not a redefinition of the M4/M5 capability milestones or permission to expand them automatically.
 
+### v0.1 release preparation (PR #25)
+
+Engineering preparation adds verified offline `--archive` installation, quarantine diagnostics/repeated lifecycle acceptance, locked Rust/npm dependencies and source-qualified CLI developer candidates tested after extraction. See [readiness and unaccepted gates](releasing/v0.1-readiness.md) and [test checklist](testing/pr25-release-readiness.md). This does not authorize public publishing or mark Windows root cause, licensing, signatures, minimum OS support or durable hosting as accepted. M3 historical evidence remains immutable.
+
 ## M4 — Safe mutation
 
 **Goal:** introduce modifications without compromising source-file safety.
