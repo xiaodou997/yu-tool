@@ -1,16 +1,20 @@
 //! Bounded one-shot transport. Engines are trusted installed programs, not sandboxed code.
+#[cfg(test)]
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::{
     io::{Read, Write},
-    process::{Child, Command, Stdio},
-    sync::{
-        Arc,
-        atomic::{AtomicUsize, Ordering},
-        mpsc,
-    },
-    thread::{self, JoinHandle},
+    process::{Child, Command},
+    thread,
     time::{Duration, Instant},
 };
 use yu_engine_manager::ManagedEngineCommand;
+
+#[cfg(test)]
+mod bounded_tests;
+mod nonblocking;
+use nonblocking::{Pipe, Pipes};
+const CLEANUP_BUDGET: Duration = Duration::from_secs(2);
+const POLL_INTERVAL: Duration = Duration::from_millis(5);
 
 #[cfg(windows)]
 mod windows_trace;
@@ -28,17 +32,13 @@ pub(crate) struct Output {
     pub stderr: Vec<u8>,
 }
 
-enum Event {
-    Input(Result<(), String>),
-    Stdout(Result<Vec<u8>, String>),
-    Stderr(Result<Vec<u8>, String>),
-}
-
 struct Running {
     child: Child,
     containment: Containment,
-    workers: Vec<JoinHandle<()>>,
+    pipes: Pipes,
     cleanup_result: Option<Result<(), String>>,
+    #[cfg(test)]
+    cleanup_fault: Option<String>,
     #[cfg(windows)]
     trace: Option<windows_trace::Trace>,
 }
@@ -48,53 +48,41 @@ impl Running {
         combine_execution_and_cleanup(execution, self.cleanup())
     }
 
-    // Result propagation only: blocking wait/join and whole-Job completion remain follow-up.
     fn cleanup(&mut self) -> Result<(), String> {
         if let Some(result) = &self.cleanup_result {
             return result.clone();
         }
+        let started = Instant::now();
+        let deadline = started + CLEANUP_BUDGET;
         #[cfg(windows)]
         if let Some(trace) = &self.trace {
             trace.record(
                 &self.child,
                 &self.containment.job,
                 "cleanup_begin",
-                serde_json::json!({"workers":self.workers.len()}),
+                serde_json::json!({"workers":0, "io_transport":"nonblocking_poll", "cleanup_budget_ms":CLEANUP_BUDGET.as_millis()}),
             );
         }
+        // Cancel the pump before waiting for process exit. No outstanding read/write,
+        // OVERLAPPED buffer or detached worker can retain these local endpoints.
+        self.pipes.close();
         let mut errors = Vec::new();
         if let Err(error) = self.containment.terminate() {
             errors.push(error);
         }
-        // Resolve a kill/exit race only by successfully observing the child's exit.
-        match self.child.try_wait() {
-            Ok(Some(_)) => {}
-            status => {
-                if let Err(error) = status {
-                    errors.push(format!("cannot observe child before cleanup: {error}"));
-                }
-                if let Err(error) = self.child.kill()
-                    && !matches!(self.child.try_wait(), Ok(Some(_)))
-                {
-                    errors.push(format!("cannot terminate direct child: {error}"));
-                }
-            }
-        }
-        let wait_result = self.child.wait();
+        let wait_result = stop_child_until(&mut self.child, deadline);
         if let Err(error) = &wait_result {
-            errors.push(format!("cannot reap direct child: {error}"));
+            errors.push(error.clone());
         }
         #[cfg(windows)]
-        let mut joined_workers = 0;
-        for (index, worker) in self.workers.drain(..).enumerate() {
-            // Do not include panic payloads in the returned error or trace.
-            if worker.join().is_err() {
-                errors.push(format!("engine I/O worker {index} panicked"));
-            }
-            #[cfg(windows)]
-            {
-                joined_workers += 1;
-            }
+        let job_result = poll_until(deadline, "owned Job exit", || self.containment.is_empty());
+        #[cfg(windows)]
+        if let Err(error) = &job_result {
+            errors.push(error.clone());
+        }
+        #[cfg(test)]
+        if let Some(error) = &self.cleanup_fault {
+            errors.push(error.clone());
         }
         #[cfg(windows)]
         if let Some(trace) = &self.trace {
@@ -103,7 +91,10 @@ impl Running {
                 &self.containment.job,
                 "cleanup_end",
                 serde_json::json!({
-                    "direct_wait_succeeded":wait_result.is_ok(), "workers_joined":joined_workers,
+                    "direct_wait_succeeded":wait_result.is_ok(), "workers_joined":0,
+                    "io_transport":"nonblocking_poll", "io_endpoints_closed":true,
+                    "job_empty_confirmed":job_result.is_ok(),
+                    "cleanup_budget_ms":CLEANUP_BUDGET.as_millis(), "cleanup_elapsed_ms":started.elapsed().as_millis(),
                     "cleanup_succeeded":errors.is_empty(), "cleanup_errors":&errors,
                 }),
             );
@@ -116,6 +107,46 @@ impl Running {
         // Both outcomes are final for this attempt; Drop must not retry or hide a failure.
         self.cleanup_result = Some(result.clone());
         result
+    }
+}
+
+fn poll_until(
+    deadline: Instant,
+    label: &str,
+    mut complete: impl FnMut() -> Result<bool, String>,
+) -> Result<(), String> {
+    loop {
+        if complete()? {
+            return Ok(());
+        }
+        let remaining = deadline.saturating_duration_since(Instant::now());
+        if remaining.is_zero() {
+            return Err(format!("cleanup deadline exceeded waiting for {label}"));
+        }
+        thread::sleep(POLL_INTERVAL.min(remaining));
+    }
+}
+
+fn stop_child_until(child: &mut Child, deadline: Instant) -> Result<(), String> {
+    let exited = child
+        .try_wait()
+        .map_err(|e| format!("cannot observe direct child: {e}"))?;
+    if exited.is_some() {
+        return Ok(());
+    }
+    let kill_error = child.kill().err();
+    let result = poll_until(deadline, "direct child exit", || {
+        child
+            .try_wait()
+            .map(|s| s.is_some())
+            .map_err(|e| format!("cannot reap direct child: {e}"))
+    });
+    // A redundant TerminateProcess can race Job termination. Only a confirmed exit
+    // within this same deadline resolves that error; the error is never blindly ignored.
+    match (result, kill_error) {
+        (Ok(()), _) => Ok(()),
+        (Err(error), Some(kill)) => Err(format!("cannot terminate direct child: {kill}; {error}")),
+        (Err(error), None) => Err(error),
     }
 }
 
@@ -163,41 +194,49 @@ fn execute_with_setup(
         return Err("external engine timeout must be greater than zero".to_owned());
     }
     let started = Instant::now();
+    let mut running = spawn_running(installed)?;
+    let spawn_elapsed_ms = started.elapsed().as_millis();
+    setup(&mut running);
+    let execution = exchange(&mut running, request, timeout, started, spawn_elapsed_ms);
+    running.finish(execution)
+}
+
+fn spawn_running(installed: &ManagedEngineCommand) -> Result<Running, String> {
     let mut command = Command::new(&installed.entrypoint);
     command
         .args(&installed.args)
         .current_dir(&installed.working_dir)
         .env_remove("NODE_OPTIONS")
-        .env_remove("NODE_PATH")
-        .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped());
+        .env_remove("NODE_PATH");
+    let mut pipes = Pipes::configure(&mut command)
+        .map_err(|e| format!("cannot prepare cancellable engine I/O: {e}"))?;
     configure_containment(&mut command);
     let mut child = command
         .spawn()
         .map_err(|e| format!("cannot start engine: {e}"))?;
-    let spawn_elapsed_ms = started.elapsed().as_millis();
+    drop(command); // Release parent-side copies of the engine endpoints before waiting for EOF.
     let containment = match Containment::attach(&child) {
         Ok(value) => value,
         Err(error) => {
-            let _ = child.kill();
-            let _ = child.wait();
-            return Err(error);
+            pipes.close();
+            return combine_execution_and_cleanup(
+                Err(error),
+                stop_child_until(&mut child, Instant::now() + CLEANUP_BUDGET),
+            );
         }
     };
     #[cfg(windows)]
     let trace = windows_trace::Trace::start(&child, &containment.job, &installed.working_dir);
-    let mut running = Running {
+    Ok(Running {
         child,
         containment,
-        workers: Vec::new(),
+        pipes,
         cleanup_result: None,
+        #[cfg(test)]
+        cleanup_fault: None,
         #[cfg(windows)]
         trace,
-    };
-    setup(&mut running);
-    let execution = exchange(&mut running, request, timeout, started, spawn_elapsed_ms);
-    running.finish(execution)
+    })
 }
 
 fn exchange(
@@ -207,102 +246,26 @@ fn exchange(
     started: Instant,
     spawn_elapsed_ms: u128,
 ) -> Result<Output, String> {
-    let mut stdin = running
-        .child
-        .stdin
-        .take()
-        .ok_or("engine stdin is missing")?;
-    let stdout = running
-        .child
-        .stdout
-        .take()
-        .ok_or("engine stdout is missing")?;
-    let stderr = running
-        .child
-        .stderr
-        .take()
-        .ok_or("engine stderr is missing")?;
-    let (sender, receiver) = mpsc::channel();
-    let input_sender = sender.clone();
-    running.workers.push(
-        thread::Builder::new()
-            .name("yu-psd-stdin".into())
-            .spawn(move || {
-                let result = stdin
-                    .write_all(&request)
-                    .map_err(|e| format!("engine stdin failed: {e}"));
-                drop(stdin); // The protocol request is terminated by EOF, not a newline.
-                let _ = input_sender.send(Event::Input(result));
-            })
-            .map_err(|e| format!("cannot start engine input worker: {e}"))?,
-    );
-    let stdout_bytes = Arc::new(AtomicUsize::new(0));
-    let stderr_bytes = Arc::new(AtomicUsize::new(0));
-    let stdout_progress = Arc::clone(&stdout_bytes);
-    let stderr_progress = Arc::clone(&stderr_bytes);
-    let stdout_sender = sender.clone();
-    running.workers.push(
-        thread::Builder::new()
-            .name("yu-psd-stdout".into())
-            .spawn(move || {
-                let _ = stdout_sender.send(Event::Stdout(read_capped_observed(
-                    stdout,
-                    MAX_STDOUT_BYTES,
-                    "stdout",
-                    &stdout_progress,
-                )));
-            })
-            .map_err(|e| format!("cannot start engine stdout worker: {e}"))?,
-    );
-    running.workers.push(
-        thread::Builder::new()
-            .name("yu-psd-stderr".into())
-            .spawn(move || {
-                let _ = sender.send(Event::Stderr(read_capped_observed(
-                    stderr,
-                    MAX_STDERR_BYTES,
-                    "stderr",
-                    &stderr_progress,
-                )));
-            })
-            .map_err(|e| format!("cannot start engine stderr worker: {e}"))?,
-    );
-
-    let mut input_done = false;
-    let mut stdout = None;
-    let mut stderr = None;
+    if running.pipes.stdin.is_none() {
+        return Err("engine stdin is missing".into());
+    }
+    if running.pipes.stdout.is_none() {
+        return Err("engine stdout is missing".into());
+    }
+    if running.pipes.stderr.is_none() {
+        return Err("engine stderr is missing".into());
+    }
+    let mut written = 0;
+    let mut stdout = Vec::new();
+    let mut stderr = Vec::new();
     loop {
-        for event in receiver.try_iter() {
-            match event {
-                Event::Input(result) => {
-                    result?;
-                    input_done = true;
-                }
-                Event::Stdout(result) => stdout = Some(result?),
-                Event::Stderr(result) => stderr = Some(result?),
-            }
-        }
         let status = running
             .child
             .try_wait()
             .map_err(|e| format!("cannot wait for engine: {e}"))?;
-        if let Some(status) = status
-            && input_done
-            && stdout.is_some()
-            && stderr.is_some()
-        {
-            let output = Output {
-                stdout: stdout.take().unwrap(),
-                stderr: stderr.take().unwrap(),
-            };
-            if !status.success() {
-                return Err(format!(
-                    "engine process failed ({status}): {}",
-                    String::from_utf8_lossy(&output.stderr).trim()
-                ));
-            }
-            return Ok(output);
-        }
+        let input_done = running.pipes.stdin.is_none();
+        let stdout_done = running.pipes.stdout.is_none();
+        let stderr_done = running.pipes.stderr.is_none();
         if started.elapsed() >= timeout {
             // Snapshot before owned-process cleanup. Completion means EOF/event delivery,
             // not absence of partial bytes. Do not dump request or document contents.
@@ -314,19 +277,98 @@ fn exchange(
                 spawn_elapsed_ms,
                 status.is_some(),
                 input_done,
-                stdout.is_some(),
-                stderr.is_some(),
-                wait_phase(
-                    status.is_some(),
-                    input_done,
-                    stdout.is_some(),
-                    stderr.is_some()
-                ),
-                stdout_bytes.load(Ordering::Relaxed),
-                stderr_bytes.load(Ordering::Relaxed)
+                stdout_done,
+                stderr_done,
+                wait_phase(status.is_some(), input_done, stdout_done, stderr_done),
+                stdout.len(),
+                stderr.len()
             ));
         }
-        thread::sleep(Duration::from_millis(5).min(timeout.saturating_sub(started.elapsed())));
+        if let Some(status) = status
+            && input_done
+            && stdout_done
+            && stderr_done
+        {
+            if !status.success() {
+                return Err(format!(
+                    "engine process failed ({status}): {}",
+                    String::from_utf8_lossy(&stderr).trim()
+                ));
+            }
+            return Ok(Output { stdout, stderr });
+        }
+        let mut progress = false;
+        if let Some(stdin) = running.pipes.stdin.as_mut() {
+            if written < request.len() {
+                match stdin.write(&request[written..request.len().min(written + 8192)]) {
+                    Ok(0) => return Err("engine stdin wrote zero bytes".into()),
+                    Ok(count) => {
+                        written += count;
+                        progress = true;
+                    }
+                    Err(e)
+                        if matches!(
+                            e.kind(),
+                            std::io::ErrorKind::WouldBlock | std::io::ErrorKind::Interrupted
+                        ) => {}
+                    Err(e) => return Err(format!("engine stdin failed: {e}")),
+                }
+            }
+            if written == request.len() {
+                drop(running.pipes.stdin.take());
+                progress = true;
+            }
+        }
+        // Exactly one bounded read per stream per turn prevents stderr/deadline starvation.
+        progress |= read_step(
+            &mut running.pipes.stdout,
+            &mut stdout,
+            MAX_STDOUT_BYTES,
+            "stdout",
+        )?;
+        progress |= read_step(
+            &mut running.pipes.stderr,
+            &mut stderr,
+            MAX_STDERR_BYTES,
+            "stderr",
+        )?;
+        if !progress {
+            thread::sleep(POLL_INTERVAL.min(timeout.saturating_sub(started.elapsed())));
+        }
+    }
+}
+
+fn read_step(
+    pipe: &mut Option<Pipe>,
+    output: &mut Vec<u8>,
+    limit: usize,
+    name: &str,
+) -> Result<bool, String> {
+    let Some(reader) = pipe.as_mut() else {
+        return Ok(false);
+    };
+    let mut buffer = [0; 8192];
+    match reader.read(&mut buffer) {
+        Ok(0) => {
+            drop(pipe.take());
+            Ok(true)
+        }
+        Ok(count) => {
+            if count > limit.saturating_sub(output.len()) {
+                return Err(format!("engine {name} exceeds {limit} bytes"));
+            }
+            output.extend_from_slice(&buffer[..count]);
+            Ok(true)
+        }
+        Err(e)
+            if matches!(
+                e.kind(),
+                std::io::ErrorKind::WouldBlock | std::io::ErrorKind::Interrupted
+            ) =>
+        {
+            Ok(false)
+        }
+        Err(e) => Err(format!("cannot read engine {name}: {e}")),
     }
 }
 
@@ -347,6 +389,7 @@ fn read_capped(reader: impl Read, limit: usize, stream: &str) -> Result<Vec<u8>,
     read_capped_observed(reader, limit, stream, &AtomicUsize::new(0))
 }
 
+#[cfg(test)]
 fn read_capped_observed(
     mut reader: impl Read,
     limit: usize,
@@ -463,6 +506,31 @@ impl Containment {
             ));
         }
         Ok(Self { job })
+    }
+    fn is_empty(&self) -> Result<bool, String> {
+        use std::os::windows::io::AsRawHandle;
+        use windows_sys::Win32::System::JobObjects::{
+            JOBOBJECT_BASIC_ACCOUNTING_INFORMATION, JobObjectBasicAccountingInformation,
+            QueryInformationJobObject,
+        };
+        let mut info = JOBOBJECT_BASIC_ACCOUNTING_INFORMATION::default();
+        // SAFETY: live owned Job and correctly sized initialized accounting structure.
+        if unsafe {
+            QueryInformationJobObject(
+                self.job.as_raw_handle(),
+                JobObjectBasicAccountingInformation,
+                &mut info as *mut _ as *mut std::ffi::c_void,
+                std::mem::size_of_val(&info) as u32,
+                std::ptr::null_mut(),
+            )
+        } == 0
+        {
+            return Err(format!(
+                "cannot confirm owned Job exit: {}",
+                std::io::Error::last_os_error()
+            ));
+        }
+        Ok(info.ActiveProcesses == 0)
     }
     fn terminate(&self) -> Result<(), String> {
         use std::os::windows::io::AsRawHandle;

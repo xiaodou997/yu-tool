@@ -121,7 +121,7 @@ fn cleanup_failure_prevents_export_publication_and_preserves_racing_output() {
                 if racing_writer {
                     fs::write(&target, b"competitor").unwrap();
                 }
-                // A real test child exits normally; a real owned worker panics in cleanup.
+                // A real test child exits normally; a private cleanup observation fails.
                 let error =
                     crate::process::cleanup_tests::failed_cleanup_after_success(root.path());
                 Err(execution_error(error))

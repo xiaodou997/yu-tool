@@ -155,6 +155,10 @@ After the owned process guard is constructed, ordinary PSD transport returns exp
 
 The optional Windows cleanup-end trace adds `cleanup_succeeded` and `cleanup_errors`; `workers_joined` counts returned joins, not proof of non-panicking threads. This developer trace is not a stable public error schema. Completed cleanup attempts are cached; Drop remains an unwind fallback, not an automatic retry. Blocking waits, creation-before-Job-assignment and whole-Job completion remain outside this increment. The 30-second execution setting and two-second quarantine budget are unchanged; neither proves a hard overall cleanup deadline. See [scope and remaining gaps](reliability/explicit-process-cleanup.md) and [acceptance](testing/pr28-explicit-process-cleanup.md).
 
+### PSD transport cleanup budget (PR #31)
+
+The execution timeout is unchanged. On completion/error/timeout, the nonblocking transport closes its local endpoints and shares a separate two-second deadline across owned child and Windows Job exit observations. Incomplete cleanup returns EXECUTION_FAILED, preserves the primary error/selected engine and cannot publish a staged PNG. No blocking I/O worker is detached or waited on indefinitely. No new CLI flag, cancellation-token API or Ctrl+C behavior is introduced. Optional trace reports io_transport=nonblocking_poll, workers_joined=0, closed-endpoint/Job-confirmation flags and cleanup timing. This is not a hard wall-clock guarantee over OS calls, process creation, optional trace writes or PNG decoding. See [scope](reliability/bounded-process-io.md) and [acceptance](testing/pr31-bounded-process-io.md). Quarantine retries, explicit activation, #29 status and historical failure evidence are unchanged.
+
 ## Image commands
 
 The first built-in raster engine is `raster-rs`.

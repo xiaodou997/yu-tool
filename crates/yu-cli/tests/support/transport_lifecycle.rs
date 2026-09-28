@@ -122,7 +122,10 @@ fn assert_owned_trace(root: &TempRoot) {
         .find(|v| v["stage"] == "cleanup_end")
         .expect("enabled trace must observe cleanup end");
     assert_eq!(end["observations"]["direct_wait_succeeded"], true);
-    assert_eq!(end["observations"]["workers_joined"], 3);
+    assert_eq!(end["observations"]["workers_joined"], 0);
+    assert_eq!(end["observations"]["io_transport"], "nonblocking_poll");
+    assert_eq!(end["observations"]["io_endpoints_closed"], true);
+    assert_eq!(end["observations"]["job_empty_confirmed"], true);
     assert_eq!(end["observations"]["cleanup_succeeded"], true);
     assert_eq!(end["observations"]["cleanup_errors"], serde_json::json!([]));
     assert_eq!(end["job"]["status"], "observed");
