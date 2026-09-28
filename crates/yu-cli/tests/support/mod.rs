@@ -10,6 +10,9 @@ use std::{
 use yu_engine_manager::{EngineManager, EngineManifest, EngineTarget, ManagedLayout};
 static NEXT: AtomicU64 = AtomicU64::new(1);
 
+#[cfg(windows)]
+mod occupancy;
+
 pub struct TempRoot(pub PathBuf);
 impl TempRoot {
     pub fn new(label: &str) -> Self {
@@ -60,14 +63,17 @@ pub fn cli_binary() -> PathBuf {
 }
 
 pub fn run(root: &Path, args: &[&str]) -> Output {
-    Command::new(cli_binary())
+    let output = Command::new(cli_binary())
         .args(args)
         .env("YU_DATA_HOME", root)
         .env("PATH", "")
         .env("NODE_OPTIONS", "--require=should-not-be-loaded-by-yu")
         .env("NODE_PATH", "should-not-be-used-by-yu")
         .output()
-        .expect("CLI must execute without PATH lookup")
+        .expect("CLI must execute without PATH lookup");
+    #[cfg(windows)]
+    occupancy::capture(root, args, &output);
+    output
 }
 pub fn success(output: Output) -> Value {
     assert!(

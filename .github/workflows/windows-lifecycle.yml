@@ -1,0 +1,73 @@
+name: Windows Lifecycle Diagnostics
+
+on:
+  pull_request:
+    paths:
+      - "crates/yu-runtime-psd/**"
+      - "crates/yu-engine-manager/**"
+      - "crates/yu-cli/**"
+      - "packaging/ag-psd-engine/**"
+      - "tools/run_lifecycle_probe.py"
+      - "tools/test_run_lifecycle_probe.py"
+      - "tools/windows_occupancy.py"
+      - "tools/collect_windows_occupancy.py"
+      - "tools/test_windows_occupancy.py"
+      - "tools/build_cli_candidate.py"
+      - "tools/build_ag_psd_managed_package.py"
+      - "Cargo.lock"
+      - "rust-toolchain.toml"
+      - ".github/workflows/windows-lifecycle.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows-lifecycle:
+    name: Windows extracted CLI / three diagnostic passes
+    runs-on: windows-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22.23.3"
+      - uses: dtolnay/rust-toolchain@1.98.1
+      - name: Validate Windows resource observation against test-owned handles
+        run: python -B -m unittest discover -s tools -p "test_windows_occupancy.py" -v
+      - name: Install locked engine build dependencies
+        working-directory: packaging/ag-psd-engine
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Build private engine input
+        run: >-
+          python -B tools/build_ag_psd_managed_package.py build
+          --sources packaging/ag-psd-engine/node-runtime-sources-v1.json
+          --target-os windows --target-arch x86_64
+          --node-modules packaging/ag-psd-engine/node_modules
+          --protocol-adapter crates/yu-psd-spike/adapters/typescript/ag_psd_protocol.cjs
+          --output-dir target/windows-lifecycle-engine
+          --package-base-url https://example.invalid/yu-tool/ag-psd-engine-export-v2
+      - name: Build and extract developer candidate, not a release
+        run: >-
+          python -B tools/build_cli_candidate.py
+          --target x86_64-pc-windows-msvc
+          --output-dir target/windows-lifecycle-candidate
+      - name: Run diagnostic cases and repeated real lifecycle without failed-case retries
+        run: >-
+          python -B tools/run_lifecycle_probe.py
+          --cli target/windows-lifecycle-candidate/smoke/bin/yu.exe
+          --manifest target/windows-lifecycle-engine/manifest-windows-x86_64.json
+          --archive target/windows-lifecycle-engine/yu-engine-ag-psd-31.0.2-node22.23.3.yu2-windows-x86_64.zip
+          --repetitions 3
+          --output-dir target/windows-lifecycle-report
+      - name: Retain diagnostic report and original logs, including failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-lifecycle-diagnostics-${{ github.run_id }}-${{ github.run_attempt }}
+          path: target/windows-lifecycle-report/
+          if-no-files-found: warn
+          retention-days: 30

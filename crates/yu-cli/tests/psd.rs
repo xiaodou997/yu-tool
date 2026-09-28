@@ -12,6 +12,9 @@ use yu_engine_manager::{ArchiveKind, EngineManifest, EnginePackage, EngineTarget
 #[path = "support/psd_exports.rs"]
 mod exports;
 
+#[path = "support/transport_lifecycle.rs"]
+mod transport_lifecycle;
+
 const CAPS: [&str; 4] = [
     "psd.inspect",
     "psd.tree",

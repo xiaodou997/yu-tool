@@ -1,0 +1,50 @@
+{
+  "schema_version": "1",
+  "evidence_kind": "observed_failure_summary_not_root_cause",
+  "feature_head": "2e162c1da219b2eae3bc5870322aab396ee8f704",
+  "actual_checkout": "96eba61ebe6dce8869e539139ec6985d5a783232",
+  "workflow_run": 36375481917,
+  "workflow_attempt": 1,
+  "job_id": 108780329257,
+  "workflow_status": "failed",
+  "artifact": {
+    "id": 10951205260,
+    "name": "windows-lifecycle-diagnostics-36375481917-1",
+    "wrapper_sha256_verified": "3c1782f8be6a0c7b5b05ab429730fb64c4ec349d05fc50508c314771a2dd468d",
+    "observed_expires_at": "2026-10-28T04:01:41Z",
+    "members": ["01-managed.log", "01-transport.log", "report.json"]
+  },
+  "input_sha256": {
+    "cli_binary": "d9d593e51152386876240c5c8b10a7a087a34e183a125732fdf1d0191a21de0f",
+    "manifest": "a8d1a93a5dbd92cc0c0bd1b5542514616b9d28f252278e403c3bce35198e16bf",
+    "engine_zip": "07798e6b18de8d69902f5286d1dbccba557e59eb011625ae03f568ec0de1148c"
+  },
+  "inputs_unchanged": true,
+  "repetitions_requested": 3,
+  "repetition_reached": 1,
+  "native_cases_passed": 5,
+  "managed_tests_passed_from_raw_log": 2,
+  "managed_tests_failed_from_raw_log": 1,
+  "completed_repeat_cycles": 1,
+  "failed_repeat_cycle": 2,
+  "failed_action": "engine.remove.quarantine",
+  "error_code": "EXECUTION_FAILED",
+  "os_error": 5,
+  "quarantine_attempts": 62,
+  "quarantine_elapsed_ms": 2017,
+  "source_present_at_failed_rename": true,
+  "source_readonly_observation": false,
+  "caller_cwd_inside_source_observation": false,
+  "handle_owner": "unknown",
+  "root_cause_fixed": false,
+  "public_release_ready": false,
+  "failed_case_retries": 0,
+  "later_repetitions_executed": false,
+  "limits": [
+    "Attribute/current-directory observations do not prove normal ACLs or identify a handle owner.",
+    "Preservation is observed at failed removal; the isolated test root has its own later teardown.",
+    "Original report counted only fully successful test summaries and displayed zero passed for the failed managed suite. Raw log is authoritative: two passed and one failed.",
+    "Runner image was null in the original report; no image version is inferred here.",
+    "No new native process-control changes were applied; this occurrence does not identify the historical timeout cause."
+  ]
+}
