@@ -403,6 +403,32 @@ fn overlapping_owned_invocations_do_not_keep_each_others_pipe_endpoints_open() {
 }
 
 #[test]
+fn retained_process_must_belong_to_this_exact_job() {
+    let roots = [tempfile::tempdir().unwrap(), tempfile::tempdir().unwrap()];
+    let (first, first_job, _) = setup(roots[0].path(), false);
+    let (second, second_job, _) = setup(roots[1].path(), false);
+    let mut a = running(spawn_in_job(&first, &first_job.job).unwrap(), first_job);
+    let mut b = running(spawn_in_job(&second, &second_job.job).unwrap(), second_job);
+    wait_report(roots[0].path(), "parent");
+    wait_report(roots[1].path(), "parent");
+    assert!(
+        a.containment.retain_member(b.child.id()).is_err(),
+        "a valid PID from another Job must not be accepted as an owned member"
+    );
+    assert!(a.child.try_wait().unwrap().is_none());
+    assert!(b.child.try_wait().unwrap().is_none());
+    finish(&mut a);
+    finish(&mut b);
+}
+
+#[test]
+fn cleanup_membership_change_is_an_error_not_a_zero_count_shortcut() {
+    assert!(unchanged_membership(2, 2).is_ok());
+    assert!(unchanged_membership(2, 3).is_err());
+    assert!(unchanged_membership(3, 2).is_err());
+}
+
+#[test]
 fn creation_pipeline_delivers_all_request_bytes_and_confirms_cleanup() {
     let root = tempfile::tempdir().unwrap();
     let (installed, job, _) = setup(root.path(), false);

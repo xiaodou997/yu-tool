@@ -288,6 +288,8 @@ PR #31 additionally bounds child/Windows Job exit polling to one shared two-seco
 
 Windows now creates the private Job and the #31 pipe pairs before CreateProcessW, passing the Job-list and explicit three-client handle-list attributes together. The adapted process wrapper exposes zero-time observation/termination only; Running owns nonblocking parent endpoints and retains #31's shared cleanup deadline and error/publication boundary. Unix keeps its existing startup. This independently ports the #29 startup contract without importing its old blocking waits or waiving its failed gate. See [combined scope](reliability/windows-owned-bounded-runtime.md), [joint acceptance](testing/pr32-windows-owned-bounded-runtime.md) and ADR0010. Historical sections above describe their original increment, not the current combined implementation.
 
+Joint native testing exposed accounting-zero before descendant handle completion. Windows cleanup therefore retains and verifies up to128 current Job members before termination, confirms those handles signaled within the same deadline, and refuses incomplete/changing membership evidence. This does not prove closure of already-departed or external file references. The detailed scope records the original failing head and the unchanged regression assertion.
+
 ## PSD bitmap export (PR #23)
 
 The optional ag-psd adapter materializes only the selected layer's stored 8-bit RGB bitmap and encodes it as RGBA8 PNG without Canvas or an additional JavaScript package. The private Node runtime and upstream library versions are unchanged. Package identity advances to `31.0.2+node22.23.3.yu2` so old installed versions and the frozen PR #21 receipts remain distinct.

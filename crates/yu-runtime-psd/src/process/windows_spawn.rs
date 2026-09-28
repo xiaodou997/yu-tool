@@ -15,6 +15,7 @@ use std::{
     path::{Component, Path, PathBuf, Prefix},
     process::ExitStatus,
     ptr::{null, null_mut},
+    time::Instant,
 };
 use windows_sys::Win32::{
     Foundation::{
@@ -24,17 +25,19 @@ use windows_sys::Win32::{
     System::{
         Environment::{FreeEnvironmentStringsW, GetEnvironmentStringsW},
         JobObjects::{
-            CreateJobObjectW, JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE,
-            JOBOBJECT_BASIC_ACCOUNTING_INFORMATION, JOBOBJECT_EXTENDED_LIMIT_INFORMATION,
-            JobObjectBasicAccountingInformation, JobObjectExtendedLimitInformation,
+            CreateJobObjectW, IsProcessInJob, JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE,
+            JOBOBJECT_BASIC_ACCOUNTING_INFORMATION, JOBOBJECT_BASIC_PROCESS_ID_LIST,
+            JOBOBJECT_EXTENDED_LIMIT_INFORMATION, JobObjectBasicAccountingInformation,
+            JobObjectBasicProcessIdList, JobObjectExtendedLimitInformation,
             QueryInformationJobObject, SetInformationJobObject, TerminateJobObject,
         },
         Threading::{
             CREATE_UNICODE_ENVIRONMENT, CreateProcessW, DeleteProcThreadAttributeList,
             EXTENDED_STARTUPINFO_PRESENT, GetExitCodeProcess, InitializeProcThreadAttributeList,
-            LPPROC_THREAD_ATTRIBUTE_LIST, PROC_THREAD_ATTRIBUTE_HANDLE_LIST,
-            PROC_THREAD_ATTRIBUTE_JOB_LIST, PROCESS_INFORMATION, STARTF_USESTDHANDLES,
-            STARTUPINFOEXW, TerminateProcess, UpdateProcThreadAttribute, WaitForSingleObject,
+            LPPROC_THREAD_ATTRIBUTE_LIST, OpenProcess, PROC_THREAD_ATTRIBUTE_HANDLE_LIST,
+            PROC_THREAD_ATTRIBUTE_JOB_LIST, PROCESS_INFORMATION, PROCESS_QUERY_LIMITED_INFORMATION,
+            PROCESS_SYNCHRONIZE, STARTF_USESTDHANDLES, STARTUPINFOEXW, TerminateProcess,
+            UpdateProcThreadAttribute, WaitForSingleObject,
         },
     },
 };
@@ -109,6 +112,36 @@ pub(super) struct Containment {
     pub(super) job: OwnedHandle,
 }
 
+const MAX_CLEANUP_MEMBERS: usize = 128;
+#[repr(C)]
+struct ProcessList {
+    assigned: u32,
+    listed: u32,
+    ids: [usize; MAX_CLEANUP_MEMBERS],
+}
+const _: () = assert!(
+    std::mem::offset_of!(ProcessList, ids)
+        == std::mem::offset_of!(JOBOBJECT_BASIC_PROCESS_ID_LIST, ProcessIdList)
+);
+
+pub(super) struct MemberSnapshot {
+    handles: Vec<OwnedHandle>,
+    total_processes: u32,
+}
+impl MemberSnapshot {
+    pub(super) fn retained_count(&self) -> usize {
+        self.handles.len()
+    }
+}
+
+fn unchanged_membership(expected: u32, observed: u32) -> Result<(), String> {
+    if expected != observed {
+        Err("owned Job membership changed during cleanup; member completion is unconfirmed".into())
+    } else {
+        Ok(())
+    }
+}
+
 impl Containment {
     fn create(name: Option<&str>) -> io::Result<Self> {
         let name = name.map(|s| wide_z(OsStr::new(s))).transpose()?;
@@ -136,7 +169,7 @@ impl Containment {
         Ok(Self { job })
     }
 
-    pub(super) fn is_empty(&self) -> Result<bool, String> {
+    fn accounting(&self) -> Result<JOBOBJECT_BASIC_ACCOUNTING_INFORMATION, String> {
         let mut info = JOBOBJECT_BASIC_ACCOUNTING_INFORMATION::default();
         // SAFETY: live owned Job and correctly sized initialized accounting structure.
         if unsafe {
@@ -154,7 +187,126 @@ impl Containment {
                 io::Error::last_os_error()
             ));
         }
-        Ok(info.ActiveProcesses == 0)
+        Ok(info)
+    }
+
+    pub(super) fn is_empty(&self) -> Result<bool, String> {
+        Ok(self.accounting()?.ActiveProcesses == 0)
+    }
+
+    fn retain_member(&self, pid: u32) -> Result<OwnedHandle, String> {
+        // SAFETY: PID came from this private Job's bounded list. Query/synchronize only;
+        // membership is checked on the SAME retained handle before it is ever waited on.
+        let raw = unsafe {
+            OpenProcess(
+                PROCESS_QUERY_LIMITED_INFORMATION | PROCESS_SYNCHRONIZE,
+                0,
+                pid,
+            )
+        };
+        if raw.is_null() {
+            return Err(format!(
+                "cannot retain owned Job member {pid}: {}",
+                io::Error::last_os_error()
+            ));
+        }
+        let handle = unsafe { OwnedHandle::from_raw_handle(raw) };
+        let mut belongs = 0;
+        if unsafe {
+            IsProcessInJob(
+                handle.as_raw_handle(),
+                self.job.as_raw_handle(),
+                &mut belongs,
+            )
+        } == 0
+        {
+            return Err(format!(
+                "cannot verify retained Job member {pid}: {}",
+                io::Error::last_os_error()
+            ));
+        }
+        if belongs == 0 {
+            return Err(format!(
+                "listed process {pid} no longer verifies in owned Job; completion unconfirmed"
+            ));
+        }
+        Ok(handle)
+    }
+
+    pub(super) fn snapshot_members(
+        &self,
+        direct: &Child,
+        deadline: Instant,
+    ) -> Result<MemberSnapshot, String> {
+        let total_processes = self.accounting()?.TotalProcesses;
+        let mut list = ProcessList {
+            assigned: 0,
+            listed: 0,
+            ids: [0; MAX_CLEANUP_MEMBERS],
+        };
+        // SAFETY: repr(C) header/array has the native layout, with fixed bounded capacity.
+        // A truncated/error result is rejected rather than used as a complete snapshot.
+        if unsafe {
+            QueryInformationJobObject(
+                self.job.as_raw_handle(),
+                JobObjectBasicProcessIdList,
+                &mut list as *mut _ as *mut c_void,
+                size_of::<ProcessList>() as u32,
+                null_mut(),
+            )
+        } == 0
+        {
+            return Err(format!(
+                "cannot snapshot owned Job members: {}",
+                io::Error::last_os_error()
+            ));
+        }
+        if list.listed != list.assigned || list.listed as usize > MAX_CLEANUP_MEMBERS {
+            return Err("owned Job member snapshot exceeds fixed128-process bound".into());
+        }
+        let ids = &list.ids[..list.listed as usize];
+        let mut handles = Vec::new();
+        for (index, &raw_pid) in ids.iter().enumerate() {
+            if Instant::now() >= deadline {
+                return Err("cleanup deadline exceeded retaining owned Job members".into());
+            }
+            let pid = u32::try_from(raw_pid)
+                .ok()
+                .filter(|pid| *pid != 0)
+                .ok_or("invalid process identifier in owned Job snapshot")?;
+            if ids[..index].contains(&raw_pid) {
+                return Err("duplicate process identifier in owned Job snapshot".into());
+            }
+            if pid != direct.id() {
+                // The direct process already has an owned stable handle.
+                handles.push(self.retain_member(pid)?);
+            }
+        }
+        unchanged_membership(total_processes, self.accounting()?.TotalProcesses)?;
+        Ok(MemberSnapshot {
+            handles,
+            total_processes,
+        })
+    }
+
+    pub(super) fn members_complete(&self, snapshot: &MemberSnapshot) -> Result<bool, String> {
+        let info = self.accounting()?;
+        unchanged_membership(snapshot.total_processes, info.TotalProcesses)?;
+        let mut complete = info.ActiveProcesses == 0;
+        for handle in &snapshot.handles {
+            // SAFETY: retained and previously membership-verified handle; zero-time wait.
+            match unsafe { WaitForSingleObject(handle.as_raw_handle(), 0) } {
+                WAIT_OBJECT_0 => {}
+                WAIT_TIMEOUT => complete = false,
+                _ => {
+                    return Err(format!(
+                        "cannot confirm retained Job member exit: {}",
+                        io::Error::last_os_error()
+                    ));
+                }
+            }
+        }
+        Ok(complete)
     }
 
     pub(super) fn terminate(&self) -> Result<(), String> {

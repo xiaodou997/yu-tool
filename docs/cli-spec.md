@@ -163,6 +163,8 @@ The execution timeout is unchanged. On completion/error/timeout, the nonblocking
 
 The managed Windows engine is created with its private Job membership and exactly three inherited standard-stream clients already specified. Startup/attribute failure returns an execution error without an uncontrolled fallback. The #31 nonblocking pump, operation timeout, shared cleanup observation budget, selected-engine metadata and no-publication-on-cleanup-error rules remain. No new CLI flag or error code is introduced. Windows requires an absolute native .exe and a validated DOS/UNC working directory; Job-list API availability is not minimum-system/signature acceptance. Old #29 remains unmerged with its historical failure intact. See [joint scope](reliability/windows-owned-bounded-runtime.md) and [acceptance](testing/pr32-windows-owned-bounded-runtime.md).
 
+Joint cleanup additionally requires successful bounded current-member capture and retained-handle exit confirmation; a late or unverified member, query failure or snapshot above128 processes returns cleanup failure instead of success. It does not lengthen the two-second budget or identify historical external file holders.
+
 ## Image commands
 
 The first built-in raster engine is `raster-rs`.

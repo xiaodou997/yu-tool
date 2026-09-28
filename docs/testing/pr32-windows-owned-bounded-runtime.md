@@ -23,13 +23,13 @@ cargo test --locked -p yu-runtime-psd --lib process::windows_spawn::tests -- --n
 cargo test --locked -p yu-runtime-psd --lib process::bounded_tests -- --nocapture
 ```
 
-Require all seven startup scenarios and eight retained-peer/bounded scenarios to execute. Check early-descendant membership before input, the one-second inherited-output timeout, actual retained-handle exit before the 20-second fixture backstop, two independent overlapping invocations, 64 KiB input, query-only creation denial and real accounting-rights denial after response. No infinite waiter or test retry should hide failure. Existing PNG no-publication and racing-writer guards remain.
+Require all eight substantive startup scenarios, the bookkeeping guard and eight retained-peer/bounded scenarios to execute. Check early-descendant membership before input, the unchanged one-second inherited-output timeout and four-second outer bound, actual retained-handle exit before the 20-second fixture backstop, two independent overlapping invocations, 64 KiB input, query-only creation denial, foreign-Job retention refusal and real accounting-rights denial after response. The original first-run failure must remain recorded; do not add waiting to its final test assertion. Production captures/validates members before termination and polls their stable handles inside the same existing deadline. No infinite waiter or test retry should hide failure. Existing PNG no-publication and racing-writer guards remain.
 
 ## Real-package gate
 
 Run the three-platform Managed Package workflow, including read-only/pixel/lifecycle checks against the unpacked release-mode candidate, and the existing Windows three-pass probe. Keep the operation/quarantine deadlines, parallelism and first-failure stop unchanged. Retain any failure and the completed-cycle count; do not replace a failed run with an unexplained rerun.
 
-Inspect original Windows artifacts: actual source/candidate identities and input hashes, all cleanup stages, zero workers, closed endpoints, direct exit and Job-empty confirmation. Distinguish expected OS32 controls from spontaneous OS5. A positive file-user observation is still not causal blocker proof. Do not reuse prior #29/#31 workflow greens as joint evidence.
+Inspect original Windows artifacts: actual source/candidate identities and input hashes, all cleanup stages, zero workers, closed endpoints, direct exit, Job-empty confirmation and retained_members_confirmed. Snapshot truncation/identity failure or late membership cannot count as success. Distinguish expected OS32 controls from spontaneous OS5. A positive file-user observation is still not causal blocker proof. Do not reuse prior #29/#31 workflow greens as joint evidence.
 
 ## Delivery
 

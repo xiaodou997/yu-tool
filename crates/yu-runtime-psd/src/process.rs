@@ -70,10 +70,18 @@ impl Running {
                 serde_json::json!({"workers":0, "io_transport":"nonblocking_poll", "cleanup_budget_ms":CLEANUP_BUDGET.as_millis()}),
             );
         }
+        // Retain verified members BEFORE requesting termination: accounting can reach zero
+        // while an actual descendant process handle is still not signaled (PR #32 control).
+        #[cfg(windows)]
+        let members = self.containment.snapshot_members(&self.child, deadline);
         // Cancel the pump before waiting for process exit. No outstanding read/write,
         // OVERLAPPED buffer or detached worker can retain these local endpoints.
         self.pipes.close();
         let mut errors = Vec::new();
+        #[cfg(windows)]
+        if let Err(error) = &members {
+            errors.push(error.clone());
+        }
         if let Err(error) = self.containment.terminate() {
             errors.push(error);
         }
@@ -82,7 +90,12 @@ impl Running {
             errors.push(error.clone());
         }
         #[cfg(windows)]
-        let job_result = poll_until(deadline, "owned Job exit", || self.containment.is_empty());
+        let job_result = poll_until(deadline, "owned Job and retained member exit", || {
+            match &members {
+                Ok(snapshot) => self.containment.members_complete(snapshot),
+                Err(_) => self.containment.is_empty(), // Still attempt owned cleanup; overall error remains.
+            }
+        });
         #[cfg(windows)]
         if let Err(error) = &job_result {
             errors.push(error.clone());
@@ -101,6 +114,8 @@ impl Running {
                     "direct_wait_succeeded":wait_result.is_ok(), "workers_joined":0,
                     "io_transport":"nonblocking_poll", "io_endpoints_closed":true,
                     "job_empty_confirmed":job_result.is_ok(),
+                    "retained_member_count":members.as_ref().ok().map(|m| m.retained_count()),
+                    "retained_members_confirmed":members.is_ok() && job_result.is_ok(),
                     "cleanup_budget_ms":CLEANUP_BUDGET.as_millis(), "cleanup_elapsed_ms":started.elapsed().as_millis(),
                     "cleanup_succeeded":errors.is_empty(), "cleanup_errors":&errors,
                 }),
