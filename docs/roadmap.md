@@ -218,6 +218,10 @@ Separate diagnostics/reproduction work records process-exit versus pipe-EOF phas
 
 First lifecycle-hardening increment: explicitly settle owned cleanup, retain primary and cleanup errors, and reject success/artifact publication on cleanup failure. Controlled tests reproduce swallowed worker failure before the change. [Scope and deferred work](reliability/explicit-process-cleanup.md) and [acceptance](testing/pr28-explicit-process-cleanup.md) separate this implemented error path from creation-time Job assignment, bounded I/O cancellation, enforced whole-Job completion and historical OS5/timeout attribution. Issue #27 stays open; no release promotion.
 
+### Independent file-resource attribution (PR #30)
+
+This main-derived diagnostics increment refines verified batch resource users into bounded, timestamped single-file observations, with separate real-Windows calibration. It is not #29 startup integration, a directory-blocker proof, bounded runtime cleanup or release approval. See [scope](reliability/windows-resource-attribution.md) and [acceptance](testing/pr30-windows-resource-attribution.md). Historical OS5/timeout evidence and issue #27 remain open; #29's failed independent gate is not waived.
+
 ## M4 — Safe mutation
 
 **Goal:** introduce modifications without compromising source-file safety.

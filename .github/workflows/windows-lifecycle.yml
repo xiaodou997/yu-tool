@@ -12,6 +12,8 @@ on:
       - "tools/windows_occupancy.py"
       - "tools/collect_windows_occupancy.py"
       - "tools/test_windows_occupancy.py"
+      - "tools/windows_resource_attribution.py"
+      - "tools/test_windows_resource_attribution.py"
       - "tools/build_cli_candidate.py"
       - "tools/build_ag_psd_managed_package.py"
       - "Cargo.lock"
@@ -23,6 +25,26 @@ permissions:
   contents: read
 
 jobs:
+  resource-calibration:
+    name: Windows single-file attribution calibration
+    runs-on: windows-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Calibrate known holders and preserve non-blocker boundaries
+        run: python -B -m unittest discover -s tools -p "test_windows_resource_attribution.py" -v
+      - name: Retain native calibration observations even on failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-resource-calibration-${{ github.run_id }}-${{ github.run_attempt }}
+          path: target/windows-resource-calibration/
+          if-no-files-found: error
+          retention-days: 30
+
   windows-lifecycle:
     name: Windows extracted CLI / three diagnostic passes
     runs-on: windows-latest

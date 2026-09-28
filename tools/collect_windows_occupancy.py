@@ -9,6 +9,7 @@ import subprocess
 import sys
 import time
 from windows_occupancy import WindowsAPI, is_reparse, select_files, normalize_windows_path
+from windows_resource_attribution import attribute_files
 
 IS_WINDOWS = os.name == "nt"
 
@@ -72,6 +73,13 @@ def worker(version: Path, output: Path, traces: Path | None) -> int:
     users = api.resource_users(selection["files"])
     save(output / "05-resource-users.json", users)
     save(output / "06-correlation.json", correlate(users, owned))
+    # Journal before each dispatch; the unchanged outer timeout retains partial work.
+    with (output / "07-file-attribution-events.jsonl").open("x", encoding="utf-8") as stream:
+        def record(event):
+            stream.write(json.dumps(event, sort_keys=True) + "\n")
+            stream.flush()
+        attribution = attribute_files(version, selection, users, api.resource_users, record)
+    save(output / "08-file-attribution.json", attribution)
     return 0
 
 
