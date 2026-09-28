@@ -14,6 +14,14 @@ Base: PR #25 squash `bf7509b1997e1efd3ff8e28deda92337da3880fd`. This is a separa
 
 Keep M3 and #25 evidence immutable. Every subsequent run records its own checkout, runner image, inputs, steps and failure. Do not label a diagnostics-only change as a repair.
 
+## First independent Windows result: failure retained
+
+Windows diagnostic run `36375481917`, attempt 1, tested feature `2e162c1da219b2eae3bc5870322aab396ee8f704` via checkout `96eba61ebe6dce8869e539139ec6985d5a783232`. All five native cases passed. In the first real-package pass, read-only and independent pixel tests passed, but repeated lifecycle cycle 2 failed at removal: OS 5 after 62 quarantine attempts / 2017ms. Cycle 1 had completed. Passes 2 and 3 were not executed; the first failure stopped the probe as intended.
+
+The original report/log ZIP was retrieved and its Actions-wrapper SHA-256 verified. [Immutable failure summary](evidence/pr26-windows-run1.json) records provenance, input hashes and exact observations. Source-present/read-only/current-directory observations do not identify an owner or prove ACL correctness. Do not infer that the failure was caused by the reader threads merely because this workstream also tests EOF.
+
+The first report parser counted only successful suite summaries and therefore displayed zero passed for the failed suite. The raw log establishes **2 passed / 1 failed**. A reporting-only correction now counts failed-suite results, rejects contradictory failure summaries even with exit 0, and recognizes uppercase Windows `IMAGEVERSION`. It does not change runtime behavior, deadlines, retries or mark the fault fixed. Standard CI106 and Managed Package17 passed on the observed feature; they do not override this independent failure.
+
 ## First slice: observation and controlled cases
 
 Timeout messages retain existing codes/deadlines and add `phase`, `stdout_bytes` and `stderr_bytes`. `phase=process_exit` means the direct child was not observed exited; `input_completion` means input-worker completion was not observed after child exit; `pipe_eof` means an output reader is unfinished after child exit/input completion. Counts are observed bytes, not document content. These are asynchronous snapshots, not lock-owner diagnoses. Full valid JSON alone is not process/pipe completion.

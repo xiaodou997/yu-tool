@@ -32,7 +32,7 @@ def run_plan(output: Path, repetitions: int, env: dict, source: str, runner=None
     report = {
         "schema_version": "1", "source_commit": source,
         "os": platform.system(), "arch": platform.machine(),
-        "runner_image": env.get("ImageVersion"), "workflow_run": env.get("GITHUB_RUN_ID"),
+        "runner_image": env.get("ImageVersion") or env.get("IMAGEVERSION"), "workflow_run": env.get("GITHUB_RUN_ID"),
         "workflow_attempt": env.get("GITHUB_RUN_ATTEMPT"),
         "repetitions_requested": repetitions, "steps": [], "status": "running",
         "public_release_ready": False, "root_cause_fixed": False,
@@ -53,12 +53,18 @@ def run_plan(output: Path, repetitions: int, env: dict, source: str, runner=None
                     result = runner(argv, cwd=ROOT, env=env, stdout=stream, stderr=subprocess.STDOUT, timeout=600, check=False)
                 entry["exit_code"] = result.returncode
                 text = logfile.read_text(encoding="utf-8", errors="replace")
-                counts = [int(n) for n in re.findall(r"test result: ok\. (\d+) passed; 0 failed;", text)]
-                entry["observed_passed_tests"] = sum(counts)
+                summaries = re.findall(r"test result: (ok|FAILED)\. (\d+) passed; (\d+) failed;", text)
+                passed = sum(int(item[1]) for item in summaries)
+                failed = sum(int(item[2]) for item in summaries)
+                all_ok = bool(summaries) and all(item[0] == "ok" and item[2] == "0" for item in summaries)
+                entry["observed_passed_tests"] = passed
+                entry["observed_failed_tests"] = failed
                 entry["minimum_passed_tests"] = minimum
-                entry["status"] = "passed" if result.returncode == 0 and sum(counts) >= minimum else "failed"
-                if result.returncode == 0 and sum(counts) < minimum:
+                entry["status"] = "passed" if result.returncode == 0 and all_ok and passed >= minimum else "failed"
+                if result.returncode == 0 and (not summaries or passed < minimum):
                     entry["reason"] = "missing_executed_test_evidence"
+                elif result.returncode == 0 and not all_ok:
+                    entry["reason"] = "failure_evidence_despite_zero_exit"
             except subprocess.TimeoutExpired:
                 entry.update(status="failed", reason="outer_command_timeout", exit_code=None)
             except OSError as error:

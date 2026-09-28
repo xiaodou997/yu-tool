@@ -38,6 +38,27 @@ class LifecycleProbeTests(unittest.TestCase):
             self.assertFalse(report["root_cause_fixed"])
             self.assertEqual(json.loads((path / "report.json").read_text()), report)
 
+    def test_failed_suite_still_reports_passed_tests_and_windows_image(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            def runner(argv, **kwargs):
+                kwargs["stdout"].write(b"test result: FAILED. 2 passed; 1 failed; 0 ignored;\n")
+                return SimpleNamespace(returncode=101)
+            report = probe.run_plan(Path(temporary) / "report", 3, {"IMAGEVERSION": "test-image"}, "a" * 40, runner)
+            self.assertEqual(report["status"], "failed")
+            self.assertEqual(len(report["steps"]), 1)
+            self.assertEqual(report["steps"][0]["observed_passed_tests"], 2)
+            self.assertEqual(report["steps"][0]["observed_failed_tests"], 1)
+            self.assertEqual(report["runner_image"], "test-image")
+
+    def test_failure_summary_cannot_be_accepted_even_with_zero_exit(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            def runner(argv, **kwargs):
+                kwargs["stdout"].write(b"test result: FAILED. 5 passed; 1 failed; 0 ignored;\n")
+                return SimpleNamespace(returncode=0)
+            report = probe.run_plan(Path(temporary) / "report", 1, {}, "a" * 40, runner)
+            self.assertEqual(report["status"], "failed")
+            self.assertEqual(report["steps"][0]["reason"], "failure_evidence_despite_zero_exit")
+
     def test_failure_is_retained_and_never_retried(self):
         with tempfile.TemporaryDirectory() as temporary:
             calls = []
