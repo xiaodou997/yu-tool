@@ -18,6 +18,8 @@ The application path is an explicit absolute `.exe`, never inferred from a comma
 
 The Windows environment snapshot retains ordering, hidden drive entries and UTF-16. All ASCII-case variants of NODE_OPTIONS and NODE_PATH are removed. No process-global environment changes or environment values in diagnostics are introduced. Copying is bounded at 1048576 UTF-16 units; an excessive block fails before startup rather than being truncated.
 
+The startup working-directory spelling uses ordinary DOS/UNC syntax, since the private Node's relative main-script lookup failed when this first implementation directly supplied a canonical verbatim cwd. Conversion only handles drive/UNC prefixes, rejects components ending in dots/spaces and verifies the ordinary path canonicalizes to the same selected directory. Unsupported/changed spellings fail before process creation. It does not rename paths, follow a fallback engine or change the caller's working directory.
+
 The Job-list attribute requires Windows 10/Server 2016 or newer. Passing current hosted Windows checks does not establish minimum OS/signing/notarization acceptance. API rejection is fail-closed; older platforms receive no uncontained fallback.
 
 ## Controlled tests
@@ -31,6 +33,10 @@ The Job-list attribute requires Windows 10/Server 2016 or newer. Passing current
 Two native helper tests return immediately in ordinary discovery; the four actual native startup cases run on Windows. The independent workflow also executes the startup module before its unchanged three-pass extracted-CLI probe. Exact-head results belong in the PR receipt, not predeclared here.
 
 ## Remaining independent work
+
+### First-run implementation failures retained
+
+The initial feature `4578f502` failed Windows test compilation because JOB_OBJECT_QUERY was imported from the wrong windows-sys module. Separately, the real private Node ran but its three actual-CLI suites failed at relative main-script resolution (`EISDIR`, lstat `C:`); no Windows candidate acceptance or manifest assembly was claimed. The independent startup module also stopped at compilation, before the three-pass probe. These are new implementation defects, not historical OS5/timeout reproductions. [The original failure summary](evidence/pr29-startup-first-run.json) and original workflow logs remain evidence. The correction uses SystemServices and verifies a non-verbatim child cwd plus rejection of ambiguous dot-suffix paths; subsequent exact-head results belong in the PR receipt.
 
 Synchronous pipe operations, `wait()`/`join()` and cleanup termination ordering remain unchanged. No `CancelIoEx`, `CancelSynchronousIo`, asynchronous I/O, hard cleanup budget, wait-time relaxation or enforced whole-Job-empty condition is included. Those need a separate PR and failure/latency tests. The 1s negative cases, 30s operation default, 2s quarantine retry, concurrent tests, engine payload, M3 receipts and historical failure evidence are preserved. Startup ownership does not automatically close issue #27 or set public_release_ready/root_cause_fixed.
 

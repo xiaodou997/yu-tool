@@ -2,16 +2,17 @@
 //! Synchronous pipes/waits intentionally retain the existing cleanup policy.
 use super::windows_wire::{MAX_ENV_UNITS, command_line, filtered_environment};
 use std::{
-    ffi::{OsStr, c_void},
-    fs::File,
+    ffi::{OsStr, OsString, c_void},
+    fs::{self, File},
     io::{self, Read},
     marker::PhantomData,
     mem::size_of,
     os::windows::{
-        ffi::OsStrExt,
+        ffi::{OsStrExt, OsStringExt},
         io::{AsRawHandle, FromRawHandle, OwnedHandle, RawHandle},
         process::ExitStatusExt,
     },
+    path::{Component, Path, PathBuf, Prefix},
     process::ExitStatus,
     ptr::{null, null_mut},
 };
@@ -55,6 +56,55 @@ fn wide_z(value: &OsStr) -> io::Result<Vec<u16>> {
     }
     units.push(0);
     Ok(units)
+}
+
+// Node's relative main-script lookup cannot use a verbatim current-directory spelling.
+// Convert only drive/UNC prefixes and verify the ordinary spelling resolves to the same
+// canonical directory. Never blindly strip prefixes from names whose semantics would change.
+fn startup_directory(path: &Path) -> io::Result<Vec<u16>> {
+    let canonical = fs::canonicalize(path)?;
+    let units: Vec<_> = canonical.as_os_str().encode_wide().collect();
+    let candidate = match canonical.components().next() {
+        Some(Component::Prefix(prefix)) => match prefix.kind() {
+            Prefix::VerbatimDisk(_) => PathBuf::from(OsString::from_wide(&units[4..])),
+            Prefix::VerbatimUNC(_, _) => {
+                let mut ordinary = vec![92, 92];
+                ordinary.extend_from_slice(&units[8..]);
+                PathBuf::from(OsString::from_wide(&ordinary))
+            }
+            Prefix::Disk(_) | Prefix::UNC(_, _) => canonical.clone(),
+            _ => {
+                return Err(io::Error::new(
+                    io::ErrorKind::InvalidInput,
+                    "Windows engine working directory has no supported DOS/UNC spelling",
+                ));
+            }
+        },
+        _ => {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "Windows engine working directory is not absolute",
+            ));
+        }
+    };
+    for component in candidate.components() {
+        if let Component::Normal(name) = component {
+            let units: Vec<_> = name.encode_wide().collect();
+            if matches!(units.last(), Some(32 | 46)) {
+                return Err(io::Error::new(
+                    io::ErrorKind::InvalidInput,
+                    "Windows engine working-directory component ends with a dot or space",
+                ));
+            }
+        }
+    }
+    if fs::canonicalize(&candidate)? != canonical {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidInput,
+            "ordinary Windows working-directory spelling changes the selected path",
+        ));
+    }
+    wide_z(candidate.as_os_str())
 }
 
 pub(super) struct Containment {
@@ -318,7 +368,7 @@ fn spawn_in_job(installed: &ManagedEngineCommand, job: &OwnedHandle) -> io::Resu
         ));
     }
     let application = wide_z(installed.entrypoint.as_os_str())?;
-    let cwd = wide_z(installed.working_dir.as_os_str())?;
+    let cwd = startup_directory(&installed.working_dir)?;
     let args: Vec<Vec<u16>> = installed
         .args
         .iter()

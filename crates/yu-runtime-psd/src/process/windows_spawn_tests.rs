@@ -12,7 +12,8 @@ use std::{
 use windows_sys::Win32::{
     Storage::FileSystem::{BY_HANDLE_FILE_INFORMATION, GetFileInformationByHandle},
     System::{
-        JobObjects::{AssignProcessToJobObject, IsProcessInJob, JOB_OBJECT_QUERY, OpenJobObjectW},
+        JobObjects::{AssignProcessToJobObject, IsProcessInJob, OpenJobObjectW},
+        SystemServices::JOB_OBJECT_QUERY,
         Threading::GetCurrentProcess,
     },
 };
@@ -241,10 +242,18 @@ fn job_without_assignment_rights_fails_before_fixture_code_and_has_no_fallback()
 
 #[test]
 fn explicit_argv_cwd_and_handle_allowlist_survive_real_child_startup() {
+    // The canonical Windows test cwd has a verbatim prefix; startup must make it
+    // usable by ordinary relative module lookup without changing directory identity.
     let temporary = tempfile::tempdir().unwrap();
     let root = temporary.path().join("engine 中文 space");
     fs::create_dir(&root).unwrap();
     let (mut installed, containment, _) = setup(&root, false);
+    let ambiguous = fs::canonicalize(&root).unwrap().join("trailing.");
+    fs::create_dir(&ambiguous).unwrap();
+    assert!(
+        startup_directory(&ambiguous).is_err(),
+        "stripping the verbatim prefix must not silently select a different directory"
+    );
     let values = [
         "spaces here",
         "a\"quote",
@@ -281,6 +290,10 @@ fn explicit_argv_cwd_and_handle_allowlist_survive_real_child_startup() {
     );
     let mut owned = running(child, containment);
     let observed = wait_report(&root, "parent");
+    assert!(
+        !observed["cwd"].as_str().unwrap().starts_with(r"\\?\"),
+        "child cwd must be usable by Node relative module lookup: {observed}"
+    );
     let actual: Vec<String> = serde_json::from_value(observed["args"].clone()).unwrap();
     assert_eq!(actual[1..], installed.args);
     assert_eq!(

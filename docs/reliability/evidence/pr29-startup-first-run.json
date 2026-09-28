@@ -1,0 +1,35 @@
+{
+  "schema_version": "1",
+  "feature_commit": "4578f5024b2d595af9f59a1ac2c0bd573617b804",
+  "kind": "startup_implementation_validation_failure",
+  "historical_os5_reproduced": false,
+  "root_cause_fixed": false,
+  "public_release_ready": false,
+  "observations": [
+    {
+      "run_id": 36407372131,
+      "run_number": 112,
+      "job_id": 108879226189,
+      "workflow": "CI",
+      "failure": "Windows all-target check: E0432, JOB_OBJECT_QUERY imported from JobObjects instead of SystemServices"
+    },
+    {
+      "run_id": 36407372224,
+      "run_number": 21,
+      "job_id": 108879227145,
+      "workflow": "Managed ag-psd Package",
+      "failure": "Windows actual CLI suites: 0 passed / 3 failed; private Node exited 1 resolving the relative main script, EISDIR lstat C:",
+      "release_candidate_accepted": false,
+      "manifest_assembly": "skipped"
+    },
+    {
+      "run_id": 36407372153,
+      "run_number": 5,
+      "job_id": 108879225830,
+      "workflow": "Windows Lifecycle Diagnostics",
+      "failure": "new startup test module failed to compile; the subsequent three-pass probe did not execute"
+    }
+  ],
+  "followup": "Correct the test API module and adapt canonical verbatim cwd to a verified ordinary DOS/UNC spelling; add a child cwd spelling assertion and retain the original full real-engine suites. These new implementation failures do not attribute historical OS5 or 30-second timeout observations.",
+  "failed_case_retries": 0
+}
