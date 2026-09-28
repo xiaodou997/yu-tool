@@ -111,23 +111,7 @@ fn execution_and_cleanup_result_matrix() {
 
 fn running_before_io(directory: &Path) -> Running {
     let fixture = fixture_command(directory);
-    let mut command = Command::new(fixture.entrypoint);
-    command
-        .args(fixture.args)
-        .current_dir(directory)
-        .stdin(Stdio::piped())
-        .stdout(Stdio::null())
-        .stderr(Stdio::null());
-    configure_containment(&mut command);
-    let mut child = command.spawn().unwrap();
-    let containment = match Containment::attach(&child) {
-        Ok(containment) => containment,
-        Err(error) => {
-            let _ = child.kill();
-            let _ = child.wait();
-            panic!("cannot attach fixture: {error}");
-        }
-    };
+    let (child, containment) = spawn_engine(&fixture).unwrap();
     Running {
         child,
         containment,

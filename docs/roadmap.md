@@ -218,6 +218,10 @@ Separate diagnostics/reproduction work records process-exit versus pipe-EOF phas
 
 First lifecycle-hardening increment: explicitly settle owned cleanup, retain primary and cleanup errors, and reject success/artifact publication on cleanup failure. Controlled tests reproduce swallowed worker failure before the change. [Scope and deferred work](reliability/explicit-process-cleanup.md) and [acceptance](testing/pr28-explicit-process-cleanup.md) separate this implemented error path from creation-time Job assignment, bounded I/O cancellation, enforced whole-Job completion and historical OS5/timeout attribution. Issue #27 stays open; no release promotion.
 
+### Windows creation-time Job ownership (PR #29)
+
+Separate startup-only increment on the #28 merged baseline: documented Job-list/handle-list process creation, owned startup resources, explicit native executable/argv/environment handling and known-Job regression controls. See [implementation scope](reliability/windows-creation-job.md) and [acceptance checklist](testing/pr29-windows-creation-job.md). Bounded waits, I/O cancellation and whole-Job completion remain the next independent change; no historical fault or public-release gate is silently closed.
+
 ## M4 — Safe mutation
 
 **Goal:** introduce modifications without compromising source-file safety.

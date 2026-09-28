@@ -20,6 +20,10 @@ Read [release readiness](releasing/v0.1-readiness.md) before distributing a buil
 
 PR #28 makes process cleanup an explicit part of the result: valid response bytes or an existing private staged PNG do not establish success when cleanup fails. Preserve the returned `EXECUTION_FAILED` and selected engine; do not publish a leftover private artifact or automatically retry against a different engine. This increment still uses blocking wait/join and does not prove Windows root-cause closure or release readiness. Read [cleanup scope](reliability/explicit-process-cleanup.md) and [the checklist](testing/pr28-explicit-process-cleanup.md).
 
+## Windows startup boundary
+
+PR #29 creates the selected engine in its private Job instead of attaching it later. Treat startup failure as an execution failure, never retry through an uncontained process. This does not imply bounded I/O/cleanup or resolve the historical issue #27 failures. See [creation-time scope](reliability/windows-creation-job.md) and [acceptance](testing/pr29-windows-creation-job.md).
+
 ## Recommended workflow
 
 Agents should use this sequence:

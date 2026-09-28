@@ -1,11 +1,11 @@
 //! Opt-in investigation snapshots of this invocation's handles; no process-control changes.
+use super::Child;
 use serde_json::{Value, json};
 use std::{
     fs::{self, OpenOptions},
     io::Write,
     os::windows::io::{AsRawHandle, OwnedHandle},
     path::{Path, PathBuf},
-    process::Child,
     time::{SystemTime, UNIX_EPOCH},
 };
 use windows_sys::Win32::{

@@ -159,6 +159,8 @@ See:
 - [Windows lifecycle acceptance checklist](docs/testing/pr26-windows-lifecycle.md)
 - [Explicit process cleanup scope](docs/reliability/explicit-process-cleanup.md)
 - [Explicit cleanup acceptance checklist](docs/testing/pr28-explicit-process-cleanup.md)
+- [Windows creation-time Job ownership](docs/reliability/windows-creation-job.md)
+- [Windows startup acceptance checklist](docs/testing/pr29-windows-creation-job.md)
 - [PSD candidate comparison](docs/psd-candidate-comparison.md)
 - [PSD controlled benchmark](docs/psd-controlled-benchmark-report.md)
 - [Engine strategy ADR](docs/decisions/0001-engine-strategy.md)

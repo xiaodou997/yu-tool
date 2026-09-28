@@ -155,6 +155,12 @@ After the owned process guard is constructed, ordinary PSD transport returns exp
 
 The optional Windows cleanup-end trace adds `cleanup_succeeded` and `cleanup_errors`; `workers_joined` counts returned joins, not proof of non-panicking threads. This developer trace is not a stable public error schema. Completed cleanup attempts are cached; Drop remains an unwind fallback, not an automatic retry. Blocking waits, creation-before-Job-assignment and whole-Job completion remain outside this increment. The 30-second execution setting and two-second quarantine budget are unchanged; neither proves a hard overall cleanup deadline. See [scope and remaining gaps](reliability/explicit-process-cleanup.md) and [acceptance](testing/pr28-explicit-process-cleanup.md).
 
+### Windows startup ownership (PR #29)
+
+Managed PSD processes are created inside their private Windows Job through extended creation attributes, not attached after startup. Creation/attribute/permission failure returns the existing `EXECUTION_FAILED` with selected-engine context; it does not retry without ownership. Only the three standard streams are explicitly inherited. Native `.exe` and working-directory paths must be absolute, package argv is encoded without a shell, and inherited `NODE_OPTIONS`/`NODE_PATH` variants are removed without modifying the caller's environment. The command-line limit is 32767 UTF-16 units including NUL; environment snapshot copying is capped at 1048576 UTF-16 units. Invalid startup serialization is an error before engine execution.
+
+There is no new public flag. These APIs require Windows 10/Server 2016 or later, but this PR's hosted acceptance does not establish a minimum-OS support or signing policy. Blocking waits and I/O remain unchanged and are not a hard overall execution deadline. See [startup scope](reliability/windows-creation-job.md).
+
 ## Image commands
 
 The first built-in raster engine is `raster-rs`.

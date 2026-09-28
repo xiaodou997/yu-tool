@@ -39,9 +39,12 @@ jobs:
       - name: Validate Windows resource observation against test-owned handles
         run: python -B -m unittest discover -s tools -p "test_windows_occupancy.py" -v
       - name: Install locked engine build dependencies
+        # Startup ownership is a separate gate from the unchanged three-pass cleanup probe.
+        # The native tests also run in the ordinary Windows Rust matrix.
         working-directory: packaging/ag-psd-engine
         run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Build private engine input
+        # Keep the engine payload and its pinned runtime unchanged.
         run: >-
           python -B tools/build_ag_psd_managed_package.py build
           --sources packaging/ag-psd-engine/node-runtime-sources-v1.json
@@ -55,6 +58,8 @@ jobs:
           python -B tools/build_cli_candidate.py
           --target x86_64-pc-windows-msvc
           --output-dir target/windows-lifecycle-candidate
+      - name: Verify creation-time private Job ownership controls
+        run: cargo test --locked -p yu-runtime-psd --lib process::windows_spawn::tests -- --nocapture
       - name: Run diagnostic cases and repeated real lifecycle without failed-case retries
         run: >-
           python -B tools/run_lifecycle_probe.py

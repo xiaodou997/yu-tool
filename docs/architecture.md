@@ -280,6 +280,12 @@ The PSD transport separates `exchange()` from `Running::finish()` / `cleanup()`.
 
 This is a result-propagation increment, not bounded cancellation: blocking wait/join and pre-guard attach-failure handling remain follow-up. A successful Job termination request is not whole-Job exit evidence. Private callable seams permit controlled worker failures and staging/publication tests; there are no user-facing fault flags or process-global test switches. See [cleanup scope](reliability/explicit-process-cleanup.md). Issue #27 remains open and release candidates stay blocked.
 
+## Windows creation-time Job ownership (PR #29)
+
+Windows startup now uses the documented `CreateProcessW` extended startup path: a private kill-on-close Job is created first and passed as `PROC_THREAD_ATTRIBUTE_JOB_LIST`, alongside a `PROC_THREAD_ATTRIBUTE_HANDLE_LIST` containing only the three engine-side standard-stream handles. No user code is deliberately run before assignment and no failure falls back to a post-spawn attach. The stable-Rust native wrapper owns the returned process reference and pipe endpoints; the initial thread and parent copies of inherited endpoints are closed after creation. Unix startup remains on `std::process::Command` with the existing process-group policy.
+
+This increment preserves synchronous pipes, blocking cleanup wait/join, explicit #28 cleanup-result propagation and the quarantine policy. It does not add cancellable I/O, a hard cleanup deadline or enforced whole-Job completion. See [startup scope and tests](reliability/windows-creation-job.md). Public release and historical OS5/timeout attribution remain open under issue #27.
+
 ## PSD bitmap export (PR #23)
 
 The optional ag-psd adapter materializes only the selected layer's stored 8-bit RGB bitmap and encodes it as RGBA8 PNG without Canvas or an additional JavaScript package. The private Node runtime and upstream library versions are unchanged. Package identity advances to `31.0.2+node22.23.3.yu2` so old installed versions and the frozen PR #21 receipts remain distinct.

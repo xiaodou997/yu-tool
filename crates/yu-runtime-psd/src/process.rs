@@ -1,7 +1,6 @@
 //! Bounded one-shot transport. Engines are trusted installed programs, not sandboxed code.
 use std::{
     io::{Read, Write},
-    process::{Child, Command, Stdio},
     sync::{
         Arc,
         atomic::{AtomicUsize, Ordering},
@@ -11,6 +10,15 @@ use std::{
     time::{Duration, Instant},
 };
 use yu_engine_manager::ManagedEngineCommand;
+
+#[cfg(unix)]
+use std::process::{Child, Command, Stdio};
+#[cfg(windows)]
+mod windows_spawn;
+#[cfg(windows)]
+use windows_spawn::{Child, Containment, spawn as spawn_engine};
+#[cfg(any(windows, test))]
+mod windows_wire;
 
 #[cfg(windows)]
 mod windows_trace;
@@ -163,28 +171,8 @@ fn execute_with_setup(
         return Err("external engine timeout must be greater than zero".to_owned());
     }
     let started = Instant::now();
-    let mut command = Command::new(&installed.entrypoint);
-    command
-        .args(&installed.args)
-        .current_dir(&installed.working_dir)
-        .env_remove("NODE_OPTIONS")
-        .env_remove("NODE_PATH")
-        .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped());
-    configure_containment(&mut command);
-    let mut child = command
-        .spawn()
-        .map_err(|e| format!("cannot start engine: {e}"))?;
+    let (child, containment) = spawn_engine(installed)?;
     let spawn_elapsed_ms = started.elapsed().as_millis();
-    let containment = match Containment::attach(&child) {
-        Ok(value) => value,
-        Err(error) => {
-            let _ = child.kill();
-            let _ = child.wait();
-            return Err(error);
-        }
-    };
     #[cfg(windows)]
     let trace = windows_trace::Trace::start(&child, &containment.job, &installed.working_dir);
     let mut running = Running {
@@ -373,13 +361,35 @@ fn read_capped_observed(
 }
 
 #[cfg(unix)]
+fn spawn_engine(installed: &ManagedEngineCommand) -> Result<(Child, Containment), String> {
+    let mut command = Command::new(&installed.entrypoint);
+    command
+        .args(&installed.args)
+        .current_dir(&installed.working_dir)
+        .env_remove("NODE_OPTIONS")
+        .env_remove("NODE_PATH")
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped());
+    configure_containment(&mut command);
+    let mut child = command
+        .spawn()
+        .map_err(|e| format!("cannot start engine: {e}"))?;
+    match Containment::attach(&child) {
+        Ok(containment) => Ok((child, containment)),
+        Err(error) => {
+            let _ = child.kill();
+            let _ = child.wait();
+            Err(error)
+        }
+    }
+}
+
+#[cfg(unix)]
 fn configure_containment(command: &mut Command) {
     use std::os::unix::process::CommandExt;
     command.process_group(0);
 }
-
-#[cfg(windows)]
-fn configure_containment(_: &mut Command) {}
 
 #[cfg(unix)]
 struct Containment {
@@ -409,74 +419,6 @@ impl Containment {
             Err(format!(
                 "cannot terminate owned engine process group: {error}"
             ))
-        }
-    }
-}
-
-#[cfg(windows)]
-struct Containment {
-    job: std::os::windows::io::OwnedHandle,
-}
-
-#[cfg(windows)]
-impl Containment {
-    fn attach(child: &Child) -> Result<Self, String> {
-        use std::os::windows::io::{AsRawHandle, FromRawHandle, OwnedHandle};
-        use windows_sys::Win32::System::JobObjects::{
-            AssignProcessToJobObject, CreateJobObjectW, JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE,
-            JOBOBJECT_EXTENDED_LIMIT_INFORMATION, JobObjectExtendedLimitInformation,
-            SetInformationJobObject,
-        };
-        // SAFETY: null optional security/name pointers create an unnamed owned job.
-        let raw = unsafe { CreateJobObjectW(std::ptr::null(), std::ptr::null()) };
-        if raw.is_null() {
-            return Err(format!(
-                "cannot create engine job: {}",
-                std::io::Error::last_os_error()
-            ));
-        }
-        // SAFETY: the successful CreateJobObjectW result is owned exactly once.
-        let job = unsafe { OwnedHandle::from_raw_handle(raw) };
-        // SAFETY: this Windows POD structure admits zero initialization.
-        let mut limits: JOBOBJECT_EXTENDED_LIMIT_INFORMATION = unsafe { std::mem::zeroed() };
-        limits.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
-        // SAFETY: pointers refer to valid handles/structures for the duration of each call.
-        let configured = unsafe {
-            SetInformationJobObject(
-                job.as_raw_handle(),
-                JobObjectExtendedLimitInformation,
-                &limits as *const _ as *const std::ffi::c_void,
-                std::mem::size_of_val(&limits) as u32,
-            )
-        };
-        if configured == 0 {
-            return Err(format!(
-                "cannot configure engine job: {}",
-                std::io::Error::last_os_error()
-            ));
-        }
-        // SAFETY: both handles are live and owned by this invocation.
-        if unsafe { AssignProcessToJobObject(job.as_raw_handle(), child.as_raw_handle()) } == 0 {
-            return Err(format!(
-                "cannot assign engine job: {}",
-                std::io::Error::last_os_error()
-            ));
-        }
-        Ok(Self { job })
-    }
-    fn terminate(&self) -> Result<(), String> {
-        use std::os::windows::io::AsRawHandle;
-        // SAFETY: the job handle is live and belongs only to this invocation.
-        let result = unsafe {
-            windows_sys::Win32::System::JobObjects::TerminateJobObject(self.job.as_raw_handle(), 1)
-        };
-        if result == 0 {
-            Err(format!(
-                "cannot terminate owned engine job: {}",
-                std::io::Error::last_os_error()
-            ))
-        } else {
-            Ok(())
         }
     }
 }
