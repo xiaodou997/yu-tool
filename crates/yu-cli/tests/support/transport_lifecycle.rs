@@ -98,6 +98,43 @@ fn fragmented_response_is_not_mistaken_for_eof() {
     remove_inactive(&root);
 }
 
+#[cfg(windows)]
+fn assert_owned_trace(root: &TempRoot) {
+    let Some(directory) = std::env::var_os("YU_WINDOWS_LIFECYCLE_TRACE_DIR") else {
+        return;
+    };
+    let version = fs::canonicalize(root.0.join("engines/ag-psd/1.0")).unwrap();
+    let mut records = Vec::new();
+    for entry in fs::read_dir(directory).unwrap() {
+        let path = entry.unwrap().path();
+        let Ok(bytes) = fs::read(path) else {
+            continue;
+        };
+        let Ok(record) = serde_json::from_slice::<serde_json::Value>(&bytes) else {
+            continue;
+        };
+        if record["version_directory"].as_str().map(Path::new) == Some(version.as_path()) {
+            records.push(record);
+        }
+    }
+    let end = records
+        .iter()
+        .find(|v| v["stage"] == "cleanup_end")
+        .expect("enabled trace must observe cleanup end");
+    assert_eq!(end["observations"]["direct_wait_succeeded"], true);
+    assert_eq!(end["observations"]["workers_joined"], 3);
+    assert_eq!(end["job"]["status"], "observed");
+    assert!(end["child_created_filetime"].is_string());
+    for stage in ["started", "cleanup_begin"] {
+        assert!(
+            records
+                .iter()
+                .any(|v| v["stage"] == stage && v["invocation"] == end["invocation"])
+        );
+    }
+    // ActiveProcesses is sampled while native handles are retained, not a leak assertion.
+}
+
 #[test]
 fn quiet_descendant_does_not_prevent_immediate_engine_removal() {
     let root = TempRoot::new("lifecycle-quiet-descendant");
@@ -105,6 +142,8 @@ fn quiet_descendant_does_not_prevent_immediate_engine_removal() {
     provision(&root, "lifecycle-quiet-descendant", "1.0", &CAPS);
     activate(&root.0, "1.0");
     success(inspect(&root, &file));
+    #[cfg(windows)]
+    assert_owned_trace(&root);
     assert!(
         root.0
             .join("engines/ag-psd/1.0/.yu-lifecycle-child-ready")

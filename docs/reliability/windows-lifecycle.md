@@ -46,6 +46,10 @@ Any failed suite/timeout/zero-test run stops that invocation. It is not retried.
 
 A timeout of the outer Cargo command is separately recorded as `outer_command_timeout`, not an engine30s timeout. A workflow setup failure before the probe is a setup failure with no executed-test receipt. Job cancellation/power loss are not claimed to yield complete diagnostics.
 
+## Follow-up: scoped occupancy evidence
+
+[Windows occupancy capture](windows-occupancy-capture.md) adds opt-in owned-Job snapshots and a test-harness hook that samples resources after a failed removal but before test-root teardown. The collector retains bounded file-user/process observations, explicit directory-handle blind spots, and PID + creation-time correlation. It does not alter native process-control order or retry/timeout policy, and does not close any historical root cause. The added observer has timing overhead; uninstrumented package acceptance remains separate.
+
 ## Unimplemented native-control follow-up
 
 Review identified two implementation gaps worth controlled reproduction: the process currently starts before assignment to its private Windows Job, and cleanup issues termination then waits for the direct child/readers without explicitly observing the whole Job becoming empty. **This slice does not change process creation, Job assignment, termination or cleanup scheduling.** A native-control patch remains separate work; no claim is made that either gap caused the recorded OS5 or30s timeout.

@@ -12,6 +12,9 @@ use std::{
 };
 use yu_engine_manager::ManagedEngineCommand;
 
+#[cfg(windows)]
+mod windows_trace;
+
 pub(crate) const MAX_REQUEST_BYTES: usize = 64 * 1024;
 pub(crate) const MAX_STDOUT_BYTES: usize = 16 * 1024 * 1024;
 pub(crate) const MAX_STDERR_BYTES: usize = 64 * 1024;
@@ -31,16 +34,38 @@ struct Running {
     child: Child,
     containment: Containment,
     workers: Vec<JoinHandle<()>>,
+    #[cfg(windows)]
+    trace: Option<windows_trace::Trace>,
 }
 
 impl Drop for Running {
     fn drop(&mut self) {
+        #[cfg(windows)]
+        if let Some(trace) = &self.trace {
+            trace.record(
+                &self.child,
+                &self.containment.job,
+                "cleanup_begin",
+                serde_json::json!({"workers":self.workers.len()}),
+            );
+        }
         // Close inherited pipes as well as the direct child before joining I/O workers.
         self.containment.terminate();
         let _ = self.child.kill();
-        let _ = self.child.wait();
+        let wait_result = self.child.wait();
+        let _ = &wait_result;
+        #[cfg(windows)]
+        let mut joined_workers = 0;
         for worker in self.workers.drain(..) {
             let _ = worker.join();
+            #[cfg(windows)]
+            {
+                joined_workers += 1;
+            }
+        }
+        #[cfg(windows)]
+        if let Some(trace) = &self.trace {
+            trace.record(&self.child, &self.containment.job, "cleanup_end", serde_json::json!({"direct_wait_succeeded":wait_result.is_ok(), "workers_joined":joined_workers}));
         }
     }
 }
@@ -79,10 +104,14 @@ pub(crate) fn execute(
             return Err(error);
         }
     };
+    #[cfg(windows)]
+    let trace = windows_trace::Trace::start(&child, &containment.job, &installed.working_dir);
     let mut running = Running {
         child,
         containment,
         workers: Vec::new(),
+        #[cfg(windows)]
+        trace,
     };
     let mut stdin = running
         .child

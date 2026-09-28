@@ -24,6 +24,12 @@ def run_plan(output: Path, repetitions: int, env: dict, source: str, runner=None
     if not 1 <= repetitions <= 20:
         raise ValueError("repetitions must be in 1..20")
     output.mkdir(parents=True, exist_ok=False)
+    env = env.copy()
+    if os.name == "nt":
+        traces, evidence = output / "owned-process-traces", output / "occupancy"
+        traces.mkdir()
+        evidence.mkdir()
+        env.update(YU_WINDOWS_LIFECYCLE_TRACE_DIR=str(traces), YU_TEST_FORENSICS_DIR=str(evidence), YU_TEST_FORENSICS_PYTHON=sys.executable)
     runner = runner or subprocess.run
     plan = [
         ("transport", ["cargo", "test", "--locked", "-p", "yu-cli", "--test", "psd", "transport_lifecycle", "--", "--nocapture"], 5 if os.name == "nt" else 4),
@@ -37,6 +43,7 @@ def run_plan(output: Path, repetitions: int, env: dict, source: str, runner=None
         "repetitions_requested": repetitions, "steps": [], "status": "running",
         "public_release_ready": False, "root_cause_fixed": False,
         "failed_case_retries": 0, "historical_failures_superseded": False,
+        "forensics_enabled": os.name == "nt", "forensics_timing":"after_failed_command_before_test_root_teardown",
     }
     report_path = output / "report.json"
     write_report(report_path, report)
@@ -70,6 +77,8 @@ def run_plan(output: Path, repetitions: int, env: dict, source: str, runner=None
             except OSError as error:
                 entry.update(status="failed", reason="command_start_or_log_error", error=str(error), exit_code=None)
             entry["elapsed_ms"] = round((time.monotonic() - started) * 1000)
+            entry["occupancy_capture_count"] = len(list((output / "occupancy").glob("*/context.json")))
+            entry["owned_trace_file_count"] = len(list((output / "owned-process-traces").glob("*.json")))
             write_report(report_path, report)
             print(json.dumps({"repetition": repetition, "suite": suite, "status": entry["status"]}), flush=True)
             if entry["status"] != "passed":

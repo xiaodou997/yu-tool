@@ -26,6 +26,12 @@ Use a new output directory for each invocation; prior evidence must never be ove
 
 On failure preserve `report.json` and the failing log. Separate setup/outer timeout, direct process exit, input completion, output EOF and removal-quarantine failures. Never infer the owner of a Windows handle from OS5 alone. Do not relabel a passing rerun as a repair.
 
+## Occupancy-capture follow-up
+
+Read [capture scope and limitations](../reliability/windows-occupancy-capture.md). Run `python -B -m unittest discover -s tools -p 'test_windows_occupancy.py' -v` on Windows: both native API cases must execute, not skip. The file-holder case must report the self-created holder PID with matching creation time and must leave its handle effective; the directory case must retain the sharing conflict until the test closes its own handle.
+
+In the independent probe inspect `owned-process-traces/` and each `occupancy/*/context.json` plus its snapshot stage files. Require matching started/cleanup stages for the controlled quiet-descendant case. Distinguish expected directory-denial controls from spontaneous lifecycle failures using the root and original error. Do not equate capture count with successful collection; retain collector timeouts and missing stages. Match ownership using both PID and FILETIME. Empty file-user lists cannot exonerate directory-only handles or kernel filters. Current Job counts are observations with native handles still held, not a whole-tree-exit guarantee.
+
 ## Review boundary
 
-Confirm that candidate `public_release_ready` stays false and no release/tag/hosting/license/signing claim is introduced. Confirm this change does not modify native Job assignment, process termination/cleanup, quarantine retry budget, package payload, frozen M3 receipts or independent pixel expectations. Native-control hardening remains unimplemented follow-up, with fresh reproduction and acceptance required.
+Confirm that candidate `public_release_ready` stays false and no release/tag/hosting/license/signing claim is introduced. Confirm this change does not modify native Job assignment, process termination/cleanup policy (additional opt-in observation is allowed), quarantine retry budget, package payload, frozen M3 receipts or independent pixel expectations. Native-control hardening remains unimplemented follow-up, with fresh reproduction and acceptance required.
