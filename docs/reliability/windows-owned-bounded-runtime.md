@@ -41,8 +41,15 @@ Original #29 Diagnostics7 failure (OS5 at round2/cycle10; artifact SHA256 `11fde
 
 See [acceptance](../testing/pr32-windows-owned-bounded-runtime.md), [ADR0010](../decisions/0010-windows-owned-bounded-runtime.md) and the historical [#31 boundary](bounded-process-io.md).
 
+## Package uninstall acceptance follow-up
+
+The latest original Package26 gate failed at read-only teardown on `0ff5e9e`, despite CI120 and the independent Diagnostics11 passing. The source remains installed on quarantine error, and no same-failure process capture existed in that package invocation. There is no evidence allowing that OS5 to be attributed to the current runtime, a security product or an earlier observed process name.
+
+A test/CI-only follow-up connects the existing collector to the actual package gate and adds a nested-file-holder fail-closed regression, preserving the active alternative version and installation/source hashes. It changes neither production runtime nor quarantine implementation, and does not classify the prior failure as fixed. See the [uninstall follow-up acceptance](../testing/pr32-windows-owned-bounded-runtime.md#windows-uninstall-gate-follow-up). Positive debug/release package tests remain mandatory, with their original failures retained.
+
 ## Primary references
 
 - https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-updateprocthreadattribute
 - https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-createprocessw
 - https://learn.microsoft.com/en-us/windows/win32/ipc/named-pipe-type-read-and-wait-modes
+- https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-fsa/87f86c9b-6c2a-4803-84b7-131a74a434fa

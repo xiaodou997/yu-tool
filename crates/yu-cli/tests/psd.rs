@@ -15,6 +15,10 @@ mod exports;
 #[path = "support/transport_lifecycle.rs"]
 mod transport_lifecycle;
 
+#[cfg(windows)]
+#[path = "support/removal_contract.rs"]
+mod removal_contract;
+
 const CAPS: [&str; 4] = [
     "psd.inspect",
     "psd.tree",

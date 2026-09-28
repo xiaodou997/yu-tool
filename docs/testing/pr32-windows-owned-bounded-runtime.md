@@ -31,6 +31,22 @@ Run the three-platform Managed Package workflow, including read-only/pixel/lifec
 
 Inspect original Windows artifacts: actual source/candidate identities and input hashes, all cleanup stages, zero workers, closed endpoints, direct exit, Job-empty confirmation and retained_members_confirmed. Snapshot truncation/identity failure or late membership cannot count as success. Distinguish expected OS32 controls from spontaneous OS5. A positive file-user observation is still not causal blocker proof. Do not reuse prior #29/#31 workflow greens as joint evidence.
 
+## Windows uninstall gate follow-up
+
+Package26 on `0ff5e9e` failed its real read-only test's final quarantine (OS5, 67 attempts, 2007ms). This remains a failed positive gate, not an expected negative test. Its failing invocation had no enabled occupancy/owned-process capture; passing Diagnostics11 cannot establish its cause.
+
+The package workflow now enables the EXISTING test-only collector and trace separately for debug and extracted-release tests. It retains original Cargo output with pipeline failure propagation, exact checkout/workflow identity, post-attempt input hashes and same-invocation snapshots even on failure. No test is retried, no collector API expands, no operation/quarantine budget changes, and a failed phase still skips candidate promotion and manifest assembly. Trace-enabled success can have timing effects and is not proof that an unobserved failure was fixed.
+
+Run the additional actual-Windows control:
+
+```sh
+cargo test --locked -p yu-cli --test psd removal_contract -- --nocapture
+```
+
+The fixture holds a nested regular file (not the version directory and not an executed engine), then removes that inactive version while another version remains active. Require EXECUTION_FAILED, original metadata/executable/source hashes and both inventory entries unchanged, the other active version unchanged, and an intact holder after capture. With collection enabled, require exactly one matching original-error context and a completed capture. Only after the fixture explicitly closes its own handle does a NEW CLI invocation remove the target version. This is a changed-precondition control, not a hidden retry or evidence about the historical holder. The control's allowed native denial family is5/32/33; retain the actual code rather than forcing a causal OS5 interpretation.
+
+Report the native fail-closed contract, real positive package acceptance, and historical root-cause status separately. The control does not waive the positive gate. Do not move a failed real uninstall into a passing bucket or accept only the independent trace-enabled probe. Record the exact shell/logging change (Windows package Cargo output now uses Bash with pipefail/tee) as part of the new test environment.
+
 ## Delivery
 
 Document review findings and exact-head gates. Leave the new PR open until reviewed; leave #29's old head/history unchanged. Update issue #27 without marking historical OS5/30-second timeout fixed. No release, signatures, minimum-system certification or candidate promotion.

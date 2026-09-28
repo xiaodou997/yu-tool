@@ -83,11 +83,51 @@ jobs:
           target/ag-psd-managed/${{ matrix.label }}/yu-engine-ag-psd-31.0.2-node22.23.3.yu2-${{ matrix.label }}.zip
           fixtures/psd/upstream/psd-tools/2layers.psd
 
+      - name: Prepare existing Windows failure capture for this package job
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          python -B - <<'PY'
+          import json, os, subprocess, sys
+          from pathlib import Path
+          root = Path('target/package-acceptance-windows').resolve()
+          for phase in ('controls', 'debug', 'release'):
+              for kind in ('traces', 'occupancy'):
+                  (root / phase / kind).mkdir(parents=True, exist_ok=False)
+          source = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True, timeout=30).strip()
+          context = {'schema_version':'1', 'source_commit':source,
+                     'run_id':os.environ['GITHUB_RUN_ID'], 'attempt':os.environ['GITHUB_RUN_ATTEMPT'],
+                     'runner_image':os.environ.get('ImageVersion'), 'public_release_ready':False,
+                     'historical_failure_attributed':False, 'failed_case_retries':0,
+                     'capture_timing':'after_failed_command_before_test_root_teardown'}
+          (root / 'context.json').write_text(json.dumps(context, indent=2) + '\n', encoding='utf-8')
+          with open(os.environ['GITHUB_ENV'], 'a', encoding='utf-8') as stream:
+              stream.write('YU_TEST_FORENSICS_PYTHON=' + sys.executable + '\n')
+          PY
+
+      - name: Verify held-file uninstall preserves installation and captured failure
+        if: runner.os == 'Windows'
+        shell: bash
+        env:
+          YU_TEST_FORENSICS_DIR: ${{ github.workspace }}/target/package-acceptance-windows/controls/occupancy
+        run: |
+          set -o pipefail
+          cargo test --locked -p yu-cli --test psd removal_contract -- --nocapture 2>&1 | tee target/package-acceptance-windows/controls/tests.log
+
       - name: Exercise real PSD CLI with no system Node and sanitized Node environment
+        shell: bash
         env:
           YU_TEST_MANIFEST: ${{ github.workspace }}/target/ag-psd-managed/${{ matrix.label }}/manifest-${{ matrix.label }}.json
           YU_TEST_PACKAGE: ${{ github.workspace }}/target/ag-psd-managed/${{ matrix.label }}/yu-engine-ag-psd-31.0.2-node22.23.3.yu2-${{ matrix.label }}.zip
-        run: cargo test --locked -p yu-cli --test psd_managed -- --ignored --nocapture
+          YU_TEST_FORENSICS_DIR: ${{ runner.os == 'Windows' && format('{0}/target/package-acceptance-windows/debug/occupancy', github.workspace) || '' }}
+          YU_WINDOWS_LIFECYCLE_TRACE_DIR: ${{ runner.os == 'Windows' && format('{0}/target/package-acceptance-windows/debug/traces', github.workspace) || '' }}
+        run: |
+          if [ "$RUNNER_OS" = Windows ]; then
+            set -o pipefail
+            cargo test --locked -p yu-cli --test psd_managed -- --ignored --nocapture 2>&1 | tee target/package-acceptance-windows/debug/tests.log
+          else
+            cargo test --locked -p yu-cli --test psd_managed -- --ignored --nocapture
+          fi
 
       - name: Build and verify isolated CLI developer candidate
         run: >-
@@ -96,11 +136,51 @@ jobs:
           --output-dir target/cli-candidate/${{ matrix.label }}
 
       - name: Run PSD and ten-cycle lifecycle acceptance against extracted release binary
+        shell: bash
         env:
           YU_TEST_CLI: ${{ github.workspace }}/target/cli-candidate/${{ matrix.label }}/smoke/bin/${{ matrix.binary_name }}
           YU_TEST_MANIFEST: ${{ github.workspace }}/target/ag-psd-managed/${{ matrix.label }}/manifest-${{ matrix.label }}.json
           YU_TEST_PACKAGE: ${{ github.workspace }}/target/ag-psd-managed/${{ matrix.label }}/yu-engine-ag-psd-31.0.2-node22.23.3.yu2-${{ matrix.label }}.zip
-        run: cargo test --locked -p yu-cli --test psd_managed -- --ignored --nocapture
+          YU_TEST_FORENSICS_DIR: ${{ runner.os == 'Windows' && format('{0}/target/package-acceptance-windows/release/occupancy', github.workspace) || '' }}
+          YU_WINDOWS_LIFECYCLE_TRACE_DIR: ${{ runner.os == 'Windows' && format('{0}/target/package-acceptance-windows/release/traces', github.workspace) || '' }}
+        run: |
+          if [ "$RUNNER_OS" = Windows ]; then
+            set -o pipefail
+            cargo test --locked -p yu-cli --test psd_managed -- --ignored --nocapture 2>&1 | tee target/package-acceptance-windows/release/tests.log
+          else
+            cargo test --locked -p yu-cli --test psd_managed -- --ignored --nocapture
+          fi
+
+      - name: Record observed Windows package and executable hashes even on failure
+        if: ${{ always() && runner.os == 'Windows' }}
+        shell: bash
+        run: |
+          python -B - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+          root = Path('target/package-acceptance-windows')
+          if root.is_dir():
+              paths = [Path('target/debug/yu.exe'), Path('target/cli-candidate/windows-x86_64/smoke/bin/yu.exe'),
+                       Path('target/cli-candidate/windows-x86_64/smoke/build-info.json')]
+              paths += list(Path('target/ag-psd-managed/windows-x86_64').glob('*'))
+              observations = {}
+              for path in paths:
+                  if path.is_file():
+                      with path.open('rb') as stream:
+                          observations[path.as_posix()] = hashlib.file_digest(stream, 'sha256').hexdigest()
+              report = {'schema_version':'1', 'phase':'after_acceptance_attempt', 'sha256':observations,
+                        'missing_file_is_not_execution_evidence':True, 'public_release_ready':False}
+              (root / 'observed-inputs.json').write_text(json.dumps(report, indent=2) + '\n', encoding='utf-8')
+          PY
+
+      - name: Retain Windows package acceptance logs and same-invocation snapshots
+        if: ${{ always() && runner.os == 'Windows' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-package-acceptance-${{ github.run_id }}-${{ github.run_attempt }}
+          path: target/package-acceptance-windows/
+          if-no-files-found: warn
+          retention-days: 30
 
       - name: Upload validated CLI developer candidate (not a release)
         uses: actions/upload-artifact@v4
