@@ -134,6 +134,8 @@ yu engine remove imagemagick 7.1.1
 
 The active version cannot be removed. Built-in and system engines are outside the managed lifecycle and are never uninstalled by this command.
 
+On Windows, quarantine rename retries access/sharing/lock-denied errors for up to two seconds while retaining the engine mutation lock. A persistent failure remains an error and preserves the installed version; no copy/delete fallback or privilege change is attempted. Other errors and non-Windows renames are not retried.
+
 ## Image commands
 
 The first built-in raster engine is `raster-rs`.
@@ -203,9 +205,9 @@ yu image convert input.png -o output.webp
 
 ## PSD commands
 
-ADR 0006 selects `ag-psd 31.0.2` as the preferred v0.1 Managed PSD engine. PR #22 wires the four read-only commands below to the explicitly activated Managed package. Export and rendering remain planned/deferred.
+ADR 0006 selects `ag-psd 31.0.2` as the preferred v0.1 Managed PSD engine. PR #22 wires the four read-only commands below to the explicitly activated Managed package. PR #23 adds partial 8-bit RGB layer bitmap export; rendering remains deferred.
 
-All four commands accept `--engine ag-psd`, `--json`, and `--timeout-secs <1..3600>` (default: 30). Input paths are resolved from the caller's working directory, must identify a regular file, and must be representable as UTF-8 by Protocol v1. Commands never modify the source file. Names are passed as JSON data, not shell commands.
+All five implemented commands accept `--engine ag-psd`, `--json`, and `--timeout-secs <1..3600>` (default: 30). Input paths are resolved from the caller's working directory, must identify a regular file, and must be representable as UTF-8 by Protocol v1. Commands never modify the source file. Names are passed as JSON data, not shell commands.
 
 The timeout covers engine process and protocol I/O, not filesystem discovery or package installation. Request/stdout/stderr limits are 64 KiB / 16 MiB / 64 KiB. Oversized output, timeouts, non-zero process exits, invalid transport, or invalid typed results return `EXECUTION_FAILED` (exit 1). Node runtime override variables `NODE_OPTIONS` and `NODE_PATH` are not inherited.
 
@@ -281,21 +283,40 @@ Future selectors may include `--path` and `--name`, but ambiguous names must nev
 
 Malformed/non-canonical IDs and IDs absent from the document return `INVALID_ARGUMENT` (exit 2). Invalid/corrupt files return `INVALID_INPUT` (exit 2). Missing/inactive/broken engine state returns `ENGINE_UNAVAILABLE` (exit 3); a valid active version that does not advertise the requested operation returns `ENGINE_INCOMPATIBLE` (exit 3). Alternate PSD engines are not wired in this build and are never used as fallback.
 
-### `yu psd layer export` — planned / partial v0.1 contract
+### `yu psd layer export` — implemented / partial
 
 ```bash
-yu psd layer export design.psd --id L0007 -o layer.png
+yu psd layer export design.psd --id L0007 -o layer.png --json
+yu psd layer export design.psb --id L0007 -o layer.png --engine ag-psd --timeout-secs 30
 ```
 
-Initial semantics:
+Requires an explicitly activated export-capable package. The first such package is `31.0.2+node22.23.3.yu2`; the older PR #21 package keeps its four read-only capabilities and is not implicitly upgraded.
 
-- source scope: 8-bit PSD/PSB documents;
-- engine materializes the selected layer bitmap;
-- YuTool normalizes pixels to RGBA8;
-- v0.1 output container is PNG;
-- selected engine/version/provider is included in structured output;
-- this is not a Photoshop-equivalent full-document render promise;
-- 16-bit/32-bit layer export returns `UNSUPPORTED_CAPABILITY` until a high-bit normalization contract is accepted.
+The implementation accepts **8-bit RGB PSD/PSB**, exporting the selected layer's stored bitmap as a static PNG with straight RGBA8 pixels. The bitmap uses the layer's own pixel dimensions, not full-canvas placement. Layer names are not selectors. A missing ID returns `INVALID_ARGUMENT`; groups, empty/non-materialized bitmaps, non-RGB color modes, and 16/32-bit documents return `UNSUPPORTED_CAPABILITY` rather than being silently composited or converted.
+
+This is not a render operation: masks, opacity, blending, effects, group composition and ICC color conversion are not applied. Text, shape and Smart Object layers can only yield their stored bitmap, not freshly rendered content. Successful output includes a warning describing these limitations.
+
+The destination must have a `.png` extension and an existing directory parent. Existing files, directories and even dangling symlinks are refused with `OUTPUT_CONFLICT`; there is no overwrite option. Source-file aliases are therefore not writable destinations. Non-UTF-8 paths are rejected rather than converted lossily.
+
+The host passes a private staging path to the engine, validates the response identity and decodes the entire PNG to verify RGBA8, dimensions, CRCs and complete image data, then publishes through a same-filesystem hard link. This is an atomic no-clobber operation, including when another writer creates the destination after preflight. Filesystems without hard-link support fail with `EXECUTION_FAILED`; there is no non-atomic copy or overwrite fallback. Ordinary failed executions clean staging and do not publish the final output; crash/power-loss recovery is not promised.
+
+Limits: export input 512 MiB, decoded RGBA8 bitmap 256 MiB, encoded PNG 320 MiB. These are individual bounds, not a whole-process memory guarantee. The process/I/O deadline is also checked after PNG validation and before publication; filesystem operations and PNG decoding are not interruptible mid-call.
+
+The schema-v1 success envelope includes `engine` (ID/provider/version), `warnings`, and this result:
+
+```json
+{
+  "contract_version": "1",
+  "layer_id": "L0007",
+  "output_path": "/absolute/output/layer.png",
+  "width": 128,
+  "height": 64,
+  "pixel_format": "rgba8",
+  "container": "png"
+}
+```
+
+The public output path is the final canonical-parent destination, never the private staging path. PNG validation failures and mismatched engine responses return `EXECUTION_FAILED` without publishing an output.
 
 ### `yu psd render` — deferred
 

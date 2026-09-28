@@ -9,6 +9,9 @@ use std::{
 use support::{TempRoot, activate, error, install, run, success};
 use yu_engine_manager::{ArchiveKind, EngineManifest, EnginePackage, EngineTarget, sha256_file};
 
+#[path = "support/psd_exports.rs"]
+mod exports;
+
 const CAPS: [&str; 4] = [
     "psd.inspect",
     "psd.tree",
@@ -49,6 +52,15 @@ fn fixture_binary() -> &'static Path {
     })
 }
 fn provision(root: &TempRoot, mode: &str, version: &str, caps: &[&str]) {
+    provision_with_args(root, mode, version, caps, &[]);
+}
+fn provision_with_args(
+    root: &TempRoot,
+    mode: &str,
+    version: &str,
+    caps: &[&str],
+    extra: &[String],
+) {
     let binary = fixture_binary();
     let manifest = EngineManifest {
         schema_version: "1".into(),
@@ -67,7 +79,9 @@ fn provision(root: &TempRoot, mode: &str, version: &str, caps: &[&str]) {
                 "runtime/fixture"
             }
             .into(),
-            args: vec![mode.into()],
+            args: std::iter::once(mode.to_owned())
+                .chain(extra.iter().cloned())
+                .collect(),
         }],
     };
     install(root, &manifest, binary);

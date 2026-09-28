@@ -141,7 +141,7 @@ report structured result
 
 YuTool has completed the **M2 Engine Manager baseline** and the **M3 PSD Engine Strategy** evidence/decision phase.
 
-The current runtime includes the Rust core, the built-in raster engine, verified Managed Engine installation/lifecycle, per-engine mutation locking, and unified Built-in/Managed/System discovery. M3 evaluated psd-tools 1.20.0 (7/7 corpus v1), rawpsd 0.2.2 (4/7), and ag-psd 31.0.2 (7/7), added representative timing/RSS/export evidence, and accepted ADR 0006: ag-psd is the preferred optional Managed PSD engine for v0.1, psd-tools remains the independent reference/compatibility path, and high-bit-depth layer export is deferred until its pixel contract is normalized. The PSD capability schema and one-shot external-engine JSON protocol are frozen as v1 contracts, and the Managed ag-psd package prototype now passes install/activate/private-runtime execution on Linux x86_64, macOS aarch64, and Windows x86_64. PR #22 wires the four read-only PSD commands (`inspect`, `tree`, `layer list`, `layer info`) to an explicitly activated Managed package, with bounded execution and typed result validation. Layer export, rendering, and public engine distribution remain deferred. The built-in raster scope remains intentionally small: PNG, JPEG, and WebP.
+The current runtime includes the Rust core, the built-in raster engine, verified Managed Engine installation/lifecycle, per-engine mutation locking, and unified Built-in/Managed/System discovery. M3 evaluated psd-tools 1.20.0 (7/7 corpus v1), rawpsd 0.2.2 (4/7), and ag-psd 31.0.2 (7/7), added representative timing/RSS/export evidence, and accepted ADR 0006: ag-psd is the preferred optional Managed PSD engine for v0.1, psd-tools remains the independent reference/compatibility path, and high-bit-depth layer export is deferred until its pixel contract is normalized. The PSD capability schema and one-shot external-engine JSON protocol are frozen as v1 contracts, and the Managed ag-psd package prototype now passes install/activate/private-runtime execution on Linux x86_64, macOS aarch64, and Windows x86_64. PR #22 wires the four read-only PSD commands (`inspect`, `tree`, `layer list`, `layer info`) to an explicitly activated Managed package, with bounded execution and typed result validation. PR #23 adds partial 8-bit RGB stored-layer export to RGBA8 PNG with verified no-clobber publication. Rendering and public engine distribution remain deferred. The built-in raster scope remains intentionally small: PNG, JPEG, and WebP.
 
 See:
 
@@ -158,21 +158,24 @@ See:
 - [PSD capability contract v1](docs/psd-capability-contract-v1.md)
 - [External engine protocol v1](docs/external-engine-protocol-v1.md)
 
-## Read-only PSD commands
+## PSD commands
 
 After explicitly installing a trusted package manifest and activating its version:
 
 ```bash
 yu engine install --manifest ./manifest.json
-yu engine activate ag-psd 31.0.2+node22.23.3
+yu engine activate ag-psd 31.0.2+node22.23.3.yu2
 
 yu psd inspect design.psd --json
 yu psd tree design.psd --json
 yu psd layer list design.psd --json
 yu psd layer info design.psd --id L0001 --engine ag-psd --timeout-secs 30 --json
+yu psd layer export design.psd --id L0001 -o layer.png --json
 ```
 
 The PR #21 prototype manifests contain placeholder download URLs; the install command above requires a manifest pointing to a real trusted package location. Local/CI verification uses the package builder and a test-only local downloader, not an undocumented public distribution service. See [PR #22 testing checklist](docs/testing/pr22-psd-readonly-cli.md).
+
+Export requires the newer `.yu2` package and a new `.png` destination on a hard-link-capable filesystem. It copies the stored layer bitmap only, without applying masks, effects, opacity, blending or ICC conversion. Groups, absent bitmaps, non-RGB and high-bit sources are unsupported. See [PR #23 export checklist](docs/testing/pr23-psd-layer-export.md).
 
 ## 中文简介
 

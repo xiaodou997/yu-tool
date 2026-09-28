@@ -29,6 +29,15 @@ pub(super) struct PsdInput {
 
 #[derive(Debug, Subcommand)]
 pub(super) enum LayerCommand {
+    /// Export one stored 8-bit RGB layer bitmap to a new RGBA8 PNG.
+    Export {
+        #[command(flatten)]
+        input: PsdInput,
+        #[arg(long, value_name = "LAYER_ID")]
+        id: String,
+        #[arg(short, long)]
+        output: PathBuf,
+    },
     /// List canonical layers, including groups.
     List(PsdInput),
     /// Inspect one layer by its canonical ID.
@@ -42,6 +51,47 @@ pub(super) enum LayerCommand {
 
 pub(super) fn run(command: PsdCommand, json: bool) -> Result<(), YuError> {
     let (input, operation) = match command {
+        PsdCommand::Layer {
+            command: LayerCommand::Export { input, id, output },
+        } => {
+            let id = id
+                .parse()
+                .map_err(|e: yu_capability_psd::PsdContractError| {
+                    YuError::new(ErrorCode::InvalidArgument, e.to_string())
+                })?;
+            let manager = EngineManager::discover().map_err(super::map_manager_error)?;
+            let envelope = yu_runtime_psd::export_layer(
+                &manager,
+                &input.file,
+                id,
+                &output,
+                input.engine.as_deref(),
+                Duration::from_secs(input.timeout_secs),
+            )?;
+            if json {
+                super::print_json(&envelope);
+            } else {
+                println!(
+                    "Exported {} -> {} ({}x{}, RGBA8 PNG)",
+                    envelope.result.layer_id,
+                    envelope.result.output_path,
+                    envelope.result.width,
+                    envelope.result.height
+                );
+                if let Some(engine) = &envelope.engine {
+                    println!(
+                        "Engine: {} [{}] {}",
+                        engine.id,
+                        engine.provider,
+                        engine.version.as_deref().unwrap_or("-")
+                    );
+                }
+                for warning in &envelope.warnings {
+                    eprintln!("warning: {}", warning.escape_debug());
+                }
+            }
+            return Ok(());
+        }
         PsdCommand::Inspect(input) => (input, ReadOperation::Inspect),
         PsdCommand::Tree(input) => (input, ReadOperation::Tree),
         PsdCommand::Layer {

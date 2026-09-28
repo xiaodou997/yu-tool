@@ -561,11 +561,20 @@ mod tests {
                 .as_array()
                 .expect("implemented capabilities should be an array")
                 .len(),
-            4
+            5
         );
-        assert_eq!(
-            snapshot["reference_adapter"]["deferred_capabilities"][0],
-            PSD_LAYER_EXPORT
+        assert!(
+            snapshot["reference_adapter"]["implemented_capabilities"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|value| value == PSD_LAYER_EXPORT)
+        );
+        assert!(
+            snapshot["reference_adapter"]["deferred_capabilities"]
+                .as_array()
+                .unwrap()
+                .is_empty()
         );
     }
 

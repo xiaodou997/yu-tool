@@ -115,4 +115,4 @@ Removing fields, changing field meaning, or changing transport/exit semantics re
 
 PR #20 includes an ag-psd reference adapter and executes it on Ubuntu, macOS, and Windows through the existing PSD Spike workflow.
 
-The reference adapter is not the final Managed package. PR #21 will package the same protocol boundary into YuTool-owned engine storage.
+PR #21 packaged the same protocol boundary into YuTool-owned engine storage. PR #22 connected the public read-only CLI, and PR #23 adds staged 8-bit RGB layer export while preserving the v1 request/result envelopes. The original PR #21 package and the newer export-capable package have distinct version identities.

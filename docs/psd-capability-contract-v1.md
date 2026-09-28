@@ -28,7 +28,7 @@ psd.layer.export
 
 The first four have reference-engine conformance coverage in PR #20.
 
-`psd.layer.export` has its request/result schema frozen here but remains implementation-deferred until the Managed engine path is wired.
+`psd.layer.export` preserves its frozen request/result schema. PR #23 implements the 8-bit RGB stored-bitmap subset through the separately versioned Managed package.
 
 ## Stable layer identity
 
@@ -174,11 +174,19 @@ The accepted v0.1 strategy is still:
 - PNG output;
 - 16/32-bit layer export unsupported until a separate high-bit contract is accepted.
 
+### Export implementation boundary (PR #23)
+
+The first implementation requires 8-bit RGB input and a selected layer with non-empty stored RGB channels. Group composition, other color modes, high-bit export and rendering are unsupported. Output contains the layer's stored pixels and transparency, not applied masks, opacity, effects or color-profile conversion; a warning is returned on success.
+
+The Rust host supplies a private staging `output_path` to the engine, requires the exact path and selected ID in the response, validates a complete static RGBA8 PNG, and publishes it without replacing any existing destination. The public CLI result reports the final destination instead. This is internal staging of the same frozen path-based protocol, not an additional public transport.
+
+The export-capable Managed package is `31.0.2+node22.23.3.yu2`. Installing it does not activate it, and the earlier package is not silently replaced. Limits and filesystem requirements are documented in `docs/cli-spec.md`.
+
 ## Paths
 
 Protocol v1 represents paths as JSON strings.
 
-The eventual Rust execution layer must reject a path that cannot be represented losslessly for the selected external engine rather than silently replacing characters.
+The Rust execution layer rejects a path that cannot be represented losslessly for the selected external engine rather than silently replacing characters.
 
 The engine receives paths as data in stdin JSON; paths are never shell-interpolated.
 
@@ -202,6 +210,7 @@ and implements:
 - inspect;
 - tree;
 - layer list;
-- layer info.
+- layer info;
+- 8-bit RGB stored-layer bitmap export (added in PR #23).
 
-Layer export deliberately returns `UNSUPPORTED_CAPABILITY` in PR #20 so that PR #21/#later implementation cannot accidentally be mistaken for a frozen export implementation.
+PR #20 originally reserved export without implementing it. PR #23 adds explicit bitmap semantics and conformance checks without broadening the contract to rendering or high-bit conversion.

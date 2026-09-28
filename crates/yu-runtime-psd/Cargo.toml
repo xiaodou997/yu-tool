@@ -6,6 +6,8 @@ edition.workspace = true
 [dependencies]
 serde.workspace = true
 serde_json.workspace = true
+png = "0.18"
+tempfile = "3"
 yu-capability-psd = { path = "../yu-capability-psd" }
 yu-core = { path = "../yu-core" }
 yu-engine-api = { path = "../yu-engine-api" }
