@@ -65,7 +65,7 @@ pub(super) fn pair(parent_reads: bool) -> io::Result<(Pipe, File)> {
     // SAFETY: successful server handle is owned exactly once.
     let parent = unsafe { File::from_raw_handle(raw) };
     // SAFETY: open only our fresh pipe. Client is synchronous/blocking and non-inheritable;
-    // std Command duplicates just the explicit stdio handle during process creation.
+    // The startup wrapper marks only its three explicit clients inheritable for HANDLE_LIST.
     let raw = unsafe {
         CreateFileW(
             name.as_ptr(),

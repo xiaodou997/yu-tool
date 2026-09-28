@@ -159,6 +159,10 @@ The optional Windows cleanup-end trace adds `cleanup_succeeded` and `cleanup_err
 
 The execution timeout is unchanged. On completion/error/timeout, the nonblocking transport closes its local endpoints and shares a separate two-second deadline across owned child and Windows Job exit observations. Incomplete cleanup returns EXECUTION_FAILED, preserves the primary error/selected engine and cannot publish a staged PNG. No blocking I/O worker is detached or waited on indefinitely. No new CLI flag, cancellation-token API or Ctrl+C behavior is introduced. Optional trace reports io_transport=nonblocking_poll, workers_joined=0, closed-endpoint/Job-confirmation flags and cleanup timing. This is not a hard wall-clock guarantee over OS calls, process creation, optional trace writes or PNG decoding. See [scope](reliability/bounded-process-io.md) and [acceptance](testing/pr31-bounded-process-io.md). Quarantine retries, explicit activation, #29 status and historical failure evidence are unchanged.
 
+### Windows creation-time ownership with bounded cleanup (PR #32)
+
+The managed Windows engine is created with its private Job membership and exactly three inherited standard-stream clients already specified. Startup/attribute failure returns an execution error without an uncontrolled fallback. The #31 nonblocking pump, operation timeout, shared cleanup observation budget, selected-engine metadata and no-publication-on-cleanup-error rules remain. No new CLI flag or error code is introduced. Windows requires an absolute native .exe and a validated DOS/UNC working directory; Job-list API availability is not minimum-system/signature acceptance. Old #29 remains unmerged with its historical failure intact. See [joint scope](reliability/windows-owned-bounded-runtime.md) and [acceptance](testing/pr32-windows-owned-bounded-runtime.md).
+
 ## Image commands
 
 The first built-in raster engine is `raster-rs`.
