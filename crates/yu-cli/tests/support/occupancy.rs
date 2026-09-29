@@ -13,21 +13,19 @@ pub(super) struct RemoveWindowSampler {
     command_started_unix_ns: u128,
 }
 
-fn remove_selector(args: &[&str]) -> Option<(&str, &str)> {
-    if args.len() < 4 || args[..2] != ["engine", "remove"] {
-        return None;
-    }
-    if args[2..4]
-        .iter()
-        .any(|s| s.is_empty() || s.contains(['/', '\\']) || *s == ".." || *s == ".")
-    {
-        return None;
-    }
-    Some((args[2], args[3]))
+fn valid_remove_selector(args: &[&str]) -> bool {
+    args.len() >= 4
+        && args[..2] == ["engine", "remove"]
+        && !args[2..4]
+            .iter()
+            .any(|s| s.is_empty() || s.contains(['/', '\\']) || *s == ".." || *s == ".")
 }
 
 pub(super) fn start_remove_window(root: &Path, args: &[&str]) -> Option<RemoveWindowSampler> {
-    let (engine, version_name) = remove_selector(args)?;
+    if !valid_remove_selector(args) {
+        return None;
+    }
+    let (engine, version_name) = (args[2], args[3]);
     let (Some(directory), Some(python)) = (
         std::env::var_os("YU_TEST_REMOVE_WINDOW_SAMPLING_DIR"),
         std::env::var_os("YU_TEST_FORENSICS_PYTHON"),
@@ -229,7 +227,7 @@ pub(super) fn capture(root: &Path, args: &[&str], output: &Output) {
         return;
     }
     // Inputs here come from test-owned commands; refuse path-like selectors defensively.
-    if remove_selector(args).is_none() {
+    if !valid_remove_selector(args) {
         return;
     }
     let finished = SystemTime::now()
