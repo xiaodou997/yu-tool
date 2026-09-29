@@ -10,6 +10,7 @@ import sys
 import time
 from windows_occupancy import WindowsAPI, is_reparse, select_files, normalize_windows_path
 from windows_resource_attribution import attribute_files
+from windows_directory_users import directory_users, correlate_directory_users
 
 IS_WINDOWS = os.name == "nt"
 
@@ -67,6 +68,15 @@ def worker(version: Path, output: Path, traces: Path | None) -> int:
         "permission_cause":"not_established; access probes are not an ACL proof"})
     owned = matching_traces(traces, version)
     save(output / "02-owned-traces.json", owned)
+    # Exact-directory observation runs before slower process/file enumeration so a
+    # short-lived directory-only user has the best chance of being retained. The
+    # system-reserved native query is diagnostics-only; failures stay explicit data.
+    directories = directory_users(version, api)
+    save(output / "02a-directory-users.json", directories)
+    save(
+        output / "02b-directory-correlation.json",
+        correlate_directory_users(directories, owned),
+    )
     save(output / "03-version-processes.json", api.version_processes(version))
     selection = select_files(version)
     save(output / "04-selection.json", selection)

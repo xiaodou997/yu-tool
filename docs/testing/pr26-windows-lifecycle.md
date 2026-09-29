@@ -32,6 +32,10 @@ Read [capture scope and limitations](../reliability/windows-occupancy-capture.md
 
 In the independent probe inspect `owned-process-traces/` and each `occupancy/*/context.json` plus its snapshot stage files. Require matching started/cleanup stages for the controlled quiet-descendant case. Distinguish expected directory-denial controls from spontaneous lifecycle failures using the root and original error. Do not equate capture count with successful collection; retain collector timeouts and missing stages. Match ownership using both PID and FILETIME. Empty file-user lists cannot exonerate directory-only handles or kernel filters. Current Job counts are observations with native handles still held, not a whole-tree-exit guarantee.
 
+## Exact-directory attribution follow-up
+
+PR #35 adds a separate real-Windows calibration for the exact opened version directory. Run `python -B -m unittest discover -s tools -p 'test_windows_directory_users.py' -v`; the known blocking holder, delete-sharing nonblocker and sibling-isolation cases must all execute. Inspect `02a-directory-users.json` and `02b-directory-correlation.json` in controlled held-directory captures. A confirmed directory user remains evidence of use, not proof of the rename-blocking share mode. See [PR #35 acceptance](pr35-windows-directory-attribution.md).
+
 ## Review boundary
 
 Confirm that candidate `public_release_ready` stays false and no release/tag/hosting/license/signing claim is introduced. Confirm this change does not modify native Job assignment, process termination/cleanup policy (additional opt-in observation is allowed), quarantine retry budget, package payload, frozen M3 receipts or independent pixel expectations. Native-control hardening remains unimplemented follow-up, with fresh reproduction and acceptance required.
