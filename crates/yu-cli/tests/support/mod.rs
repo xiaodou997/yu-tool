@@ -13,6 +13,11 @@ static NEXT: AtomicU64 = AtomicU64::new(1);
 #[cfg(windows)]
 mod occupancy;
 
+#[cfg(windows)]
+pub fn assert_remove_window_user(version: &Path, pid: u32, command_succeeded: bool) {
+    occupancy::assert_remove_window_user(version, pid, command_succeeded);
+}
+
 pub struct TempRoot(pub PathBuf);
 impl TempRoot {
     pub fn new(label: &str) -> Self {
