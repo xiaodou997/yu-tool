@@ -161,6 +161,8 @@ See:
 - [Explicit cleanup acceptance checklist](docs/testing/pr28-explicit-process-cleanup.md)
 - [Windows single-file resource attribution](docs/reliability/windows-resource-attribution.md)
 - [Resource attribution acceptance checklist](docs/testing/pr30-windows-resource-attribution.md)
+- [Windows exact-directory attribution](docs/reliability/windows-directory-attribution.md)
+- [Exact-directory attribution acceptance](docs/testing/pr35-windows-directory-attribution.md)
 - [Combined Windows startup and bounded runtime](docs/reliability/windows-owned-bounded-runtime.md)
 - [Combined Windows runtime acceptance](docs/testing/pr32-windows-owned-bounded-runtime.md)
 - [Bounded process wait and cancellable I/O](docs/reliability/bounded-process-io.md)

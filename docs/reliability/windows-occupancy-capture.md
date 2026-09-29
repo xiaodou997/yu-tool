@@ -22,6 +22,12 @@ The independent probe enables that trace and a **test-harness-only** post-failur
 
 Restart Manager cannot query directory paths as file resources; `RmGetList` documents ERROR_ACCESS_DENIED for a registered directory. Its result identifies applications using the selected **files**, not every directory-only handle, kernel filter or permission restriction. A file user is not necessarily the process preventing a parent-directory rename. Empty results must never be described as proof of no occupancy. Registration creates Restart Manager session bookkeeping but does not change resource owners, sharing modes or ACLs. No RmShutdown/RmRestart or unlock/elevation operation is used.
 
+## Exact-directory follow-up (PR #35)
+
+Before the slower file/process stages, the collector now also performs a diagnostics-only query against the exact opened version directory and writes `02a-directory-users.json` plus PID+creation-time correlation in `02b-directory-correlation.json`. The implementation uses `NtQueryInformationFile(FileProcessIdsUsingFileInformation = 47)`, which Microsoft marks as reserved for system use. It is therefore isolated to the bounded Python investigation worker and is not a CLI/runtime dependency.
+
+The query is calibrated with known non-delete-sharing, delete-sharing and sibling-directory holders. A confirmed directory user is still **not** labeled the rename blocker: individual handle/share mode and kernel-filter causality remain unknown, and delete-sharing calibration deliberately proves that a directory user can coexist with successful rename. See [full scope](windows-directory-attribution.md) and [acceptance](../testing/pr35-windows-directory-attribution.md).
+
 Job accounting is observed while the runtime still owns process handles. A nonzero ActiveProcesses count is not, by itself, proof of a leaked running process; a zero count is not proof that every external handle/reference is closed. The trace does not enforce whole-Job completion or close the existing start-before-assignment gap.
 
 ## Validation
@@ -44,6 +50,8 @@ windows-lifecycle-report/
       trigger.json
       01-path-observation.json
       02-owned-traces.json
+      02a-directory-users.json
+      02b-directory-correlation.json
       03-version-processes.json
       04-selection.json
       05-resource-users.json
@@ -62,6 +70,8 @@ The initial batch query above is retained unchanged. A diagnostics-only refineme
 
 ## Primary references
 
+- https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/ne-wdm-_file_information_class
+- https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-ntqueryinformationfile
 - https://learn.microsoft.com/en-us/windows/win32/api/restartmanager/nf-restartmanager-rmgetlist
 - https://learn.microsoft.com/en-us/windows/win32/api/restartmanager/nf-restartmanager-rmregisterresources
 - https://learn.microsoft.com/en-us/windows/win32/api/restartmanager/ns-restartmanager-rm_unique_process

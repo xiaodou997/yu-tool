@@ -230,6 +230,10 @@ Independent runtime change on main after #30: nonblocking pipe pump, stop-and-cl
 
 Independent adaptation after #31: the #29 creation-time Job/handle-list contract feeds the #31 nonblocking pipe pump and shared cleanup deadline. Joint native controls cover early descendant membership plus timeout/exit, overlapping invocations and real Job-query denial. [Scope](reliability/windows-owned-bounded-runtime.md) and [acceptance](testing/pr32-windows-owned-bounded-runtime.md) retain old #29's failed gate and issue #27. No extra attribution tooling, engine changes or public candidate promotion.
 
+### Exact-directory user attribution (PR #35)
+
+Diagnostics-only follow-up for the remaining OS5 blind spot: calibrate an exact opened-directory PID query on real Windows and attach it to the existing post-failure collector before file-level Restart Manager attribution. Because the native information class is reserved for system use, this remains investigation tooling rather than a runtime API. A directory user is not automatically a proven rename blocker. See [scope](reliability/windows-directory-attribution.md), [acceptance](testing/pr35-windows-directory-attribution.md), and [ADR 0013](decisions/0013-windows-directory-query-diagnostic-only.md); Issue #27 remains open.
+
 ## M4 — Safe mutation
 
 **Goal:** introduce modifications without compromising source-file safety.
