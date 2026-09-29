@@ -1,0 +1,486 @@
+//! Known-owner startup controls. All processes, Jobs, paths and handles are test-owned.
+use super::*;
+use crate::process::{CLEANUP_BUDGET, Running, exchange, poll_until};
+use serde_json::{Value, json};
+use std::{
+    fs::{self, File},
+    io::Read,
+    path::Path,
+    process::{Command, Stdio},
+    thread,
+    time::{Duration, Instant, SystemTime, UNIX_EPOCH},
+};
+use windows_sys::Win32::{
+    Storage::FileSystem::{BY_HANDLE_FILE_INFORMATION, GetFileInformationByHandle},
+    System::{
+        JobObjects::{AssignProcessToJobObject, IsProcessInJob, OpenJobObjectW},
+        SystemServices::{JOB_OBJECT_QUERY, JOB_OBJECT_TERMINATE},
+        Threading::{
+            GetCurrentProcess, OpenProcess, PROCESS_QUERY_INFORMATION, PROCESS_SYNCHRONIZE,
+        },
+    },
+};
+const CONFIG: &str = ".yu-startup-fixture.json";
+const CHILD_TEST: &str = "process::windows_spawn::tests::fixture_child";
+const DESCENDANT_TEST: &str = "process::windows_spawn::tests::fixture_descendant";
+
+fn query_job(name: &str) -> OwnedHandle {
+    let name = wide_z(OsStr::new(name)).unwrap();
+    // SAFETY: opens only a uniquely named Job created by this test; query rights only.
+    let handle = unsafe { OpenJobObjectW(JOB_OBJECT_QUERY, 0, name.as_ptr()) };
+    assert!(!handle.is_null(), "{}", io::Error::last_os_error());
+    // SAFETY: successful OpenJobObjectW transfers an owned handle reference.
+    unsafe { OwnedHandle::from_raw_handle(handle) }
+}
+fn in_job(process: HANDLE, job: &OwnedHandle) -> bool {
+    let mut yes = 0;
+    // SAFETY: process is our live child/current-process handle and Job is owned and live.
+    assert_ne!(
+        unsafe { IsProcessInJob(process, job.as_raw_handle(), &mut yes) },
+        0
+    );
+    yes != 0
+}
+fn file_identity(handle: HANDLE) -> Option<(u32, u32, u32)> {
+    let mut info = BY_HANDLE_FILE_INFORMATION::default();
+    // SAFETY: metadata-only query of a fixture-provided handle value; Windows validates it.
+    // Never close, duplicate or mutate this candidate handle in the child.
+    (unsafe { GetFileInformationByHandle(handle, &mut info) } != 0).then_some((
+        info.dwVolumeSerialNumber,
+        info.nFileIndexHigh,
+        info.nFileIndexLow,
+    ))
+}
+fn report(prefix: &str, value: Value) {
+    fs::write(format!("{prefix}.tmp"), serde_json::to_vec(&value).unwrap()).unwrap();
+    fs::rename(format!("{prefix}.tmp"), format!("{prefix}.json")).unwrap();
+}
+fn config() -> Option<Value> {
+    if !std::env::args().any(|arg| arg == "--exact") || !Path::new(CONFIG).is_file() {
+        return None;
+    }
+    Some(serde_json::from_slice(&fs::read(CONFIG).unwrap()).unwrap())
+}
+
+#[test]
+fn fixture_child() {
+    let Some(config) = config() else {
+        return;
+    };
+    let job = query_job(config["job"].as_str().unwrap());
+    // Query membership at the first fixture operation, before reading any engine request.
+    let assigned = in_job(unsafe { GetCurrentProcess() }, &job);
+    let unexpected_file = config["handle"].as_u64().is_some_and(|raw| {
+        let seen = file_identity(raw as usize as HANDLE);
+        seen.is_some() && serde_json::to_value(seen.unwrap()).unwrap() == config["identity"]
+    });
+    let descendant = if config["descendant"] == true {
+        // This test requires the parent to exit before its descendant. The invocation Job
+        // owns termination; the descendant also has a finite 20s lifetime as a test backstop.
+        #[expect(
+            clippy::zombie_processes,
+            reason = "Windows startup fixture deliberately leaves its descendant to the invocation Job, not to a parent wait"
+        )]
+        let child = Command::new(std::env::current_exe().unwrap())
+            .args(["--exact", DESCENDANT_TEST, "--nocapture"])
+            .stdin(Stdio::null())
+            .stdout(Stdio::inherit())
+            .stderr(Stdio::inherit())
+            .spawn()
+            .unwrap();
+        Some(child.id()) // The invocation Job, not this fixture, owns descendant termination.
+    } else {
+        None
+    };
+    report(
+        "parent",
+        json!({"pid":std::process::id(), "in_expected_job":assigned,
+        "descendant":descendant, "args":std::env::args().collect::<Vec<_>>(),
+        "cwd":std::env::current_dir().unwrap(), "unexpected_file":unexpected_file,
+        "node_options":std::env::var_os("NODE_OPTIONS").is_some(), "node_path":std::env::var_os("NODE_PATH").is_some()}),
+    );
+    let mut bytes = Vec::new();
+    std::io::stdin().read_to_end(&mut bytes).unwrap();
+    println!("startup-fixture-eof:{}", bytes.len());
+}
+
+#[test]
+fn fixture_descendant() {
+    let Some(config) = config() else {
+        return;
+    };
+    let job = query_job(config["job"].as_str().unwrap());
+    report(
+        "descendant",
+        json!({"pid":std::process::id(),
+        "in_expected_job":in_job(unsafe { GetCurrentProcess() }, &job)}),
+    );
+    thread::sleep(Duration::from_secs(20)); // Finite even if owned cleanup regresses.
+}
+
+fn setup(root: &Path, descendant: bool) -> (ManagedEngineCommand, Containment, String) {
+    let name = format!(
+        "Local\\YuTool-startup-{}-{}",
+        std::process::id(),
+        SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos()
+    );
+    let containment = Containment::create(Some(&name)).unwrap();
+    fs::write(
+        root.join(CONFIG),
+        serde_json::to_vec(&json!({"job":name, "descendant":descendant})).unwrap(),
+    )
+    .unwrap();
+    let installed = ManagedEngineCommand {
+        engine_id: "ag-psd".into(),
+        version: "startup-fixture".into(),
+        capabilities: vec![],
+        working_dir: fs::canonicalize(root).unwrap(),
+        entrypoint: std::env::current_exe().unwrap(),
+        args: vec!["--exact".into(), CHILD_TEST.into(), "--nocapture".into()],
+    };
+    (installed, containment, name)
+}
+fn wait_report(root: &Path, prefix: &str) -> Value {
+    let started = Instant::now();
+    let path = root.join(format!("{prefix}.json"));
+    while !path.exists() {
+        assert!(
+            started.elapsed() < Duration::from_secs(15),
+            "fixture did not report {prefix}"
+        );
+        thread::sleep(Duration::from_millis(5));
+    }
+    serde_json::from_slice(&fs::read(path).unwrap()).unwrap()
+}
+fn running(spawned: (Child, Pipes), containment: Containment) -> Running {
+    let (child, pipes) = spawned;
+    Running {
+        child,
+        containment,
+        pipes,
+        cleanup_result: None,
+        cleanup_fault: None,
+        trace: None,
+    }
+}
+fn finish(running: &mut Running) {
+    let result = exchange(
+        running,
+        b"{}".to_vec(),
+        Duration::from_secs(30),
+        Instant::now(),
+        0,
+    );
+    let output = running.finish(result).unwrap();
+    assert!(String::from_utf8_lossy(&output.stdout).contains("startup-fixture-eof:2"));
+    assert!(running.pipes.is_closed());
+    assert!(running.child.try_wait().unwrap().is_some());
+    assert!(running.containment.is_empty().unwrap());
+}
+
+#[test]
+fn early_descendant_membership_and_inherited_pipe_timeout_settle_together() {
+    let root = tempfile::tempdir().unwrap();
+    let (installed, containment, _) = setup(root.path(), true);
+    let child = spawn_in_job(&installed, &containment.job).unwrap();
+    let mut owned = running(child, containment);
+    let parent = wait_report(root.path(), "parent");
+    let descendant = wait_report(root.path(), "descendant");
+    assert_eq!(parent["in_expected_job"], true);
+    assert_eq!(descendant["in_expected_job"], true);
+    assert_eq!(parent["descendant"], descendant["pid"]);
+    assert!(in_job(owned.child.as_raw_handle(), &owned.containment.job));
+    // Open the known test descendant while it reports membership and is still alive.
+    // Retain this handle through cleanup rather than interpreting a later reused PID.
+    let raw = unsafe {
+        OpenProcess(
+            PROCESS_QUERY_INFORMATION | PROCESS_SYNCHRONIZE,
+            0,
+            descendant["pid"].as_u64().unwrap().try_into().unwrap(),
+        )
+    };
+    assert!(!raw.is_null(), "{}", io::Error::last_os_error());
+    let descendant_handle = unsafe { OwnedHandle::from_raw_handle(raw) };
+    assert!(in_job(
+        descendant_handle.as_raw_handle(),
+        &owned.containment.job
+    ));
+    assert_eq!(
+        unsafe { WaitForSingleObject(descendant_handle.as_raw_handle(), 0) },
+        WAIT_TIMEOUT
+    );
+    let began = Instant::now();
+    let execution = exchange(&mut owned, b"{}".to_vec(), Duration::from_secs(1), began, 0);
+    let error = match owned.finish(execution) {
+        Err(error) => error,
+        Ok(_) => panic!("inherited output peer must prevent complete transport success"),
+    };
+    assert!(error.contains("timed out after 1000 ms"), "{error}");
+    assert!(!error.contains("engine cleanup failed:"), "{error}");
+    assert!(began.elapsed() < Duration::from_secs(4), "{error}");
+    assert!(owned.pipes.is_closed());
+    assert!(owned.child.try_wait().unwrap().is_some());
+    assert!(owned.containment.is_empty().unwrap());
+    assert_eq!(
+        unsafe { WaitForSingleObject(descendant_handle.as_raw_handle(), 0) },
+        WAIT_OBJECT_0,
+        "the actual early descendant must exit, not merely reach its20-second backstop"
+    );
+}
+
+#[test]
+fn controlled_legacy_post_spawn_assignment_exposes_the_startup_gap() {
+    let root = tempfile::tempdir().unwrap();
+    let (installed, containment, _) = setup(root.path(), false);
+    struct Legacy(std::process::Child);
+    impl Drop for Legacy {
+        fn drop(&mut self) {
+            let _ = self.0.kill();
+            let _ = poll_until(
+                Instant::now() + CLEANUP_BUDGET,
+                "legacy fixture exit",
+                || {
+                    self.0
+                        .try_wait()
+                        .map(|v| v.is_some())
+                        .map_err(|e| e.to_string())
+                },
+            );
+        }
+    }
+    let mut child = Legacy(
+        Command::new(&installed.entrypoint)
+            .args(&installed.args)
+            .current_dir(&installed.working_dir)
+            .stdin(Stdio::piped())
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .spawn()
+            .unwrap(),
+    );
+    let observed = wait_report(root.path(), "parent");
+    // Only the controlled old-order fixture uses post-spawn assignment; production never does.
+    assert_eq!(observed["in_expected_job"], false);
+    assert_ne!(
+        unsafe {
+            AssignProcessToJobObject(containment.job.as_raw_handle(), child.0.as_raw_handle())
+        },
+        0
+    );
+    assert!(in_job(child.0.as_raw_handle(), &containment.job));
+    drop(child.0.stdin.take());
+    poll_until(
+        Instant::now() + CLEANUP_BUDGET,
+        "legacy fixture exit",
+        || {
+            child
+                .0
+                .try_wait()
+                .map(|v| v.is_some())
+                .map_err(|e| e.to_string())
+        },
+    )
+    .unwrap();
+    assert!(child.0.try_wait().unwrap().unwrap().success());
+}
+
+#[test]
+fn job_without_assignment_rights_fails_before_fixture_code_and_has_no_fallback() {
+    let root = tempfile::tempdir().unwrap();
+    let (installed, containment, name) = setup(root.path(), false);
+    let restricted = query_job(&name); // No JOB_OBJECT_ASSIGN_PROCESS permission.
+    let error = match spawn_in_job(&installed, &restricted) {
+        Ok(child) => {
+            let mut owned = running(child, containment);
+            let _ = owned.cleanup();
+            panic!("query-only Job unexpectedly permitted creation");
+        }
+        Err(error) => error,
+    };
+    assert_eq!(error.raw_os_error(), Some(5), "{error}");
+    assert!(!root.path().join("parent.json").exists());
+    assert!(!root.path().join("descendant.json").exists());
+    assert!(containment.is_empty().unwrap());
+    // Same fixture and full-rights Job work normally after the refused creation.
+    let child = spawn_in_job(&installed, &containment.job).unwrap();
+    let mut owned = running(child, containment);
+    assert_eq!(wait_report(root.path(), "parent")["in_expected_job"], true);
+    finish(&mut owned);
+}
+
+#[test]
+fn explicit_argv_cwd_and_handle_allowlist_survive_real_child_startup() {
+    // The canonical Windows test cwd has a verbatim prefix; startup must make it
+    // usable by ordinary relative module lookup without changing directory identity.
+    let temporary = tempfile::tempdir().unwrap();
+    let root = temporary.path().join("engine 中文 space");
+    fs::create_dir(&root).unwrap();
+    let (mut installed, containment, _) = setup(&root, false);
+    let ambiguous = fs::canonicalize(&root).unwrap().join("trailing.");
+    fs::create_dir(&ambiguous).unwrap();
+    assert!(
+        startup_directory(&ambiguous).is_err(),
+        "stripping the verbatim prefix must not silently select a different directory"
+    );
+    let values = [
+        "spaces here",
+        "a\"quote",
+        "slash\\\"quote",
+        "trailing\\",
+        "中文",
+        "%PATH% & ! ^",
+        "tab\tvalue",
+    ];
+    for value in values {
+        installed.args.extend(["--skip".into(), value.into()]);
+    }
+    let sentinel = root.join("unrelated-handle.txt");
+    fs::write(&sentinel, b"test-owned only").unwrap();
+    let file = File::open(&sentinel).unwrap();
+    assert_ne!(
+        unsafe {
+            SetHandleInformation(
+                file.as_raw_handle(),
+                HANDLE_FLAG_INHERIT,
+                HANDLE_FLAG_INHERIT,
+            )
+        },
+        0
+    );
+    let mut config: Value = serde_json::from_slice(&fs::read(root.join(CONFIG)).unwrap()).unwrap();
+    config["handle"] = json!(file.as_raw_handle() as usize);
+    config["identity"] = json!(file_identity(file.as_raw_handle()).unwrap());
+    fs::write(root.join(CONFIG), serde_json::to_vec(&config).unwrap()).unwrap();
+    let child = spawn_in_job(&installed, &containment.job).unwrap();
+    assert_ne!(
+        unsafe { SetHandleInformation(file.as_raw_handle(), HANDLE_FLAG_INHERIT, 0) },
+        0
+    );
+    let mut owned = running(child, containment);
+    let observed = wait_report(&root, "parent");
+    assert!(
+        !observed["cwd"].as_str().unwrap().starts_with(r"\\?\"),
+        "child cwd must be usable by Node relative module lookup: {observed}"
+    );
+    let actual: Vec<String> = serde_json::from_value(observed["args"].clone()).unwrap();
+    assert_eq!(actual[1..], installed.args);
+    assert_eq!(
+        Path::new(observed["cwd"].as_str().unwrap())
+            .canonicalize()
+            .unwrap(),
+        installed.working_dir
+    );
+    assert_eq!(observed["unexpected_file"], false);
+    assert_eq!(observed["node_options"], false);
+    assert_eq!(observed["node_path"], false);
+    finish(&mut owned);
+}
+
+#[test]
+fn overlapping_owned_invocations_do_not_keep_each_others_pipe_endpoints_open() {
+    let roots = [tempfile::tempdir().unwrap(), tempfile::tempdir().unwrap()];
+    let (first, first_job, _) = setup(roots[0].path(), false);
+    let (second, second_job, _) = setup(roots[1].path(), false);
+    let mut a = running(spawn_in_job(&first, &first_job.job).unwrap(), first_job);
+    let mut b = running(spawn_in_job(&second, &second_job.job).unwrap(), second_job);
+    assert_eq!(
+        wait_report(roots[0].path(), "parent")["in_expected_job"],
+        true
+    );
+    assert_eq!(
+        wait_report(roots[1].path(), "parent")["in_expected_job"],
+        true
+    );
+    assert!(b.child.try_wait().unwrap().is_none());
+    finish(&mut a);
+    // B remains alive with its own stdin open; it cannot delay A's EOF or be killed by A.
+    assert!(b.child.try_wait().unwrap().is_none());
+    assert!(!b.containment.is_empty().unwrap());
+    finish(&mut b);
+}
+
+#[test]
+fn retained_process_must_belong_to_this_exact_job() {
+    let roots = [tempfile::tempdir().unwrap(), tempfile::tempdir().unwrap()];
+    let (first, first_job, _) = setup(roots[0].path(), false);
+    let (second, second_job, _) = setup(roots[1].path(), false);
+    let mut a = running(spawn_in_job(&first, &first_job.job).unwrap(), first_job);
+    let mut b = running(spawn_in_job(&second, &second_job.job).unwrap(), second_job);
+    wait_report(roots[0].path(), "parent");
+    wait_report(roots[1].path(), "parent");
+    assert!(
+        a.containment.retain_member(b.child.id()).is_err(),
+        "a valid PID from another Job must not be accepted as an owned member"
+    );
+    assert!(a.child.try_wait().unwrap().is_none());
+    assert!(b.child.try_wait().unwrap().is_none());
+    finish(&mut a);
+    finish(&mut b);
+}
+
+#[test]
+fn cleanup_membership_change_is_an_error_not_a_zero_count_shortcut() {
+    assert!(unchanged_membership(2, 2).is_ok());
+    assert!(unchanged_membership(2, 3).is_err());
+    assert!(unchanged_membership(3, 2).is_err());
+}
+
+#[test]
+fn creation_pipeline_delivers_all_request_bytes_and_confirms_cleanup() {
+    let root = tempfile::tempdir().unwrap();
+    let (installed, job, _) = setup(root.path(), false);
+    let mut owned = running(spawn_in_job(&installed, &job.job).unwrap(), job);
+    assert_eq!(wait_report(root.path(), "parent")["in_expected_job"], true);
+    let execution = exchange(
+        &mut owned,
+        vec![7; crate::process::MAX_REQUEST_BYTES],
+        Duration::from_secs(30),
+        Instant::now(),
+        0,
+    );
+    let output = owned.finish(execution).unwrap();
+    assert!(String::from_utf8_lossy(&output.stdout).contains("startup-fixture-eof:65536"));
+    assert!(owned.pipes.is_closed());
+    assert!(owned.child.try_wait().unwrap().unwrap().success());
+    assert!(owned.containment.is_empty().unwrap());
+}
+
+#[test]
+fn real_job_query_denial_is_not_hidden_by_successful_response() {
+    let root = tempfile::tempdir().unwrap();
+    let (installed, job, name) = setup(root.path(), false);
+    let mut owned = running(spawn_in_job(&installed, &job.job).unwrap(), job);
+    assert_eq!(wait_report(root.path(), "parent")["in_expected_job"], true);
+    let output = exchange(
+        &mut owned,
+        b"{}".to_vec(),
+        Duration::from_secs(30),
+        Instant::now(),
+        0,
+    )
+    .unwrap();
+    let name = wide_z(OsStr::new(&name)).unwrap();
+    // Only narrow a handle to this TEST-owned Job; no process or ACL is modified.
+    // Termination is allowed but the real accounting query must fail without QUERY rights.
+    let raw = unsafe { OpenJobObjectW(JOB_OBJECT_TERMINATE, 0, name.as_ptr()) };
+    assert!(!raw.is_null(), "{}", io::Error::last_os_error());
+    let restricted = unsafe { OwnedHandle::from_raw_handle(raw) };
+    let _full_rights = std::mem::replace(&mut owned.containment.job, restricted);
+    let error = match owned.finish(Ok(output)) {
+        Err(error) => error,
+        Ok(_) => panic!("native Job query denial must reject otherwise successful output"),
+    };
+    assert!(error.starts_with("engine cleanup failed:"), "{error}");
+    assert!(error.contains("cannot confirm owned Job exit:"), "{error}");
+    assert!(owned.pipes.is_closed());
+    assert!(owned.child.try_wait().unwrap().is_some());
+    assert_eq!(
+        owned.cleanup_result,
+        Some(Err(error
+            .trim_start_matches("engine cleanup failed: ")
+            .to_owned()))
+    );
+}

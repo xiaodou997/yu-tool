@@ -1,8 +1,9 @@
 //! Nonblocking parent endpoints, ordinary blocking engine endpoints. No I/O workers.
+#[cfg(unix)]
+use std::process::Command;
 use std::{
     fs::File,
     io::{self, Read, Write},
-    process::Command,
 };
 
 #[cfg(windows)]
@@ -84,6 +85,7 @@ pub(super) struct Pipes {
     pub(super) stderr: Option<Pipe>,
 }
 impl Pipes {
+    #[cfg(unix)]
     pub(super) fn configure(command: &mut Command) -> io::Result<Self> {
         let (stdin, input) = pair(false)?;
         let (stdout, output) = pair(true)?;

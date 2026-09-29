@@ -226,6 +226,10 @@ This main-derived diagnostics increment refines verified batch resource users in
 
 Independent runtime change on main after #30: nonblocking pipe pump, stop-and-close cancellation, bounded direct-child and Windows Job settlement, and preserved explicit cleanup/error/publication semantics. No #29 startup code or additional occupancy investigation is included. [Scope](reliability/bounded-process-io.md) and [acceptance](testing/pr31-bounded-process-io.md) distinguish tested transport bounds from hard OS-call guarantees and historical root-cause closure. Issue #27 remains open; no candidate promotion.
 
+### Combined Windows owned / bounded runtime (PR #32)
+
+Independent adaptation after #31: the #29 creation-time Job/handle-list contract feeds the #31 nonblocking pipe pump and shared cleanup deadline. Joint native controls cover early descendant membership plus timeout/exit, overlapping invocations and real Job-query denial. [Scope](reliability/windows-owned-bounded-runtime.md) and [acceptance](testing/pr32-windows-owned-bounded-runtime.md) retain old #29's failed gate and issue #27. No extra attribution tooling, engine changes or public candidate promotion.
+
 ## M4 — Safe mutation
 
 **Goal:** introduce modifications without compromising source-file safety.

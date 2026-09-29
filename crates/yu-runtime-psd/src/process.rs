@@ -1,9 +1,10 @@
 //! Bounded one-shot transport. Engines are trusted installed programs, not sandboxed code.
+#[cfg(unix)]
+use std::process::{Child, Command};
 #[cfg(test)]
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::{
     io::{Read, Write},
-    process::{Child, Command},
     thread,
     time::{Duration, Instant},
 };
@@ -17,7 +18,13 @@ const CLEANUP_BUDGET: Duration = Duration::from_secs(2);
 const POLL_INTERVAL: Duration = Duration::from_millis(5);
 
 #[cfg(windows)]
+mod windows_spawn;
+#[cfg(windows)]
 mod windows_trace;
+#[cfg(any(windows, test))]
+mod windows_wire;
+#[cfg(windows)]
+use windows_spawn::{Child, Containment};
 
 #[cfg(test)]
 #[path = "process_cleanup_tests.rs"]
@@ -63,10 +70,18 @@ impl Running {
                 serde_json::json!({"workers":0, "io_transport":"nonblocking_poll", "cleanup_budget_ms":CLEANUP_BUDGET.as_millis()}),
             );
         }
+        // Retain verified members BEFORE requesting termination: accounting can reach zero
+        // while an actual descendant process handle is still not signaled (PR #32 control).
+        #[cfg(windows)]
+        let members = self.containment.snapshot_members(&self.child, deadline);
         // Cancel the pump before waiting for process exit. No outstanding read/write,
         // OVERLAPPED buffer or detached worker can retain these local endpoints.
         self.pipes.close();
         let mut errors = Vec::new();
+        #[cfg(windows)]
+        if let Err(error) = &members {
+            errors.push(error.clone());
+        }
         if let Err(error) = self.containment.terminate() {
             errors.push(error);
         }
@@ -75,7 +90,12 @@ impl Running {
             errors.push(error.clone());
         }
         #[cfg(windows)]
-        let job_result = poll_until(deadline, "owned Job exit", || self.containment.is_empty());
+        let job_result = poll_until(deadline, "owned Job and retained member exit", || {
+            match &members {
+                Ok(snapshot) => self.containment.members_complete(snapshot),
+                Err(_) => self.containment.is_empty(), // Still attempt owned cleanup; overall error remains.
+            }
+        });
         #[cfg(windows)]
         if let Err(error) = &job_result {
             errors.push(error.clone());
@@ -94,6 +114,8 @@ impl Running {
                     "direct_wait_succeeded":wait_result.is_ok(), "workers_joined":0,
                     "io_transport":"nonblocking_poll", "io_endpoints_closed":true,
                     "job_empty_confirmed":job_result.is_ok(),
+                    "retained_member_count":members.as_ref().ok().map(|m| m.retained_count()),
+                    "retained_members_confirmed":members.is_ok() && job_result.is_ok(),
                     "cleanup_budget_ms":CLEANUP_BUDGET.as_millis(), "cleanup_elapsed_ms":started.elapsed().as_millis(),
                     "cleanup_succeeded":errors.is_empty(), "cleanup_errors":&errors,
                 }),
@@ -202,28 +224,34 @@ fn execute_with_setup(
 }
 
 fn spawn_running(installed: &ManagedEngineCommand) -> Result<Running, String> {
-    let mut command = Command::new(&installed.entrypoint);
-    command
-        .args(&installed.args)
-        .current_dir(&installed.working_dir)
-        .env_remove("NODE_OPTIONS")
-        .env_remove("NODE_PATH");
-    let mut pipes = Pipes::configure(&mut command)
-        .map_err(|e| format!("cannot prepare cancellable engine I/O: {e}"))?;
-    configure_containment(&mut command);
-    let mut child = command
-        .spawn()
-        .map_err(|e| format!("cannot start engine: {e}"))?;
-    drop(command); // Release parent-side copies of the engine endpoints before waiting for EOF.
-    let containment = match Containment::attach(&child) {
-        Ok(value) => value,
-        Err(error) => {
-            pipes.close();
-            return combine_execution_and_cleanup(
-                Err(error),
-                stop_child_until(&mut child, Instant::now() + CLEANUP_BUDGET),
-            );
-        }
+    #[cfg(windows)]
+    let (child, containment, pipes) = windows_spawn::spawn(installed)?;
+    #[cfg(unix)]
+    let (child, containment, pipes) = {
+        let mut command = Command::new(&installed.entrypoint);
+        command
+            .args(&installed.args)
+            .current_dir(&installed.working_dir)
+            .env_remove("NODE_OPTIONS")
+            .env_remove("NODE_PATH");
+        let mut pipes = Pipes::configure(&mut command)
+            .map_err(|e| format!("cannot prepare cancellable engine I/O: {e}"))?;
+        configure_containment(&mut command);
+        let mut child = command
+            .spawn()
+            .map_err(|e| format!("cannot start engine: {e}"))?;
+        drop(command); // Release parent-side copies of the engine endpoints before waiting for EOF.
+        let containment = match Containment::attach(&child) {
+            Ok(value) => value,
+            Err(error) => {
+                pipes.close();
+                return combine_execution_and_cleanup(
+                    Err(error),
+                    stop_child_until(&mut child, Instant::now() + CLEANUP_BUDGET),
+                );
+            }
+        };
+        (child, containment, pipes)
     };
     #[cfg(windows)]
     let trace = windows_trace::Trace::start(&child, &containment.job, &installed.working_dir);
@@ -421,9 +449,6 @@ fn configure_containment(command: &mut Command) {
     command.process_group(0);
 }
 
-#[cfg(windows)]
-fn configure_containment(_: &mut Command) {}
-
 #[cfg(unix)]
 struct Containment {
     group: libc::pid_t,
@@ -452,99 +477,6 @@ impl Containment {
             Err(format!(
                 "cannot terminate owned engine process group: {error}"
             ))
-        }
-    }
-}
-
-#[cfg(windows)]
-struct Containment {
-    job: std::os::windows::io::OwnedHandle,
-}
-
-#[cfg(windows)]
-impl Containment {
-    fn attach(child: &Child) -> Result<Self, String> {
-        use std::os::windows::io::{AsRawHandle, FromRawHandle, OwnedHandle};
-        use windows_sys::Win32::System::JobObjects::{
-            AssignProcessToJobObject, CreateJobObjectW, JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE,
-            JOBOBJECT_EXTENDED_LIMIT_INFORMATION, JobObjectExtendedLimitInformation,
-            SetInformationJobObject,
-        };
-        // SAFETY: null optional security/name pointers create an unnamed owned job.
-        let raw = unsafe { CreateJobObjectW(std::ptr::null(), std::ptr::null()) };
-        if raw.is_null() {
-            return Err(format!(
-                "cannot create engine job: {}",
-                std::io::Error::last_os_error()
-            ));
-        }
-        // SAFETY: the successful CreateJobObjectW result is owned exactly once.
-        let job = unsafe { OwnedHandle::from_raw_handle(raw) };
-        // SAFETY: this Windows POD structure admits zero initialization.
-        let mut limits: JOBOBJECT_EXTENDED_LIMIT_INFORMATION = unsafe { std::mem::zeroed() };
-        limits.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
-        // SAFETY: pointers refer to valid handles/structures for the duration of each call.
-        let configured = unsafe {
-            SetInformationJobObject(
-                job.as_raw_handle(),
-                JobObjectExtendedLimitInformation,
-                &limits as *const _ as *const std::ffi::c_void,
-                std::mem::size_of_val(&limits) as u32,
-            )
-        };
-        if configured == 0 {
-            return Err(format!(
-                "cannot configure engine job: {}",
-                std::io::Error::last_os_error()
-            ));
-        }
-        // SAFETY: both handles are live and owned by this invocation.
-        if unsafe { AssignProcessToJobObject(job.as_raw_handle(), child.as_raw_handle()) } == 0 {
-            return Err(format!(
-                "cannot assign engine job: {}",
-                std::io::Error::last_os_error()
-            ));
-        }
-        Ok(Self { job })
-    }
-    fn is_empty(&self) -> Result<bool, String> {
-        use std::os::windows::io::AsRawHandle;
-        use windows_sys::Win32::System::JobObjects::{
-            JOBOBJECT_BASIC_ACCOUNTING_INFORMATION, JobObjectBasicAccountingInformation,
-            QueryInformationJobObject,
-        };
-        let mut info = JOBOBJECT_BASIC_ACCOUNTING_INFORMATION::default();
-        // SAFETY: live owned Job and correctly sized initialized accounting structure.
-        if unsafe {
-            QueryInformationJobObject(
-                self.job.as_raw_handle(),
-                JobObjectBasicAccountingInformation,
-                &mut info as *mut _ as *mut std::ffi::c_void,
-                std::mem::size_of_val(&info) as u32,
-                std::ptr::null_mut(),
-            )
-        } == 0
-        {
-            return Err(format!(
-                "cannot confirm owned Job exit: {}",
-                std::io::Error::last_os_error()
-            ));
-        }
-        Ok(info.ActiveProcesses == 0)
-    }
-    fn terminate(&self) -> Result<(), String> {
-        use std::os::windows::io::AsRawHandle;
-        // SAFETY: the job handle is live and belongs only to this invocation.
-        let result = unsafe {
-            windows_sys::Win32::System::JobObjects::TerminateJobObject(self.job.as_raw_handle(), 1)
-        };
-        if result == 0 {
-            Err(format!(
-                "cannot terminate owned engine job: {}",
-                std::io::Error::last_os_error()
-            ))
-        } else {
-            Ok(())
         }
     }
 }

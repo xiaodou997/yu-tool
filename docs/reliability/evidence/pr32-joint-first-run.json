@@ -1,0 +1,24 @@
+{
+  "schema_version": "1",
+  "kind": "retained_native_joint_failure",
+  "feature_sha": "a2ae60e3a48840aa413ea92cdbe27bccc6acb916",
+  "actual_checkout_sha": "ab2545defe85f7d1c0b15b8bc8b680a453d3755e",
+  "base_sha": "4a939e4b7c23622ce445aeb3a680c2678b0154ea",
+  "ci": {"run_id": 36440124246, "run_number": 119, "attempt": 1, "windows_job_id": 108988141840, "conclusion": "failure", "runtime_passed": 37, "runtime_failed": 1, "original_job_log_sha256": "f7b92db9cf8e4d07717787a39f795246277282495788a7dc8a5c29cda9e3418c"},
+  "diagnostics": {"run_id": 36440124023, "run_number": 10, "attempt": 1, "job_id": 108988140105, "conclusion": "failure", "bounded_cases_passed": 8, "startup_entries_passed": 8, "startup_entries_failed": 1, "real_lifecycle_cycles_executed": 0, "original_job_log_sha256": "eb8c4f25013225c89abfa758587e30ec3c1f2f025021ed66684410d5035be3fb"},
+  "failure": {
+    "test": "process::windows_spawn::tests::early_descendant_membership_and_inherited_pipe_timeout_settle_together",
+    "assertion": "retained descendant handle is signaled before return",
+    "actual_wait_code": 258,
+    "actual_meaning": "WAIT_TIMEOUT",
+    "expected_wait_code": 0,
+    "expected_meaning": "WAIT_OBJECT_0",
+    "prior_assertions_passed": ["membership before input", "one-second transport timeout", "no reported cleanup error", "less than four seconds", "local pipes closed", "direct child exited", "Job ActiveProcesses zero"],
+    "interpretation": "Accounting zero did not establish retained descendant process-handle completion; production settlement confirmation must not substitute one for the other.",
+    "historical_os5_attributed": false
+  },
+  "failed_job_reruns": 0,
+  "assertion_relaxed": false,
+  "public_release_ready": false,
+  "original_local_logs": ["target/pr32-validation/windows-ci-first.log", "target/pr32-validation/windows-joint-first.log"]
+}

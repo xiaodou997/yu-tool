@@ -20,6 +20,10 @@ Read [release readiness](releasing/v0.1-readiness.md) before distributing a buil
 
 PR #28 makes process cleanup an explicit part of the result: valid response bytes or an existing private staged PNG do not establish success when cleanup fails. Preserve the returned `EXECUTION_FAILED` and selected engine; do not publish a leftover private artifact or automatically retry against a different engine. PR #31 replaces blocking transport workers with nonblocking endpoints and a shared two-second cleanup observation budget. It does not merge #29 or prove Windows root-cause closure/release readiness. Read [current scope](reliability/bounded-process-io.md) and [acceptance](testing/pr31-bounded-process-io.md); do not treat a cleanup deadline error as evidence all processes exited.
 
+## Combined Windows startup
+
+PR #32 adapts creation-time Job ownership onto the #31 nonblocking transport. Do not merge the old #29 branch on top: its blocking interfaces and failed independent gate remain historical evidence. Use the [joint acceptance](testing/pr32-windows-owned-bounded-runtime.md) to verify startup, I/O cancellation and cleanup on the same candidate. A successful run is not proof of the historical OS5 cause or release approval.
+
 ## Recommended workflow
 
 Agents should use this sequence:
