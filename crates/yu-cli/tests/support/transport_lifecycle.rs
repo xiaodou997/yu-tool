@@ -187,6 +187,7 @@ fn external_directory_occupancy_fails_closed_then_recovers_after_release() {
     );
     assert!(version.is_dir());
     assert_eq!(sha256_file(&metadata).unwrap(), before);
+    occupancy::assert_remove_window_user(&version, std::process::id(), false);
     drop(held); // Release only the handle created by THIS test, never external handles.
     let removed = success(run(
         &root.0,

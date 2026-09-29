@@ -234,6 +234,10 @@ Independent adaptation after #31: the #29 creation-time Job/handle-list contract
 
 Diagnostics-only follow-up for the remaining OS5 blind spot: calibrate an exact opened-directory PID query on real Windows and attach it to the existing post-failure collector before file-level Restart Manager attribution. Because the native information class is reserved for system use, this remains investigation tooling rather than a runtime API. A directory user is not automatically a proven rename blocker. See [scope](reliability/windows-directory-attribution.md), [acceptance](testing/pr35-windows-directory-attribution.md), and [ADR 0013](decisions/0013-windows-directory-query-diagnostic-only.md); Issue #27 remains open.
 
+### In-flight remove-window sampling (PR #36)
+
+Test-only follow-up after a successful remove required 52 quarantine attempts / ~1317 ms and therefore escaped post-failure capture. While an explicitly instrumented `engine remove` is running, the harness samples PR #35 exact-directory identities and correlates their first/last seen times with the unchanged remove result. Three real-Windows controls cover transient-success, persistent-failure and sibling isolation. See [scope](reliability/windows-remove-window-sampling.md) and [acceptance](testing/pr36-windows-remove-window-sampling.md); this does not change the production retry loop or prove a causal rename blocker.
+
 ## M4 — Safe mutation
 
 **Goal:** introduce modifications without compromising source-file safety.

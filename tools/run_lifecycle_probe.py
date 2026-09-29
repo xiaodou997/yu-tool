@@ -26,10 +26,20 @@ def run_plan(output: Path, repetitions: int, env: dict, source: str, runner=None
     output.mkdir(parents=True, exist_ok=False)
     env = env.copy()
     if os.name == "nt":
-        traces, evidence = output / "owned-process-traces", output / "occupancy"
+        traces, evidence, remove_windows = (
+            output / "owned-process-traces",
+            output / "occupancy",
+            output / "remove-window",
+        )
         traces.mkdir()
         evidence.mkdir()
-        env.update(YU_WINDOWS_LIFECYCLE_TRACE_DIR=str(traces), YU_TEST_FORENSICS_DIR=str(evidence), YU_TEST_FORENSICS_PYTHON=sys.executable)
+        remove_windows.mkdir()
+        env.update(
+            YU_WINDOWS_LIFECYCLE_TRACE_DIR=str(traces),
+            YU_TEST_FORENSICS_DIR=str(evidence),
+            YU_TEST_FORENSICS_PYTHON=sys.executable,
+            YU_TEST_REMOVE_WINDOW_SAMPLING_DIR=str(remove_windows),
+        )
     runner = runner or subprocess.run
     plan = [
         ("transport", ["cargo", "test", "--locked", "-p", "yu-cli", "--test", "psd", "transport_lifecycle", "--", "--nocapture"], 5 if os.name == "nt" else 4),
@@ -79,6 +89,7 @@ def run_plan(output: Path, repetitions: int, env: dict, source: str, runner=None
             entry["elapsed_ms"] = round((time.monotonic() - started) * 1000)
             entry["occupancy_capture_count"] = len(list((output / "occupancy").glob("*/context.json")))
             entry["owned_trace_file_count"] = len(list((output / "owned-process-traces").glob("*.json")))
+            entry["remove_window_report_count"] = len(list((output / "remove-window").glob("*/report.json")))
             write_report(report_path, report)
             print(json.dumps({"repetition": repetition, "suite": suite, "status": entry["status"]}), flush=True)
             if entry["status"] != "passed":

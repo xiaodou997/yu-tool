@@ -63,14 +63,22 @@ pub fn cli_binary() -> PathBuf {
 }
 
 pub fn run(root: &Path, args: &[&str]) -> Output {
-    let output = Command::new(cli_binary())
+    let mut command = Command::new(cli_binary());
+    command
         .args(args)
         .env("YU_DATA_HOME", root)
         .env("PATH", "")
         .env("NODE_OPTIONS", "--require=should-not-be-loaded-by-yu")
-        .env("NODE_PATH", "should-not-be-used-by-yu")
+        .env("NODE_PATH", "should-not-be-used-by-yu");
+    #[cfg(windows)]
+    let sampler = occupancy::start_remove_window(root, args);
+    let output = command
         .output()
         .expect("CLI must execute without PATH lookup");
+    #[cfg(windows)]
+    if let Some(sampler) = sampler {
+        occupancy::finish_remove_window(sampler, &output);
+    }
     #[cfg(windows)]
     occupancy::capture(root, args, &output);
     output
