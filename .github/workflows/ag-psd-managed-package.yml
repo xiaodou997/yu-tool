@@ -16,6 +16,8 @@ on:
       - "tools/windows_directory_users.py"
       - "tools/windows_remove_window_sampler.py"
       - "tools/test_windows_remove_window_sampler.py"
+      - "tools/windows_remove_file_sampler.py"
+      - "tools/test_windows_remove_file_sampler.py"
       - "crates/yu-cli/**"
       - "crates/yu-core/**"
       - "crates/yu-engine-api/**"
