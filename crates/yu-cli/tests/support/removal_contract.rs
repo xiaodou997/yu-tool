@@ -85,8 +85,13 @@ fn held_nested_file_preserves_installation_and_other_active_version_until_explic
         serde_json::json!(["1.0", "2.0"])
     );
     assert_eq!(psd_caps(&root), CAPS);
+    super::support::assert_remove_file_window_user(
+        &version,
+        std::process::id(),
+        "runtime/fixture.exe",
+    );
     capture_preserves_original_error(&root, &version, &denied);
-    // Collection and failure handling must not unlock or delete the held test resource.
+    // Sampling, collection and failure handling must not unlock or delete the held test resource.
     let still_held = fs::rename(&binary, version.join("runtime/moved.exe"));
     assert!(
         still_held.is_err(),
