@@ -98,7 +98,7 @@ jobs:
           from pathlib import Path
           root = Path('target/package-acceptance-windows').resolve()
           for phase in ('controls', 'debug', 'release'):
-              for kind in ('traces', 'occupancy', 'remove-window'):
+              for kind in ('traces', 'occupancy', 'remove-window', 'remove-file-window'):
                   (root / phase / kind).mkdir(parents=True, exist_ok=False)
           source = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True, timeout=30).strip()
           context = {'schema_version':'1', 'source_commit':source,
@@ -117,6 +117,7 @@ jobs:
         env:
           YU_TEST_FORENSICS_DIR: ${{ github.workspace }}/target/package-acceptance-windows/controls/occupancy
           YU_TEST_REMOVE_WINDOW_SAMPLING_DIR: ${{ github.workspace }}/target/package-acceptance-windows/controls/remove-window
+          YU_TEST_REMOVE_FILE_SAMPLING_DIR: ${{ github.workspace }}/target/package-acceptance-windows/controls/remove-file-window
         run: |
           set -o pipefail
           cargo test --locked -p yu-cli --test psd removal_contract -- --nocapture 2>&1 | tee target/package-acceptance-windows/controls/tests.log
@@ -128,6 +129,7 @@ jobs:
           YU_TEST_PACKAGE: ${{ github.workspace }}/target/ag-psd-managed/${{ matrix.label }}/yu-engine-ag-psd-31.0.2-node22.23.3.yu2-${{ matrix.label }}.zip
           YU_TEST_FORENSICS_DIR: ${{ runner.os == 'Windows' && format('{0}/target/package-acceptance-windows/debug/occupancy', github.workspace) || '' }}
           YU_TEST_REMOVE_WINDOW_SAMPLING_DIR: ${{ runner.os == 'Windows' && format('{0}/target/package-acceptance-windows/debug/remove-window', github.workspace) || '' }}
+          YU_TEST_REMOVE_FILE_SAMPLING_DIR: ${{ runner.os == 'Windows' && format('{0}/target/package-acceptance-windows/debug/remove-file-window', github.workspace) || '' }}
           YU_WINDOWS_LIFECYCLE_TRACE_DIR: ${{ runner.os == 'Windows' && format('{0}/target/package-acceptance-windows/debug/traces', github.workspace) || '' }}
         run: |
           if [ "$RUNNER_OS" = Windows ]; then
@@ -151,6 +153,7 @@ jobs:
           YU_TEST_PACKAGE: ${{ github.workspace }}/target/ag-psd-managed/${{ matrix.label }}/yu-engine-ag-psd-31.0.2-node22.23.3.yu2-${{ matrix.label }}.zip
           YU_TEST_FORENSICS_DIR: ${{ runner.os == 'Windows' && format('{0}/target/package-acceptance-windows/release/occupancy', github.workspace) || '' }}
           YU_TEST_REMOVE_WINDOW_SAMPLING_DIR: ${{ runner.os == 'Windows' && format('{0}/target/package-acceptance-windows/release/remove-window', github.workspace) || '' }}
+          YU_TEST_REMOVE_FILE_SAMPLING_DIR: ${{ runner.os == 'Windows' && format('{0}/target/package-acceptance-windows/release/remove-file-window', github.workspace) || '' }}
           YU_WINDOWS_LIFECYCLE_TRACE_DIR: ${{ runner.os == 'Windows' && format('{0}/target/package-acceptance-windows/release/traces', github.workspace) || '' }}
         run: |
           if [ "$RUNNER_OS" = Windows ]; then
