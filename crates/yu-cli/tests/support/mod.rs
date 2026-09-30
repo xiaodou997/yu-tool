@@ -18,6 +18,11 @@ pub fn assert_remove_window_user(version: &Path, pid: u32, command_succeeded: bo
     occupancy::assert_remove_window_user(version, pid, command_succeeded);
 }
 
+#[cfg(windows)]
+pub fn assert_remove_file_window_user(version: &Path, pid: u32, relative_path: &str) {
+    occupancy::assert_remove_file_window_user(version, pid, relative_path);
+}
+
 pub struct TempRoot(pub PathBuf);
 impl TempRoot {
     pub fn new(label: &str) -> Self {
