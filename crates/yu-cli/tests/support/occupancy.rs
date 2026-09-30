@@ -165,7 +165,13 @@ pub(super) fn finish_remove_window(mut sampler: RemoveWindowSampler, output: &Ou
 }
 
 fn normalized_windows_path(path: &Path) -> String {
-    let text = path
+    // The Windows runner may expose the same temp directory through an 8.3 alias
+    // (for example RUNNER~1) while the native sampler reports its long path.
+    // Canonicalize existing test-owned paths before textual normalization so the
+    // assertion compares the directory identity rather than the spelling used by
+    // the caller. Failed remove controls deliberately keep this directory present.
+    let canonical = fs::canonicalize(path).unwrap_or_else(|_| path.to_path_buf());
+    let text = canonical
         .to_string_lossy()
         .replace('/', "\\")
         .to_ascii_lowercase();
