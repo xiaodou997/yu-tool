@@ -300,10 +300,7 @@ pub(super) fn assert_remove_file_window_user(version: &Path, pid: u32, relative_
     let directory = PathBuf::from(directory);
     let mut matches = Vec::new();
     for entry in fs::read_dir(directory).unwrap() {
-        let report = entry
-            .unwrap()
-            .path()
-            .join("sampling/sampling-report.json");
+        let report = entry.unwrap().path().join("sampling/sampling-report.json");
         if !report.is_file() {
             continue;
         }
