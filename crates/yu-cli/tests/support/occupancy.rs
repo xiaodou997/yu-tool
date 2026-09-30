@@ -293,6 +293,51 @@ pub(super) fn assert_remove_window_user(version: &Path, pid: u32, command_succee
     );
 }
 
+pub(super) fn assert_remove_file_window_user(version: &Path, pid: u32, relative_path: &str) {
+    let Some(directory) = std::env::var_os("YU_TEST_REMOVE_FILE_SAMPLING_DIR") else {
+        return;
+    };
+    let directory = PathBuf::from(directory);
+    let mut matches = Vec::new();
+    for entry in fs::read_dir(directory).unwrap() {
+        let report = entry
+            .unwrap()
+            .path()
+            .join("sampling/sampling-report.json");
+        if !report.is_file() {
+            continue;
+        }
+        let value: Value = serde_json::from_slice(&fs::read(&report).unwrap()).unwrap();
+        let observed_version = value["version_directory"]
+            .as_str()
+            .map(Path::new)
+            .map(normalized_windows_path);
+        if observed_version.as_deref() == Some(&normalized_windows_path(version)) {
+            matches.push(value);
+        }
+    }
+    assert_eq!(
+        matches.len(),
+        1,
+        "expected one remove-file-window report for {version:?}"
+    );
+    let expected = relative_path.replace('/', "\\").to_ascii_lowercase();
+    let witnesses = matches[0]["witnesses"].as_array().unwrap();
+    assert!(
+        witnesses.iter().any(|witness| {
+            witness["pid"] == pid
+                && witness["relative_path"]
+                    .as_str()
+                    .map(|path| path.replace('/', "\\").to_ascii_lowercase())
+                    .as_deref()
+                    == Some(expected.as_str())
+        }),
+        "expected PID {pid} / {relative_path} singleton witness: {}",
+        matches[0]
+    );
+    assert_eq!(matches[0]["rename_blocker_proven"], false);
+}
+
 pub(super) fn capture(root: &Path, args: &[&str], output: &Output) {
     if output.status.success() || args.len() < 4 || args[..2] != ["engine", "remove"] {
         return;
