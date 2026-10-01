@@ -15,6 +15,8 @@ import tempfile
 import tomllib
 import zipfile
 
+from distribution_notices import AUXILIARY_NAMES, MAX_BUNDLE, cli_notices
+
 ROOT = Path(__file__).resolve().parents[1]
 TARGETS = {
     "x86_64-unknown-linux-gnu": "bin/yu",
@@ -54,7 +56,35 @@ def clean_head() -> str:
     return git("rev-parse", "HEAD")
 
 
-def archive_bytes(binary: bytes, metadata: dict) -> dict[str, bytes]:
+def checked_auxiliary(metadata: dict, extra: dict[str, bytes]) -> dict[str, bytes]:
+    layout = metadata.get("archive_layout_version", 1)
+    if layout == 1:
+        if extra or "auxiliary_sha256" in metadata:
+            raise ValueError("legacy candidate cannot contain undeclared auxiliary files")
+        return {}
+    if layout != 2 or set(extra) != AUXILIARY_NAMES:
+        raise ValueError("unsupported candidate layout or missing distribution files")
+    hashes = metadata.get("auxiliary_sha256")
+    if not isinstance(hashes, dict) or set(hashes) != AUXILIARY_NAMES:
+        raise ValueError("candidate auxiliary manifest is incomplete")
+    if sum(map(len, extra.values())) > MAX_BUNDLE:
+        raise ValueError("candidate auxiliary bundle exceeds bound")
+    for name, content in extra.items():
+        if not content or digest(content) != hashes[name]:
+            raise ValueError("candidate auxiliary checksum mismatch")
+        content.decode("utf-8")
+    inventory = json.loads(extra["dependency-inventory.json"])
+    if (not isinstance(inventory, dict)
+            or inventory.get("kind") != "resolved_dependency_notice_inventory"
+            or inventory.get("source_commit") != metadata.get("source_commit")
+            or inventory.get("target") != metadata.get("target")
+            or inventory.get("redistribution_review_accepted") is not False
+            or inventory.get("public_release_ready") is not False):
+        raise ValueError("dependency inventory identity or review boundary mismatch")
+    return extra
+
+
+def archive_bytes(binary: bytes, metadata: dict, extra: dict[str, bytes] | None = None) -> dict[str, bytes]:
     target = metadata["target"]
     if target not in TARGETS or not 0 < len(binary) <= MAX_BINARY:
         raise ValueError("unsupported target or invalid binary size")
@@ -62,11 +92,12 @@ def archive_bytes(binary: bytes, metadata: dict) -> dict[str, bytes]:
         raise ValueError("binary digest mismatch")
     if metadata.get("public_release_ready") is not False:
         raise ValueError("developer candidates must not assert release readiness")
-    return {TARGETS[target]: binary, "build-info.json": json_bytes(metadata), "RELEASE-STATUS.txt": NOTICE.encode()}
+    auxiliary = checked_auxiliary(metadata, extra or {})
+    return {TARGETS[target]: binary, "build-info.json": json_bytes(metadata), "RELEASE-STATUS.txt": NOTICE.encode(), **auxiliary}
 
 
-def write_archive(path: Path, binary: bytes, metadata: dict) -> None:
-    members = archive_bytes(binary, metadata)
+def write_archive(path: Path, binary: bytes, metadata: dict, extra: dict[str, bytes] | None = None) -> None:
+    members = archive_bytes(binary, metadata, extra)
     # Exclusive creation: never silently replace another candidate.
     with path.open("xb") as stream, zipfile.ZipFile(stream, "w", compression=zipfile.ZIP_STORED) as archive:
         for name, data in sorted(members.items()):
@@ -81,21 +112,25 @@ def unpack_verified(path: Path, destination: Path) -> tuple[Path, dict]:
     with zipfile.ZipFile(path) as archive:
         infos = archive.infolist()
         names = [info.filename for info in infos]
-        if len(names) != 3 or len(set(names)) != 3 or "build-info.json" not in names:
+        if len(names) not in (3, 6) or len(set(names)) != len(names) or "build-info.json" not in names:
             raise ValueError("unexpected or duplicate candidate members")
         info = archive.getinfo("build-info.json")
         if info.file_size > 1024 * 1024:
             raise ValueError("oversized build metadata")
         metadata = json.loads(archive.read(info))
+        if not isinstance(metadata, dict):
+            raise ValueError("candidate metadata must be an object")
         target = metadata.get("target")
         if target not in TARGETS or metadata.get("public_release_ready") is not False:
             raise ValueError("invalid candidate target/readiness")
         executable = TARGETS[target]
-        if set(names) != {executable, "build-info.json", "RELEASE-STATUS.txt"}:
+        layout = metadata.get("archive_layout_version", 1)
+        auxiliary_names = AUXILIARY_NAMES if layout == 2 else set()
+        if layout not in (1, 2) or set(names) != {executable, "build-info.json", "RELEASE-STATUS.txt"} | auxiliary_names:
             raise ValueError("candidate contains an unexpected path")
         for item in infos:
             mode = item.external_attr >> 16
-            limit = MAX_BINARY if item.filename == executable else 1024 * 1024
+            limit = MAX_BINARY if item.filename == executable else MAX_BUNDLE if item.filename in auxiliary_names else 1024 * 1024
             if not stat.S_ISREG(mode) or not 0 < item.file_size <= limit or item.flag_bits & 1:
                 raise ValueError("candidate member must be bounded, regular and unencrypted")
         binary = archive.read(executable)
@@ -103,6 +138,9 @@ def unpack_verified(path: Path, destination: Path) -> tuple[Path, dict]:
             raise ValueError("candidate binary checksum mismatch")
         if archive.read("RELEASE-STATUS.txt") != NOTICE.encode():
             raise ValueError("candidate notice mismatch")
+        if sum(archive.getinfo(name).file_size for name in auxiliary_names) > MAX_BUNDLE:
+            raise ValueError("candidate auxiliary bundle exceeds bound")
+        auxiliary = checked_auxiliary(metadata, {name: archive.read(name) for name in auxiliary_names})
         destination.mkdir(parents=True, exist_ok=False)
         binary_path = destination / executable
         binary_path.parent.mkdir()
@@ -111,6 +149,8 @@ def unpack_verified(path: Path, destination: Path) -> tuple[Path, dict]:
             binary_path.chmod(0o755)
         (destination / "build-info.json").write_bytes(json_bytes(metadata))
         (destination / "RELEASE-STATUS.txt").write_text(NOTICE, encoding="utf-8")
+        for name, data in auxiliary.items():
+            (destination / name).write_bytes(data)
     return binary_path.resolve(), metadata
 
 
@@ -146,8 +186,15 @@ def build(target: str, output: Path) -> dict:
         raise ValueError("source changed while building candidate")
     binary_path = build_dir / target / "release" / Path(TARGETS[target]).name
     binary = binary_path.read_bytes()
+    resolved = json.loads(command(["cargo", "metadata", "--locked", "--format-version", "1", "--filter-platform", target, "--manifest-path", str(ROOT / "crates/yu-cli/Cargo.toml")], timeout=300))
+    notices, inventory = cli_notices(resolved, tomllib.loads((ROOT / "Cargo.lock").read_text()), head, target)
+    extra = {"THIRD-PARTY-NOTICES.txt": notices, "dependency-inventory.json": inventory, "USAGE.md": (ROOT / "packaging/cli/USAGE.md").read_bytes()}
+    if clean_head() != head:
+        raise ValueError("source changed while collecting distribution notices")
     metadata = {
         "schema_version": "1", "kind": "developer_candidate", "version": version,
+        "archive_layout_version": 2, "auxiliary_sha256": {name: digest(data) for name, data in extra.items()},
+        "redistribution_review_accepted": False,
         "target": target, "source_commit": head, "source_tree": git("rev-parse", "HEAD^{tree}"),
         "rustc": compiler, "binary_sha256": digest(binary),
         "input_sha256": {name: digest((ROOT / name).read_bytes()) for name in LOCKS},
@@ -160,7 +207,7 @@ def build(target: str, output: Path) -> dict:
         stage = Path(temporary)
         name = f"yu-{version}-dev.{head[:12]}-{target}.zip"
         archive = stage / name
-        write_archive(archive, binary, metadata)
+        write_archive(archive, binary, metadata, extra)
         executable, _ = unpack_verified(archive, stage / "smoke")
         smoke(executable, version, stage)
         receipt = {"schema_version":"1", "archive":name, "sha256":digest(archive.read_bytes()), "bytes":archive.stat().st_size, "source_commit":head, "public_release_ready":False, "packaged_cli_smoke":"passed", "smoke_binary":f"smoke/{TARGETS[target]}"}
