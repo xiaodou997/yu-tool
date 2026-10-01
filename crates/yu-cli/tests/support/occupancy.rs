@@ -110,7 +110,7 @@ pub(super) fn start_remove_window(root: &Path, args: &[&str]) -> Option<RemoveWi
     let ready = case.join("ready");
     let script =
         Path::new(env!("CARGO_MANIFEST_DIR")).join("../../tools/windows_remove_window_sampler.py");
-    let mut child = Command::new(python)
+    let mut child = Command::new(&python)
         .args(["-B"])
         .arg(script)
         .arg("--version-dir")
