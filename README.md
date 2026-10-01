@@ -154,6 +154,8 @@ See:
 - [M3 implementation freeze](docs/milestones/m3-freeze.md)
 - [M3 freeze acceptance checklist](docs/testing/pr24-m3-freeze.md)
 - [v0.1 release preparation](docs/releasing/v0.1-readiness.md)
+- [Distribution notices and isolated acceptance](docs/releasing/distribution-readiness.md)
+- [Distribution acceptance checklist](docs/testing/pr33-distribution-readiness.md)
 - [Release preparation acceptance](docs/testing/pr25-release-readiness.md)
 - [Windows lifecycle investigation](docs/reliability/windows-lifecycle.md)
 - [Windows lifecycle acceptance checklist](docs/testing/pr26-windows-lifecycle.md)

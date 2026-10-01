@@ -10,6 +10,11 @@ on:
       - "Cargo.lock"
       - "rust-toolchain.toml"
       - "tools/build_cli_candidate.py"
+      - "tools/distribution_notices.py"
+      - "tools/accept_cli_candidate.py"
+      - "tools/test_candidate_distribution.py"
+      - "tools/test_distribution_notices.py"
+      - "packaging/cli/**"
       - "tools/collect_windows_occupancy.py"
       - "tools/windows_occupancy.py"
       - "tools/windows_resource_attribution.py"
@@ -164,6 +169,25 @@ jobs:
           else
             cargo test --locked -p yu-cli --test psd_managed -- --ignored --nocapture
           fi
+
+      - name: Accept packaged CLI in fresh user environment without development PATH
+        run: >-
+          python -B tools/accept_cli_candidate.py
+          --candidate-dir target/cli-candidate/${{ matrix.label }}
+          --manifest target/ag-psd-managed/${{ matrix.label }}/manifest-${{ matrix.label }}.json
+          --engine-archive target/ag-psd-managed/${{ matrix.label }}/yu-engine-ag-psd-31.0.2-node22.23.3.yu2-${{ matrix.label }}.zip
+          --fixture fixtures/psd/upstream/psd-tools/2layers.psd
+          --expected-source ${{ github.sha }}
+          --output-dir target/isolated-acceptance/${{ matrix.label }}
+
+      - name: Retain isolated acceptance receipt and original CLI output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: isolated-cli-acceptance-${{ matrix.label }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: target/isolated-acceptance/${{ matrix.label }}/
+          if-no-files-found: warn
+          retention-days: 30
 
       - name: Record observed Windows package and executable hashes even on failure
         if: ${{ always() && runner.os == 'Windows' }}

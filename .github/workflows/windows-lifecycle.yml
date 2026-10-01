@@ -21,6 +21,8 @@ on:
       - "tools/windows_remove_file_sampler.py"
       - "tools/test_windows_remove_file_sampler.py"
       - "tools/build_cli_candidate.py"
+      - "tools/distribution_notices.py"
+      - "packaging/cli/**"
       - "tools/build_ag_psd_managed_package.py"
       - "Cargo.lock"
       - "rust-toolchain.toml"

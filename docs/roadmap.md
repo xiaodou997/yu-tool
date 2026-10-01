@@ -242,6 +242,10 @@ Diagnostics-only follow-up for the remaining OS5 blind spot: calibrate an exact 
 
 Test-only follow-up after a successful remove required 52 quarantine attempts / ~1317 ms and therefore escaped post-failure capture. While an explicitly instrumented `engine remove` is running, the harness samples PR #35 exact-directory identities and correlates their first/last seen times with the unchanged remove result. Three real-Windows controls cover transient-success, persistent-failure and sibling isolation. See [scope](reliability/windows-remove-window-sampling.md) and [acceptance](testing/pr36-windows-remove-window-sampling.md); this does not change the production retry loop or prove a causal rename blocker.
 
+### Distribution notices and isolated acceptance (PR #33)
+
+Originally developed after #32 and rebased for final acceptance onto `main@f0a3f052e52ce9ba89c59bbebbce813b3b84410e` after #34/#37. Distribution preparation packages conservative Cargo source notices, a hashed dependency inventory and usage guidance with new CLI candidates, then checks core/offline PSD workflows in a fresh process environment. See [scope](releasing/distribution-readiness.md) and [acceptance](testing/pr33-distribution-readiness.md). This is not legal clearance, clean-VM/signing/minimum-OS acceptance or public release; Issue #27 stays open.
+
 ## M4 — Safe mutation
 
 **Goal:** introduce modifications without compromising source-file safety.
