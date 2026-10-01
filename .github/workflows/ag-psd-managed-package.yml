@@ -1,6 +1,37 @@
 name: Managed ag-psd Package
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - "packaging/ag-psd-engine/**"
+      - "tools/build_ag_psd_managed_package.py"
+      - "crates/yu-engine-manager/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "rust-toolchain.toml"
+      - "tools/build_cli_candidate.py"
+      - "tools/distribution_notices.py"
+      - "tools/accept_cli_candidate.py"
+      - "tools/test_candidate_distribution.py"
+      - "tools/test_distribution_notices.py"
+      - "packaging/cli/**"
+      - "tools/collect_windows_occupancy.py"
+      - "tools/windows_occupancy.py"
+      - "tools/windows_resource_attribution.py"
+      - "tools/windows_directory_users.py"
+      - "tools/windows_remove_window_sampler.py"
+      - "tools/test_windows_remove_window_sampler.py"
+      - "tools/windows_remove_file_sampler.py"
+      - "tools/test_windows_remove_file_sampler.py"
+      - "crates/yu-cli/**"
+      - "crates/yu-core/**"
+      - "crates/yu-engine-api/**"
+      - "crates/yu-capability-psd/**"
+      - "crates/yu-runtime-psd/**"
+      - "crates/yu-psd-spike/adapters/typescript/ag_psd_protocol.cjs"
+      - ".github/workflows/ag-psd-managed-package.yml"
   pull_request:
     paths:
       - "packaging/ag-psd-engine/**"
