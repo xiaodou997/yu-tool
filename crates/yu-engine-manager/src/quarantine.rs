@@ -3,6 +3,10 @@
 use std::io;
 use std::{fs, path::Path};
 
+#[cfg(windows)]
+const WINDOWS_QUARANTINE_RETRY_BUDGET: std::time::Duration =
+    std::time::Duration::from_millis(2500);
+
 /// The caller holds the per-engine mutation lock and has checked ownership,
 /// activation, metadata and paths. Retry only this same rename; never copy or
 /// delete the original version when quarantine cannot be completed.
@@ -20,7 +24,10 @@ pub(crate) fn rename(source: &Path, destination: &Path) -> Result<QuarantineObse
         fs::rename(source, destination)
     };
     #[cfg(windows)]
-    let result = retry_windows_rename(&mut operation, std::time::Duration::from_secs(2));
+    // Issue #27 RC evidence observed an identity-confirmed external regular-file user
+    // on runtime/node.exe through ~2125 ms and gone shortly after the old 2 s bound.
+    // Keep the operation atomic and add only 500 ms of sharing-class settle grace.
+    let result = retry_windows_rename(&mut operation, WINDOWS_QUARANTINE_RETRY_BUDGET);
     #[cfg(not(windows))]
     let result = operation();
     let observation = QuarantineObservation {
@@ -134,6 +141,62 @@ mod tests {
         .unwrap_err();
         assert_eq!(calls, 1);
         assert_eq!(error.raw_os_error(), Some(5));
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn windows_nested_file_holder_released_after_two_seconds_uses_settle_grace() {
+        use std::{
+            os::windows::fs::OpenOptionsExt,
+            thread,
+            time::{Duration, Instant, SystemTime, UNIX_EPOCH},
+        };
+        use windows_sys::Win32::Storage::FileSystem::{FILE_SHARE_READ, FILE_SHARE_WRITE};
+
+        let root = std::env::temp_dir().join(format!(
+            "yu-quarantine-late-file-sharing-{}-{}",
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        let source = root.join("version");
+        let target = root.join("quarantined");
+        let runtime = source.join("runtime");
+        let node = runtime.join("node.exe");
+        fs::create_dir_all(&runtime).unwrap();
+        fs::write(&node, b"node fixture").unwrap();
+
+        // Model the RC Freeze reproduction: a nested executable is observed by an
+        // external process beyond the historical two-second bound, then released.
+        // No FILE_SHARE_DELETE means the directory rename must wait for this handle.
+        let held = fs::OpenOptions::new()
+            .read(true)
+            .share_mode(FILE_SHARE_READ | FILE_SHARE_WRITE)
+            .open(&node)
+            .unwrap();
+        let releaser = thread::spawn(move || {
+            thread::sleep(Duration::from_millis(2100));
+            drop(held);
+        });
+
+        let started = Instant::now();
+        let observation = rename(&source, &target).unwrap();
+        releaser.join().unwrap();
+
+        assert!(
+            observation.elapsed_ms >= 2000,
+            "control must cross the historical two-second bound: {observation:?}"
+        );
+        assert!(
+            started.elapsed() < Duration::from_millis(2600),
+            "sharing settle grace must remain bounded: {observation:?}"
+        );
+        assert!(!source.exists());
+        assert_eq!(fs::read(target.join("runtime/node.exe")).unwrap(), b"node fixture");
+
+        fs::remove_dir_all(root).unwrap();
     }
 
     #[cfg(windows)]
