@@ -18,6 +18,8 @@ on:
       - "tools/test_windows_directory_users.py"
       - "tools/windows_remove_window_sampler.py"
       - "tools/test_windows_remove_window_sampler.py"
+      - "tools/windows_remove_file_sampler.py"
+      - "tools/test_windows_remove_file_sampler.py"
       - "tools/build_cli_candidate.py"
       - "tools/build_ag_psd_managed_package.py"
       - "Cargo.lock"
@@ -44,6 +46,8 @@ jobs:
         run: python -B -m unittest discover -s tools -p "test_windows_directory_users.py" -v
       - name: Calibrate remove-window sampling against transient and persistent holders
         run: python -B -m unittest discover -s tools -p "test_windows_remove_window_sampler.py" -v
+      - name: Calibrate in-flight regular-file sampling and singleton witnesses
+        run: python -B -m unittest discover -s tools -p "test_windows_remove_file_sampler.py" -v
       - name: Retain native calibration observations even on failure
         if: always()
         uses: actions/upload-artifact@v4
@@ -53,6 +57,7 @@ jobs:
             target/windows-resource-calibration/
             target/windows-directory-calibration/
             target/windows-remove-window-calibration/
+            target/windows-remove-file-calibration/
           if-no-files-found: error
           retention-days: 30
 
