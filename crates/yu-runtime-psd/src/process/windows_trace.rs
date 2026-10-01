@@ -1,5 +1,5 @@
 //! Opt-in investigation snapshots of this invocation's handles; no process-control changes.
-use super::Child;
+use super::{Child, windows_spawn::StartupObservation};
 use serde_json::{Value, json};
 use std::{
     fs::{self, OpenOptions},
@@ -74,6 +74,7 @@ impl Trace {
         child: &Child,
         job: &OwnedHandle,
         version_directory: &Path,
+        startup: &StartupObservation,
     ) -> Option<Self> {
         let directory = PathBuf::from(std::env::var_os("YU_WINDOWS_LIFECYCLE_TRACE_DIR")?);
         let metadata = fs::symlink_metadata(&directory).ok()?;
@@ -86,7 +87,7 @@ impl Trace {
             version_directory: version_directory.to_owned(),
             child_created_filetime: creation_time(child),
         };
-        trace.record(child, job, "started", json!({}));
+        trace.record(child, job, "started", json!({"startup": startup.json()}));
         Some(trace)
     }
 

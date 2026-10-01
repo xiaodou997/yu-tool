@@ -98,6 +98,38 @@ fn real_child_success_keeps_transport_output() {
 }
 
 #[test]
+fn operation_deadline_rejects_completed_startup_overrun_before_exchange() {
+    let root = tempfile::tempdir().unwrap();
+    let started = Instant::now();
+    let result = execute_with_setup_and_spawn(
+        &fixture_command(root.path()),
+        b"request-must-not-enter-exchange".to_vec(),
+        Duration::from_millis(40),
+        |_| {},
+        |installed| {
+            std::thread::sleep(Duration::from_millis(80));
+            spawn_running(installed)
+        },
+    );
+    let error = match result {
+        Err(error) => error,
+        Ok(_) => panic!("startup that already exhausted the operation deadline must fail"),
+    };
+    assert!(error.contains("timed out after 40 ms"), "{error}");
+    assert!(error.contains("startup diagnostic:"), "{error}");
+    assert!(error.contains("phase=startup"), "{error}");
+    assert!(error.contains("spawn_ms="), "{error}");
+    #[cfg(windows)]
+    {
+        assert!(error.contains("startup_stages_us="), "{error}");
+        assert!(error.contains("create_process:"), "{error}");
+    }
+    assert!(!error.contains("transport diagnostic:"), "{error}");
+    assert!(started.elapsed() >= Duration::from_millis(80));
+    assert!(started.elapsed() < Duration::from_secs(3), "{error}");
+}
+
+#[test]
 fn execution_and_cleanup_result_matrix() {
     assert_eq!(combine_execution_and_cleanup(Ok(42), Ok(())), Ok(42));
     assert_eq!(

@@ -161,6 +161,7 @@ fn running(spawned: (Child, Pipes), containment: Containment) -> Running {
         child,
         containment,
         pipes,
+        startup: StartupObservation::default(),
         cleanup_result: None,
         cleanup_fault: None,
         trace: None,
@@ -354,7 +355,21 @@ fn explicit_argv_cwd_and_handle_allowlist_survive_real_child_startup() {
     config["handle"] = json!(file.as_raw_handle() as usize);
     config["identity"] = json!(file_identity(file.as_raw_handle()).unwrap());
     fs::write(root.join(CONFIG), serde_json::to_vec(&config).unwrap()).unwrap();
-    let child = spawn_in_job(&installed, &containment.job).unwrap();
+    let mut startup = StartupObservation::default();
+    let child = spawn_in_job_observed(&installed, &containment.job, &mut startup).unwrap();
+    assert_eq!(
+        startup.stage_names(),
+        [
+            "path_validation",
+            "command_line",
+            "environment",
+            "pipe_create",
+            "handle_inherit",
+            "attribute_list",
+            "create_process",
+            "post_create_cleanup",
+        ]
+    );
     assert_ne!(
         unsafe { SetHandleInformation(file.as_raw_handle(), HANDLE_FLAG_INHERIT, 0) },
         0

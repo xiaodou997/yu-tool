@@ -43,6 +43,8 @@ struct Running {
     child: Child,
     containment: Containment,
     pipes: Pipes,
+    #[cfg(windows)]
+    startup: windows_spawn::StartupObservation,
     cleanup_result: Option<Result<(), String>>,
     #[cfg(test)]
     cleanup_fault: Option<String>,
@@ -209,6 +211,16 @@ fn execute_with_setup(
     timeout: Duration,
     setup: impl FnOnce(&mut Running),
 ) -> Result<Output, String> {
+    execute_with_setup_and_spawn(installed, request, timeout, setup, spawn_running)
+}
+
+fn execute_with_setup_and_spawn(
+    installed: &ManagedEngineCommand,
+    request: Vec<u8>,
+    timeout: Duration,
+    setup: impl FnOnce(&mut Running),
+    spawn: impl FnOnce(&ManagedEngineCommand) -> Result<Running, String>,
+) -> Result<Output, String> {
     if request.len() > MAX_REQUEST_BYTES {
         return Err("external engine request exceeds 64 KiB".to_owned());
     }
@@ -216,16 +228,69 @@ fn execute_with_setup(
         return Err("external engine timeout must be greater than zero".to_owned());
     }
     let started = Instant::now();
-    let mut running = spawn_running(installed)?;
-    let spawn_elapsed_ms = started.elapsed().as_millis();
+    let mut running = match spawn(installed) {
+        Ok(running) => running,
+        Err(error) => {
+            let elapsed = started.elapsed();
+            if elapsed >= timeout {
+                return Err(startup_timeout_error(
+                    None,
+                    timeout,
+                    elapsed,
+                    elapsed.as_millis(),
+                    Some(&error),
+                ));
+            }
+            return Err(error);
+        }
+    };
+    let spawn_elapsed = started.elapsed();
+    let spawn_elapsed_ms = spawn_elapsed.as_millis();
     setup(&mut running);
+    if spawn_elapsed >= timeout {
+        let execution = Err(startup_timeout_error(
+            Some(&running),
+            timeout,
+            spawn_elapsed,
+            spawn_elapsed_ms,
+            None,
+        ));
+        return running.finish(execution);
+    }
     let execution = exchange(&mut running, request, timeout, started, spawn_elapsed_ms);
     running.finish(execution)
 }
 
+fn startup_timeout_error(
+    running: Option<&Running>,
+    timeout: Duration,
+    elapsed: Duration,
+    spawn_elapsed_ms: u128,
+    startup_error: Option<&str>,
+) -> String {
+    let pid = running
+        .map(|running| running.child.id().to_string())
+        .unwrap_or_else(|| "unavailable".to_owned());
+    let mut message = format!(
+        "engine timed out after {} ms; startup diagnostic: pid={pid}, elapsed_ms={}, spawn_ms={spawn_elapsed_ms}, phase=startup",
+        timeout.as_millis(),
+        elapsed.as_millis(),
+    );
+    #[cfg(windows)]
+    if let Some(running) = running {
+        message.push_str(", startup_stages_us=");
+        message.push_str(&running.startup.diagnostic());
+    }
+    if let Some(error) = startup_error {
+        message.push_str(", startup_error=");
+        message.push_str(error);
+    }
+    message
+}
+
 fn spawn_running(installed: &ManagedEngineCommand) -> Result<Running, String> {
     #[cfg(windows)]
-    let (child, containment, pipes) = windows_spawn::spawn(installed)?;
+    let (child, containment, pipes, startup) = windows_spawn::spawn(installed)?;
     #[cfg(unix)]
     let (child, containment, pipes) = {
         let mut command = Command::new(&installed.entrypoint);
@@ -254,11 +319,14 @@ fn spawn_running(installed: &ManagedEngineCommand) -> Result<Running, String> {
         (child, containment, pipes)
     };
     #[cfg(windows)]
-    let trace = windows_trace::Trace::start(&child, &containment.job, &installed.working_dir);
+    let trace =
+        windows_trace::Trace::start(&child, &containment.job, &installed.working_dir, &startup);
     Ok(Running {
         child,
         containment,
         pipes,
+        #[cfg(windows)]
+        startup,
         cleanup_result: None,
         #[cfg(test)]
         cleanup_fault: None,

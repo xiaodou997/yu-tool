@@ -130,13 +130,37 @@ fn assert_owned_trace(root: &TempRoot) {
     assert_eq!(end["observations"]["cleanup_errors"], serde_json::json!([]));
     assert_eq!(end["job"]["status"], "observed");
     assert!(end["child_created_filetime"].is_string());
-    for stage in ["started", "cleanup_begin"] {
-        assert!(
-            records
-                .iter()
-                .any(|v| v["stage"] == stage && v["invocation"] == end["invocation"])
-        );
-    }
+    let started = records
+        .iter()
+        .find(|v| v["stage"] == "started" && v["invocation"] == end["invocation"])
+        .expect("enabled trace must observe startup");
+    let startup = started["observations"]["startup"]["stages"]
+        .as_array()
+        .expect("startup trace must carry bounded stage timings");
+    let names = startup
+        .iter()
+        .map(|stage| stage["name"].as_str().unwrap())
+        .collect::<Vec<_>>();
+    assert_eq!(
+        names,
+        [
+            "job_create",
+            "path_validation",
+            "command_line",
+            "environment",
+            "pipe_create",
+            "handle_inherit",
+            "attribute_list",
+            "create_process",
+            "post_create_cleanup",
+        ]
+    );
+    assert!(started["observations"]["startup"]["total_us"].is_u64());
+    assert!(
+        records
+            .iter()
+            .any(|v| { v["stage"] == "cleanup_begin" && v["invocation"] == end["invocation"] })
+    );
     // ActiveProcesses is sampled while native handles are retained, not a leak assertion.
 }
 
