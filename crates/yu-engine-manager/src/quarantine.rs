@@ -4,8 +4,7 @@ use std::io;
 use std::{fs, path::Path};
 
 #[cfg(windows)]
-const WINDOWS_QUARANTINE_RETRY_BUDGET: std::time::Duration =
-    std::time::Duration::from_millis(2500);
+const WINDOWS_QUARANTINE_RETRY_BUDGET: std::time::Duration = std::time::Duration::from_millis(2500);
 
 /// The caller holds the per-engine mutation lock and has checked ownership,
 /// activation, metadata and paths. Retry only this same rename; never copy or
@@ -194,7 +193,10 @@ mod tests {
             "sharing settle grace must remain bounded: {observation:?}"
         );
         assert!(!source.exists());
-        assert_eq!(fs::read(target.join("runtime/node.exe")).unwrap(), b"node fixture");
+        assert_eq!(
+            fs::read(target.join("runtime/node.exe")).unwrap(),
+            b"node fixture"
+        );
 
         fs::remove_dir_all(root).unwrap();
     }
