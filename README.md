@@ -167,6 +167,8 @@ See:
 - [Remove-window sampling acceptance](docs/testing/pr36-windows-remove-window-sampling.md)
 - [Combined Windows startup and bounded runtime](docs/reliability/windows-owned-bounded-runtime.md)
 - [Combined Windows runtime acceptance](docs/testing/pr32-windows-owned-bounded-runtime.md)
+- [Windows startup deadline semantics](docs/reliability/windows-startup-deadline.md)
+- [Windows startup deadline acceptance](docs/testing/pr34-windows-startup-deadline.md)
 - [Bounded process wait and cancellable I/O](docs/reliability/bounded-process-io.md)
 - [Bounded transport acceptance checklist](docs/testing/pr31-bounded-process-io.md)
 - [PSD candidate comparison](docs/psd-candidate-comparison.md)

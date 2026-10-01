@@ -47,6 +47,66 @@ use yu_engine_manager::ManagedEngineCommand;
 #[path = "windows_spawn_tests.rs"]
 mod tests;
 
+#[derive(Debug, Clone)]
+struct StartupStage {
+    name: &'static str,
+    elapsed_us: u128,
+}
+
+#[derive(Debug, Clone, Default)]
+pub(super) struct StartupObservation {
+    stages: Vec<StartupStage>,
+}
+
+impl StartupObservation {
+    fn observe<T>(
+        &mut self,
+        name: &'static str,
+        operation: impl FnOnce() -> io::Result<T>,
+    ) -> io::Result<T> {
+        let started = Instant::now();
+        let result = operation();
+        self.record(name, started.elapsed().as_micros());
+        result
+    }
+
+    fn record(&mut self, name: &'static str, elapsed_us: u128) {
+        self.stages.push(StartupStage { name, elapsed_us });
+    }
+
+    pub(super) fn diagnostic(&self) -> String {
+        self.stages
+            .iter()
+            .map(|stage| format!("{}:{}", stage.name, stage.elapsed_us))
+            .collect::<Vec<_>>()
+            .join("|")
+    }
+
+    pub(super) fn json(&self) -> serde_json::Value {
+        let stages = self
+            .stages
+            .iter()
+            .map(|stage| {
+                serde_json::json!({
+                    "name": stage.name,
+                    "elapsed_us": u64::try_from(stage.elapsed_us).unwrap_or(u64::MAX),
+                })
+            })
+            .collect::<Vec<_>>();
+        serde_json::json!({
+            "stages": stages,
+            "total_us": self.stages.iter().fold(0u64, |total, stage| {
+                total.saturating_add(u64::try_from(stage.elapsed_us).unwrap_or(u64::MAX))
+            }),
+        })
+    }
+
+    #[cfg(test)]
+    fn stage_names(&self) -> Vec<&'static str> {
+        self.stages.iter().map(|stage| stage.name).collect()
+    }
+}
+
 fn wide_z(value: &OsStr) -> io::Result<Vec<u16>> {
     let mut units: Vec<_> = value.encode_wide().collect();
     if units.contains(&0) {
@@ -466,54 +526,92 @@ fn inherited_environment() -> io::Result<Vec<u16>> {
 
 pub(super) fn spawn(
     installed: &ManagedEngineCommand,
-) -> Result<(Child, Containment, Pipes), String> {
-    let containment =
-        Containment::create(None).map_err(|e| format!("cannot prepare private engine Job: {e}"))?;
-    let (child, pipes) = spawn_in_job(installed, &containment.job)
-        .map_err(|e| format!("cannot create engine in private Job (no fallback): {e}"))?;
-    Ok((child, containment, pipes))
+) -> Result<(Child, Containment, Pipes, StartupObservation), String> {
+    let mut observation = StartupObservation::default();
+    let containment = observation
+        .observe("job_create", || Containment::create(None))
+        .map_err(|error| {
+            format!(
+                "cannot prepare private engine Job: {error}; startup_stages_us={}",
+                observation.diagnostic()
+            )
+        })?;
+    let (child, pipes) = spawn_in_job_observed(installed, &containment.job, &mut observation)
+        .map_err(|error| {
+            format!(
+                "cannot create engine in private Job (no fallback): {error}; startup_stages_us={}",
+                observation.diagnostic()
+            )
+        })?;
+    Ok((child, containment, pipes, observation))
 }
 
+#[cfg(test)]
 fn spawn_in_job(installed: &ManagedEngineCommand, job: &OwnedHandle) -> io::Result<(Child, Pipes)> {
-    if !installed.entrypoint.is_absolute()
-        || !installed.working_dir.is_absolute()
-        || !installed
-            .entrypoint
-            .extension()
-            .and_then(|e| e.to_str())
-            .is_some_and(|e| e.eq_ignore_ascii_case("exe"))
-    {
-        return Err(io::Error::new(
-            io::ErrorKind::InvalidInput,
-            "Windows engine requires absolute native .exe and working directory paths",
-        ));
-    }
-    let application = wide_z(installed.entrypoint.as_os_str())?;
-    let cwd = startup_directory(&installed.working_dir)?;
-    let args: Vec<Vec<u16>> = installed
-        .args
-        .iter()
-        .map(|arg| arg.encode_utf16().collect())
-        .collect();
-    let mut command = command_line(&application[..application.len() - 1], &args)?;
-    let environment = inherited_environment()?;
-    let (stdin, input) = nonblocking::pair(false)?;
-    let (stdout, output) = nonblocking::pair(true)?;
-    let (stderr, error) = nonblocking::pair(true)?;
+    let mut observation = StartupObservation::default();
+    spawn_in_job_observed(installed, job, &mut observation)
+}
+
+fn spawn_in_job_observed(
+    installed: &ManagedEngineCommand,
+    job: &OwnedHandle,
+    observation: &mut StartupObservation,
+) -> io::Result<(Child, Pipes)> {
+    observation.observe("path_validation", || {
+        if !installed.entrypoint.is_absolute()
+            || !installed.working_dir.is_absolute()
+            || !installed
+                .entrypoint
+                .extension()
+                .and_then(|e| e.to_str())
+                .is_some_and(|e| e.eq_ignore_ascii_case("exe"))
+        {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "Windows engine requires absolute native .exe and working directory paths",
+            ));
+        }
+        Ok(())
+    })?;
+    let (application, cwd, mut command) = observation.observe("command_line", || {
+        let application = wide_z(installed.entrypoint.as_os_str())?;
+        let cwd = startup_directory(&installed.working_dir)?;
+        let args: Vec<Vec<u16>> = installed
+            .args
+            .iter()
+            .map(|arg| arg.encode_utf16().collect())
+            .collect();
+        let command = command_line(&application[..application.len() - 1], &args)?;
+        Ok((application, cwd, command))
+    })?;
+    let environment = observation.observe("environment", inherited_environment)?;
+    let (stdin, input, stdout, output, stderr, error) =
+        observation.observe("pipe_create", || {
+            let (stdin, input) = nonblocking::pair(false)?;
+            let (stdout, output) = nonblocking::pair(true)?;
+            let (stderr, error) = nonblocking::pair(true)?;
+            Ok((stdin, input, stdout, output, stderr, error))
+        })?;
     let jobs = [job.as_raw_handle()];
     let inherited = [
         input.as_raw_handle(),
         output.as_raw_handle(),
         error.as_raw_handle(),
     ];
-    for handle in inherited {
-        // SAFETY: these are this invocation's live blocking client endpoints. The parent
-        // NOWAIT endpoints and Job remain non-inheritable; HANDLE_LIST permits only these.
-        if unsafe { SetHandleInformation(handle, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT) } == 0 {
-            return Err(io::Error::last_os_error());
+    observation.observe("handle_inherit", || {
+        for handle in inherited {
+            // SAFETY: these are this invocation's live blocking client endpoints. The parent
+            // NOWAIT endpoints and Job remain non-inheritable; HANDLE_LIST permits only these.
+            if unsafe { SetHandleInformation(handle, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT) }
+                == 0
+            {
+                return Err(io::Error::last_os_error());
+            }
         }
-    }
-    let mut attributes = AttributeList::new(&jobs, &inherited)?;
+        Ok(())
+    })?;
+    let mut attributes =
+        observation.observe("attribute_list", || AttributeList::new(&jobs, &inherited))?;
     let mut startup = STARTUPINFOEXW::default();
     startup.StartupInfo.cb = size_of::<STARTUPINFOEXW>() as u32;
     startup.StartupInfo.dwFlags = STARTF_USESTDHANDLES;
@@ -522,32 +620,41 @@ fn spawn_in_job(installed: &ManagedEngineCommand, job: &OwnedHandle) -> io::Resu
     startup.StartupInfo.hStdError = inherited[2];
     startup.lpAttributeList = attributes.raw();
     let mut info = PROCESS_INFORMATION::default();
-    // SAFETY: explicit executable and cwd, mutable terminated command, Unicode environment,
-    // live attribute arrays/Job/std handles, correctly sized STARTUPINFOEXW and outputs.
-    // Job assignment is part of creation. Never retry without attributes or assign after spawn.
-    if unsafe {
-        CreateProcessW(
-            application.as_ptr(),
-            command.as_mut_ptr(),
-            null(),
-            null(),
-            1,
-            EXTENDED_STARTUPINFO_PRESENT | CREATE_UNICODE_ENVIRONMENT,
-            environment.as_ptr().cast(),
-            cwd.as_ptr(),
-            &startup.StartupInfo,
-            &mut info,
-        )
-    } == 0
-    {
-        return Err(io::Error::last_os_error());
-    }
+    observation.observe("create_process", || {
+        // SAFETY: explicit executable and cwd, mutable terminated command, Unicode environment,
+        // live attribute arrays/Job/std handles, correctly sized STARTUPINFOEXW and outputs.
+        // Job assignment is part of creation. Never retry without attributes or assign after spawn.
+        if unsafe {
+            CreateProcessW(
+                application.as_ptr(),
+                command.as_mut_ptr(),
+                null(),
+                null(),
+                1,
+                EXTENDED_STARTUPINFO_PRESENT | CREATE_UNICODE_ENVIRONMENT,
+                environment.as_ptr().cast(),
+                cwd.as_ptr(),
+                &startup.StartupInfo,
+                &mut info,
+            )
+        } == 0
+        {
+            Err(io::Error::last_os_error())
+        } else {
+            Ok(())
+        }
+    })?;
+    let post_create = Instant::now();
     // SAFETY: successful creation returns exactly these owned process/thread references.
     // No fallible setup remains after creation; the private Job already owns the process.
     let handle = unsafe { OwnedHandle::from_raw_handle(info.hProcess) };
     let thread = unsafe { OwnedHandle::from_raw_handle(info.hThread) };
     drop(thread);
     drop(attributes);
+    drop(input);
+    drop(output);
+    drop(error);
+    observation.record("post_create_cleanup", post_create.elapsed().as_micros());
     // Local child-side copies close before returning, so EOF cannot be held by this parent.
     Ok((
         Child {

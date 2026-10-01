@@ -165,6 +165,12 @@ The managed Windows engine is created with its private Job membership and exactl
 
 Joint cleanup additionally requires successful bounded current-member capture and retained-handle exit confirmation; a late or unverified member, query failure or snapshot above128 processes returns cleanup failure instead of success. It does not lengthen the two-second budget or identify historical external file holders.
 
+### Windows startup deadline classification (PR #34)
+
+The operation clock begins before managed-engine startup. After synchronous startup returns, YuTool checks that same deadline before writing any protocol request. If the budget is already exhausted, the invocation returns `EXECUTION_FAILED` with `phase=startup` and enters the existing owned cleanup path instead of continuing into protocol exchange. On Windows, diagnostics split startup into Job creation, path/command preparation, environment, pipe creation, handle inheritance, attribute-list setup, `CreateProcessW`, and post-create cleanup timings; opt-in lifecycle `started` traces carry the same bounded observations.
+
+This does not make synchronous Windows process creation hard-preemptible. A native OS/filesystem call may itself return after the configured timeout; YuTool does not use forced thread termination or detached startup work to hide that fact. The default/public timeout range and the separate two-second cleanup budget are unchanged. See [scope](reliability/windows-startup-deadline.md) and [acceptance](testing/pr34-windows-startup-deadline.md).
+
 ## Image commands
 
 The first built-in raster engine is `raster-rs`.
@@ -238,7 +244,7 @@ ADR 0006 selects `ag-psd 31.0.2` as the preferred v0.1 Managed PSD engine. PR #2
 
 All five implemented commands accept `--engine ag-psd`, `--json`, and `--timeout-secs <1..3600>` (default: 30). Input paths are resolved from the caller's working directory, must identify a regular file, and must be representable as UTF-8 by Protocol v1. Commands never modify the source file. Names are passed as JSON data, not shell commands.
 
-The timeout covers engine process and protocol I/O, not filesystem discovery or package installation. Request/stdout/stderr limits are 64 KiB / 16 MiB / 64 KiB. Oversized output, timeouts, non-zero process exits, invalid transport, or invalid typed results return `EXECUTION_FAILED` (exit 1). Node runtime override variables `NODE_OPTIONS` and `NODE_PATH` are not inherited.
+The timeout budget begins before managed-engine startup and also covers protocol I/O after startup returns; it does not cover filesystem discovery or package installation. A synchronous native startup call cannot be forcibly interrupted by this deadline, but an already-expired startup is rejected before protocol exchange. Request/stdout/stderr limits are 64 KiB / 16 MiB / 64 KiB. Oversized output, timeouts, non-zero process exits, invalid transport, or invalid typed results return `EXECUTION_FAILED` (exit 1). Node runtime override variables `NODE_OPTIONS` and `NODE_PATH` are not inherited.
 
 The default production path must not require a system Node.js installation. If no compatible active Managed PSD engine exists, commands return a structured `ENGINE_UNAVAILABLE` result rather than silently installing or activating one.
 
