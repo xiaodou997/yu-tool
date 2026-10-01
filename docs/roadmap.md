@@ -246,6 +246,12 @@ Test-only follow-up after a successful remove required 52 quarantine attempts / 
 
 Originally developed after #32 and rebased for final acceptance onto `main@f0a3f052e52ce9ba89c59bbebbce813b3b84410e` after #34/#37. Distribution preparation packages conservative Cargo source notices, a hashed dependency inventory and usage guidance with new CLI candidates, then checks core/offline PSD workflows in a fresh process environment. See [scope](releasing/distribution-readiness.md) and [acceptance](testing/pr33-distribution-readiness.md). This is not legal clearance, clean-VM/signing/minimum-OS acceptance or public release; Issue #27 stays open.
 
+### v0.1 Final Release Gate / RC Freeze
+
+The release-candidate freeze starts after #33, #34 and #37 are integrated. The freeze does not authorize a public release: it freezes the candidate source, requires post-merge exact-`main` CI / Managed Package / Windows Lifecycle evidence, and moves any further code change back through the full release gate. See [final release gate](releasing/v0.1-final-gate.md) and [RC freeze acceptance](testing/v0.1-rc-freeze.md).
+
+Only release-blocking fixes may change the frozen candidate line. Feature work continues after the v0.1 decision rather than being folded into the RC.
+
 ## M4 — Safe mutation
 
 **Goal:** introduce modifications without compromising source-file safety.
