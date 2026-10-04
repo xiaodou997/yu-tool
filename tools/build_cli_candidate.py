@@ -70,6 +70,8 @@ def checked_auxiliary(metadata: dict, extra: dict[str, bytes]) -> dict[str, byte
         raise ValueError("unsupported candidate layout or missing distribution files")
     if set(extra) != expected:
         raise ValueError("unsupported candidate layout or missing distribution files")
+    if layout == 3 and metadata.get("project_license") != "MIT OR Apache-2.0":
+        raise ValueError("layout v3 requires the frozen project license")
     hashes = metadata.get("auxiliary_sha256")
     if not isinstance(hashes, dict) or set(hashes) != expected:
         raise ValueError("candidate auxiliary manifest is incomplete")
