@@ -212,3 +212,13 @@ YuTool 不要求使用者分别学习和管理大量底层工具，而是通过�
 一句话：
 
 > **一个 \`yu\`，调用所需能力。**
+
+
+## License
+
+YuTool is dual-licensed under either of:
+
+- MIT License ([LICENSE-MIT](LICENSE-MIT))
+- Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE))
+
+You may choose either license for your use of YuTool.
