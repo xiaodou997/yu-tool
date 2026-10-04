@@ -74,6 +74,8 @@ class DistributionTests(unittest.TestCase):
             archive_bytes(self.binary, self.meta, {})
         with self.assertRaises(ValueError):
             archive_bytes(self.binary, dict(self.meta, archive_layout_version=99), self.extra)
+        with self.assertRaises(ValueError):
+            archive_bytes(self.binary, dict(self.meta, project_license="MIT"), self.extra)
         value = json.loads(self.extra["dependency-inventory.json"])
         value["source_commit"] = "b" * 40
         self.extra["dependency-inventory.json"] = json.dumps(value).encode()
