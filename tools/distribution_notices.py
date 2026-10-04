@@ -12,7 +12,9 @@ import zipfile
 NOTICE_NAME = re.compile(r"^(licen[cs]es?|copying|notice|copyright)([-_.].*)?$", re.I)
 MAX_TEXT = 2 * 1024 * 1024
 MAX_BUNDLE = 16 * 1024 * 1024
-AUXILIARY_NAMES = {"THIRD-PARTY-NOTICES.txt", "dependency-inventory.json", "USAGE.md"}
+LEGACY_AUXILIARY_NAMES = {"THIRD-PARTY-NOTICES.txt", "dependency-inventory.json", "USAGE.md"}
+PROJECT_LICENSE_NAMES = {"LICENSE-MIT", "LICENSE-APACHE"}
+AUXILIARY_NAMES = LEGACY_AUXILIARY_NAMES | PROJECT_LICENSE_NAMES
 LIMITS = [
     "Resolved normal/build dependency closure; not a linker-derived list of shipped code.",
     "Cargo feature unification and build dependencies can over-include components.",
