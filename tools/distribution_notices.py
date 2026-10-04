@@ -20,7 +20,7 @@ LIMITS = [
     "Cargo feature unification and build dependencies can over-include components.",
     "Discovered license/notice files are preserved; embedded native code and toolchain notices require separate review.",
     "License expressions are upstream declarations, not selected license options or redistribution approval.",
-    "The project license remains an owner decision. Optional engines are separate packages.",
+    "The project license is MIT OR Apache-2.0; final redistribution acceptance remains an owner decision. Optional engines are separate packages.",
 ]
 
 
