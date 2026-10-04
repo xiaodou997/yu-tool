@@ -1,7 +1,9 @@
 # YuTool developer candidate
 
 This archive is for development acceptance, not an approved public v0.1 release.
-It is unsigned/unnotarized unless a separate receipt explicitly states otherwise.
+YuTool itself is dual-licensed under MIT OR Apache-2.0; both project license texts
+are included as `LICENSE-MIT` and `LICENSE-APACHE`. It is unsigned/unnotarized
+unless a separate receipt explicitly states otherwise.
 Do not bypass operating-system security controls to run an untrusted binary.
 Verify archive provenance and SHA-256 through a trusted channel; a checksum
 packaged alongside an untrusted archive is not authentication.
@@ -49,8 +51,8 @@ and reports an error; do not force-unlock another application's resources.
 `THIRD-PARTY-NOTICES.txt` preserves discovered dependency notice texts.
 `dependency-inventory.json` records their upstream declarations, source and hashes.
 It is a conservative Cargo normal/build dependency inventory, not an exact linker
-map or legal approval. Native embedded code, toolchain/runtime notices, project
-license selection and final redistribution review remain separate acceptance work.
+map or legal approval. Native embedded code, toolchain/runtime notices and final redistribution review remain
+separate acceptance work. The project license selection is fixed at MIT OR Apache-2.0.
 Optional engine notices are inside its own archive, including `licenses/node-LICENSE`.
 
 Issue #27 retains historical Windows OS5/uninstall and inspect-timeout risk.
