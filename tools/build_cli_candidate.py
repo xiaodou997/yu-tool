@@ -15,7 +15,7 @@ import tempfile
 import tomllib
 import zipfile
 
-from distribution_notices import AUXILIARY_NAMES, MAX_BUNDLE, cli_notices
+from distribution_notices import AUXILIARY_NAMES, LEGACY_AUXILIARY_NAMES, MAX_BUNDLE, cli_notices
 
 ROOT = Path(__file__).resolve().parents[1]
 TARGETS = {
@@ -25,8 +25,8 @@ TARGETS = {
 }
 LOCKS = ("Cargo.lock", "packaging/ag-psd-engine/package-lock.json", "rust-toolchain.toml")
 MAX_BINARY = 512 * 1024 * 1024
-NOTICE = "Developer validation artifact only. Not approved for public release. Project license, third-party notices, signing/notarization and release authorization remain unaccepted. No optional engine is bundled.\n"
-BLOCKERS = ["project_license_and_redistribution_review", "third_party_notice_bundle", "platform_signing_policy_and_acceptance", "minimum_os_acceptance", "windows_lifecycle_root_cause", "durable_hosting_and_release_authorization"]
+NOTICE = "Developer validation artifact only. Not approved for public release. Project license is MIT OR Apache-2.0; final redistribution acceptance, platform signing/notarization, clean-machine acceptance, durable hosting and release authorization remain gated. No optional engine is bundled.\n"
+BLOCKERS = ["third_party_redistribution_final_acceptance", "platform_signing_policy_and_acceptance", "minimum_os_clean_machine_acceptance", "durable_hosting_and_release_authorization", "final_release_authorization"]
 
 
 def digest(data: bytes) -> str:
@@ -62,10 +62,16 @@ def checked_auxiliary(metadata: dict, extra: dict[str, bytes]) -> dict[str, byte
         if extra or "auxiliary_sha256" in metadata:
             raise ValueError("legacy candidate cannot contain undeclared auxiliary files")
         return {}
-    if layout != 2 or set(extra) != AUXILIARY_NAMES:
+    if layout == 2:
+        expected = LEGACY_AUXILIARY_NAMES
+    elif layout == 3:
+        expected = AUXILIARY_NAMES
+    else:
+        raise ValueError("unsupported candidate layout or missing distribution files")
+    if set(extra) != expected:
         raise ValueError("unsupported candidate layout or missing distribution files")
     hashes = metadata.get("auxiliary_sha256")
-    if not isinstance(hashes, dict) or set(hashes) != AUXILIARY_NAMES:
+    if not isinstance(hashes, dict) or set(hashes) != expected:
         raise ValueError("candidate auxiliary manifest is incomplete")
     if sum(map(len, extra.values())) > MAX_BUNDLE:
         raise ValueError("candidate auxiliary bundle exceeds bound")
@@ -112,7 +118,7 @@ def unpack_verified(path: Path, destination: Path) -> tuple[Path, dict]:
     with zipfile.ZipFile(path) as archive:
         infos = archive.infolist()
         names = [info.filename for info in infos]
-        if len(names) not in (3, 6) or len(set(names)) != len(names) or "build-info.json" not in names:
+        if len(names) not in (3, 6, 8) or len(set(names)) != len(names) or "build-info.json" not in names:
             raise ValueError("unexpected or duplicate candidate members")
         info = archive.getinfo("build-info.json")
         if info.file_size > 1024 * 1024:
@@ -125,8 +131,15 @@ def unpack_verified(path: Path, destination: Path) -> tuple[Path, dict]:
             raise ValueError("invalid candidate target/readiness")
         executable = TARGETS[target]
         layout = metadata.get("archive_layout_version", 1)
-        auxiliary_names = AUXILIARY_NAMES if layout == 2 else set()
-        if layout not in (1, 2) or set(names) != {executable, "build-info.json", "RELEASE-STATUS.txt"} | auxiliary_names:
+        if layout == 1:
+            auxiliary_names = set()
+        elif layout == 2:
+            auxiliary_names = LEGACY_AUXILIARY_NAMES
+        elif layout == 3:
+            auxiliary_names = AUXILIARY_NAMES
+        else:
+            auxiliary_names = set()
+        if layout not in (1, 2, 3) or set(names) != {executable, "build-info.json", "RELEASE-STATUS.txt"} | auxiliary_names:
             raise ValueError("candidate contains an unexpected path")
         for item in infos:
             mode = item.external_attr >> 16
@@ -188,12 +201,18 @@ def build(target: str, output: Path) -> dict:
     binary = binary_path.read_bytes()
     resolved = json.loads(command(["cargo", "metadata", "--locked", "--format-version", "1", "--filter-platform", target, "--manifest-path", str(ROOT / "crates/yu-cli/Cargo.toml")], timeout=300))
     notices, inventory = cli_notices(resolved, tomllib.loads((ROOT / "Cargo.lock").read_text()), head, target)
-    extra = {"THIRD-PARTY-NOTICES.txt": notices, "dependency-inventory.json": inventory, "USAGE.md": (ROOT / "packaging/cli/USAGE.md").read_bytes()}
+    inventory_data = json.loads(inventory)
+    if any(component.get("declared_license") != "MIT OR Apache-2.0" for component in inventory_data["project_components"]):
+        raise ValueError("workspace project license metadata is incomplete")
+    extra = {"THIRD-PARTY-NOTICES.txt": notices, "dependency-inventory.json": inventory,
+             "USAGE.md": (ROOT / "packaging/cli/USAGE.md").read_bytes(),
+             "LICENSE-MIT": (ROOT / "LICENSE-MIT").read_bytes(),
+             "LICENSE-APACHE": (ROOT / "LICENSE-APACHE").read_bytes()}
     if clean_head() != head:
         raise ValueError("source changed while collecting distribution notices")
     metadata = {
         "schema_version": "1", "kind": "developer_candidate", "version": version,
-        "archive_layout_version": 2, "auxiliary_sha256": {name: digest(data) for name, data in extra.items()},
+        "archive_layout_version": 3, "project_license": "MIT OR Apache-2.0", "auxiliary_sha256": {name: digest(data) for name, data in extra.items()},
         "redistribution_review_accepted": False,
         "target": target, "source_commit": head, "source_tree": git("rev-parse", "HEAD^{tree}"),
         "rustc": compiler, "binary_sha256": digest(binary),
