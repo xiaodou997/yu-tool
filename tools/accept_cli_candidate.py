@@ -100,7 +100,8 @@ def accept(candidate_dir: Path, manifest: Path, engine: Path, fixture: Path, out
             root = Path(temporary).resolve()
             binary, build = unpack_verified(archive, root / "application")
             host = HOSTS.get((platform.system(), platform.machine()))
-            if build.get("target") != host or build.get("source_commit") != expected_source or build.get("archive_layout_version") != 2:
+            if (build.get("target") != host or build.get("source_commit") != expected_source
+                    or build.get("archive_layout_version") != 3 or build.get("project_license") != "MIT OR Apache-2.0"):
                 raise ValueError("candidate target/source/layout does not match acceptance")
             report.update(source_commit=build["source_commit"], target=build["target"], binary_sha256=hash_file(binary))
             inventory = load_json(root / "application/dependency-inventory.json")

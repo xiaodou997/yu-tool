@@ -12,13 +12,15 @@ import zipfile
 NOTICE_NAME = re.compile(r"^(licen[cs]es?|copying|notice|copyright)([-_.].*)?$", re.I)
 MAX_TEXT = 2 * 1024 * 1024
 MAX_BUNDLE = 16 * 1024 * 1024
-AUXILIARY_NAMES = {"THIRD-PARTY-NOTICES.txt", "dependency-inventory.json", "USAGE.md"}
+LEGACY_AUXILIARY_NAMES = {"THIRD-PARTY-NOTICES.txt", "dependency-inventory.json", "USAGE.md"}
+PROJECT_LICENSE_NAMES = {"LICENSE-MIT", "LICENSE-APACHE"}
+AUXILIARY_NAMES = LEGACY_AUXILIARY_NAMES | PROJECT_LICENSE_NAMES
 LIMITS = [
     "Resolved normal/build dependency closure; not a linker-derived list of shipped code.",
     "Cargo feature unification and build dependencies can over-include components.",
     "Discovered license/notice files are preserved; embedded native code and toolchain notices require separate review.",
     "License expressions are upstream declarations, not selected license options or redistribution approval.",
-    "The project license remains an owner decision. Optional engines are separate packages.",
+    "The project license is MIT OR Apache-2.0; final redistribution acceptance remains an owner decision. Optional engines are separate packages.",
 ]
 
 

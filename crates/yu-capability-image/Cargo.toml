@@ -2,6 +2,7 @@
 name = "yu-capability-image"
 version.workspace = true
 edition.workspace = true
+license.workspace = true
 
 [dependencies]
 serde.workspace = true
