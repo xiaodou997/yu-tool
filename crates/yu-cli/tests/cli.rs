@@ -218,6 +218,238 @@ fn image_resize_rejects_existing_output() {
 }
 
 #[test]
+fn image_crop_selects_expected_pixels_and_reports_geometry() {
+    let input = temp_path("crop-input", "png");
+    let output_path = temp_path("crop-output", "png");
+    let mut source = RgbaImage::new(3, 2);
+    for y in 0..2 {
+        for x in 0..3 {
+            source.put_pixel(x, y, Rgba([x as u8 * 60, y as u8 * 90, 5, 255]));
+        }
+    }
+    source.save(&input).unwrap();
+    let original = fs::read(&input).unwrap();
+
+    let result = run(&[
+        "image",
+        "crop",
+        input.to_str().unwrap(),
+        "--x",
+        "1",
+        "--y",
+        "1",
+        "--width",
+        "2",
+        "--height",
+        "1",
+        "-o",
+        output_path.to_str().unwrap(),
+        "--json",
+    ]);
+    let json = parse_stdout(&result);
+    assert_eq!(json["operation"], "image.crop");
+    assert_eq!(json["engine"]["id"], "raster-rs");
+    assert_eq!(json["result"]["source_width"], 3);
+    assert_eq!(json["result"]["width"], 2);
+    assert_eq!(json["result"]["height"], 1);
+    let cropped = image::open(&output_path).unwrap().to_rgba8();
+    assert_eq!(*cropped.get_pixel(0, 0), *source.get_pixel(1, 1));
+    assert_eq!(*cropped.get_pixel(1, 0), *source.get_pixel(2, 1));
+    assert_eq!(fs::read(&input).unwrap(), original);
+    fs::remove_file(input).unwrap();
+    fs::remove_file(output_path).unwrap();
+}
+
+#[test]
+fn image_crop_rejects_overflow_out_of_bounds_and_zero_geometry() {
+    let input = temp_path("crop-bounds-input", "png");
+    let output_path = temp_path("crop-bounds-output", "png");
+    create_png(&input, 3, 2);
+    for (x, y, width, height) in [
+        ("2", "1", "2", "1"),
+        ("4294967295", "0", "2", "1"),
+        ("0", "0", "0", "1"),
+        ("0", "0", "1", "0"),
+    ] {
+        let result = run(&[
+            "image",
+            "crop",
+            input.to_str().unwrap(),
+            "--x",
+            x,
+            "--y",
+            y,
+            "--width",
+            width,
+            "--height",
+            height,
+            "-o",
+            output_path.to_str().unwrap(),
+            "--json",
+        ]);
+        assert_eq!(result.status.code(), Some(2));
+        let json: Value = serde_json::from_slice(&result.stderr).unwrap();
+        assert_eq!(json["error"]["code"], "INVALID_INPUT");
+        assert!(!output_path.exists());
+    }
+    fs::remove_file(input).unwrap();
+}
+
+#[test]
+fn image_rotate_90_is_clockwise_and_preserves_source() {
+    let input = temp_path("rotate-input", "png");
+    let output_path = temp_path("rotate-output", "png");
+    let mut source = RgbaImage::new(3, 2);
+    for y in 0..2 {
+        for x in 0..3 {
+            source.put_pixel(x, y, Rgba([(10 + x + y * 3) as u8, 0, 0, 255]));
+        }
+    }
+    source.save(&input).unwrap();
+    let original = fs::read(&input).unwrap();
+    let result = run(&[
+        "image",
+        "rotate",
+        input.to_str().unwrap(),
+        "--degrees",
+        "90",
+        "-o",
+        output_path.to_str().unwrap(),
+        "--json",
+    ]);
+    let json = parse_stdout(&result);
+    assert_eq!(json["operation"], "image.rotate");
+    assert_eq!(json["result"]["degrees"], 90);
+    assert_eq!(json["result"]["width"], 2);
+    assert_eq!(json["result"]["height"], 3);
+    let rotated = image::open(&output_path).unwrap().to_rgba8();
+    assert_eq!(*rotated.get_pixel(0, 0), *source.get_pixel(0, 1));
+    assert_eq!(*rotated.get_pixel(1, 0), *source.get_pixel(0, 0));
+    assert_eq!(fs::read(&input).unwrap(), original);
+    fs::remove_file(input).unwrap();
+    fs::remove_file(output_path).unwrap();
+}
+
+#[test]
+fn image_rotate_rejects_non_right_angle() {
+    let input = temp_path("rotate-invalid-input", "png");
+    let output_path = temp_path("rotate-invalid-output", "png");
+    create_png(&input, 3, 2);
+    let result = run(&[
+        "image",
+        "rotate",
+        input.to_str().unwrap(),
+        "--degrees",
+        "45",
+        "-o",
+        output_path.to_str().unwrap(),
+        "--json",
+    ]);
+    assert_eq!(result.status.code(), Some(2));
+    let json: Value = serde_json::from_slice(&result.stderr).unwrap();
+    assert_eq!(json["error"]["code"], "INVALID_INPUT");
+    assert!(!output_path.exists());
+    fs::remove_file(input).unwrap();
+}
+
+#[test]
+fn image_rotate_180_and_270_preserve_pixel_positions() {
+    let input = temp_path("rotate-other-input", "png");
+    let mut source = RgbaImage::new(3, 2);
+    for y in 0..2 {
+        for x in 0..3 {
+            source.put_pixel(x, y, Rgba([(x + 1 + y * 3) as u8, 0, 0, 255]));
+        }
+    }
+    source.save(&input).unwrap();
+    for (degrees, expected_width, expected_height, first_pixel) in [
+        ("180", 3, 2, *source.get_pixel(2, 1)),
+        ("270", 2, 3, *source.get_pixel(2, 0)),
+    ] {
+        let output_path = temp_path("rotate-other-output", "png");
+        let result = run(&[
+            "image",
+            "rotate",
+            input.to_str().unwrap(),
+            "--degrees",
+            degrees,
+            "-o",
+            output_path.to_str().unwrap(),
+            "--json",
+        ]);
+        let json = parse_stdout(&result);
+        assert_eq!(json["result"]["width"], expected_width);
+        assert_eq!(json["result"]["height"], expected_height);
+        let rotated = image::open(&output_path).unwrap().to_rgba8();
+        assert_eq!(*rotated.get_pixel(0, 0), first_pixel);
+        fs::remove_file(output_path).unwrap();
+    }
+    fs::remove_file(input).unwrap();
+}
+
+#[test]
+fn image_convert_supports_png_to_jpeg_and_webp() {
+    let input = temp_path("convert-input", "png");
+    create_png(&input, 3, 2);
+    let original = fs::read(&input).unwrap();
+    for (extension, format) in [("jpg", "jpeg"), ("webp", "webp")] {
+        let output_path = temp_path("convert-output", extension);
+        let result = run(&[
+            "image",
+            "convert",
+            input.to_str().unwrap(),
+            "-o",
+            output_path.to_str().unwrap(),
+            "--json",
+        ]);
+        let json = parse_stdout(&result);
+        assert_eq!(json["operation"], "image.convert");
+        assert_eq!(json["result"]["source_format"], "png");
+        assert_eq!(json["result"]["format"], format);
+        let converted = image::open(&output_path).unwrap();
+        assert_eq!((converted.width(), converted.height()), (3, 2));
+        assert_eq!(fs::read(&input).unwrap(), original);
+        fs::remove_file(output_path).unwrap();
+    }
+    fs::remove_file(input).unwrap();
+}
+
+#[test]
+fn image_convert_refuses_existing_destination_and_unknown_format() {
+    let input = temp_path("convert-guard-input", "png");
+    let output_path = temp_path("convert-guard-output", "webp");
+    create_png(&input, 3, 2);
+    create_png(&output_path.with_extension("png"), 1, 1);
+    fs::write(&output_path, b"do not replace").unwrap();
+    let result = run(&[
+        "image",
+        "convert",
+        input.to_str().unwrap(),
+        "-o",
+        output_path.to_str().unwrap(),
+        "--json",
+    ]);
+    assert_eq!(result.status.code(), Some(2));
+    let json: Value = serde_json::from_slice(&result.stderr).unwrap();
+    assert_eq!(json["error"]["code"], "OUTPUT_CONFLICT");
+    assert_eq!(fs::read(&output_path).unwrap(), b"do not replace");
+    let unsupported = temp_path("convert-unknown", "gif");
+    let result = run(&[
+        "image",
+        "convert",
+        input.to_str().unwrap(),
+        "-o",
+        unsupported.to_str().unwrap(),
+        "--json",
+    ]);
+    assert_eq!(result.status.code(), Some(3));
+    assert!(!unsupported.exists());
+    fs::remove_file(input).unwrap();
+    fs::remove_file(&output_path).unwrap();
+    fs::remove_file(output_path.with_extension("png")).unwrap();
+}
+
+#[test]
 fn explicit_incompatible_engine_returns_structured_error() {
     let input = temp_path("engine-input", "png");
     create_png(&input, 4, 2);

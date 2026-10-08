@@ -220,23 +220,42 @@ Semantics:
 - the output path must not already exist;
 - source files are never overwritten by this v0.1 operation.
 
-### `yu image crop` — planned
+### `yu image crop` — M4a
 
 ```bash
 yu image crop input.png   --x 100   --y 100   --width 500   --height 500   -o output.png
 ```
 
-### `yu image rotate` — planned
+The rectangle origin is zero-based from the top-left; width and height must be
+non-zero and the entire rectangle must fit inside the decoded image. An invalid
+or overflowing rectangle returns `INVALID_INPUT` (exit 2). JSON operation:
+`image.crop`, with source dimensions, crop x/y, output dimensions and format.
+
+### `yu image rotate` — M4a
 
 ```bash
-yu image rotate input.png --degrees 90 -o output.png
+yu image rotate input.png --degrees 90 -o output.png --json
 ```
 
-### `yu image convert` — planned
+Only 90, 180 or 270 degrees **clockwise** are accepted in M4a; arbitrary
+angles require a future resampling/background contract. JSON operation
+`image.rotate` returns degrees, source/output dimensions and format.
+
+### `yu image convert` — M4a
 
 ```bash
-yu image convert input.png -o output.webp
+yu image convert input.png -o output.webp --json
 ```
+
+All M4a image operations use built-in `raster-rs` and accept `--engine`.
+Supported output extensions are `.png`, `.jpg`/`.jpeg` and `.webp`.
+Conversion decodes and re-encodes the source; it does not promise metadata,
+ICC or exact original encoded bytes. JSON operation `image.convert` returns
+the source and destination formats plus dimensions. All three write to a
+different, initially absent output file. Publication requires hard-link support
+in the destination directory; existing destinations produce `OUTPUT_CONFLICT`
+(exit 2) and are never replaced, even if created during encoding. Unsupported
+output formats return `UNSUPPORTED_CAPABILITY` (exit 3).
 
 ## PSD commands
 

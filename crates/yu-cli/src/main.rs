@@ -7,7 +7,10 @@ use std::{
     path::{Path, PathBuf},
     process::{ExitCode, Termination},
 };
-use yu_capability_image::{ImageEngine, ImageErrorKind, ImageOperationError, ResizeRequest};
+use yu_capability_image::{
+    ConvertRequest, CropRequest, ImageEngine, ImageErrorKind, ImageOperationError, ResizeRequest,
+    RotateRequest,
+};
 use yu_core::{
     EngineDescriptor, EngineProvider, EngineState, ErrorCode, ErrorEnvelope, ResultEnvelope,
     RuntimeRegistry, YuError,
@@ -104,6 +107,40 @@ enum ImageCommand {
         #[arg(long, help = "Use a specific engine instead of automatic resolution")]
         engine: Option<String>,
     },
+    /// Crop an in-bounds rectangle to a new image.
+    Crop {
+        input: PathBuf,
+        #[arg(long)]
+        x: u32,
+        #[arg(long)]
+        y: u32,
+        #[arg(long)]
+        width: u32,
+        #[arg(long)]
+        height: u32,
+        #[arg(short, long)]
+        output: PathBuf,
+        #[arg(long, help = "Use a specific engine instead of automatic resolution")]
+        engine: Option<String>,
+    },
+    /// Rotate clockwise by 90, 180, or 270 degrees.
+    Rotate {
+        input: PathBuf,
+        #[arg(long)]
+        degrees: u16,
+        #[arg(short, long)]
+        output: PathBuf,
+        #[arg(long, help = "Use a specific engine instead of automatic resolution")]
+        engine: Option<String>,
+    },
+    /// Convert between supported PNG, JPEG, and WebP formats.
+    Convert {
+        input: PathBuf,
+        #[arg(short, long)]
+        output: PathBuf,
+        #[arg(long, help = "Use a specific engine instead of automatic resolution")]
+        engine: Option<String>,
+    },
 }
 
 fn main() -> impl Termination {
@@ -188,6 +225,61 @@ fn run(cli: Cli) -> Result<(), YuError> {
                 width,
                 height,
             },
+            engine.as_deref(),
+            cli.json,
+        ),
+        Command::Image {
+            command:
+                ImageCommand::Crop {
+                    input,
+                    x,
+                    y,
+                    width,
+                    height,
+                    output,
+                    engine,
+                },
+        } => render_image_crop(
+            &registry,
+            CropRequest {
+                input,
+                output,
+                x,
+                y,
+                width,
+                height,
+            },
+            engine.as_deref(),
+            cli.json,
+        ),
+        Command::Image {
+            command:
+                ImageCommand::Rotate {
+                    input,
+                    degrees,
+                    output,
+                    engine,
+                },
+        } => render_image_rotate(
+            &registry,
+            RotateRequest {
+                input,
+                output,
+                degrees,
+            },
+            engine.as_deref(),
+            cli.json,
+        ),
+        Command::Image {
+            command:
+                ImageCommand::Convert {
+                    input,
+                    output,
+                    engine,
+                },
+        } => render_image_convert(
+            &registry,
+            ConvertRequest { input, output },
             engine.as_deref(),
             cli.json,
         ),
@@ -605,6 +697,79 @@ fn render_image_resize(
     );
     println!("Format: {}", result.format);
     println!("Engine: {}", descriptor.id);
+    Ok(())
+}
+
+fn render_image_crop(
+    registry: &RuntimeRegistry,
+    request: CropRequest,
+    requested_engine: Option<&str>,
+    json: bool,
+) -> Result<(), YuError> {
+    let descriptor = registry.resolve_engine("image.crop", requested_engine)?;
+    let result = image_engine(descriptor)?
+        .crop(&request)
+        .map_err(map_image_error)?;
+    if json {
+        print_json(&ResultEnvelope::new("image.crop", result).with_engine(descriptor));
+    } else {
+        println!(
+            "Cropped {} -> {} (x={}, y={}, {}x{})",
+            result.input, result.output, result.x, result.y, result.width, result.height
+        );
+        println!("Format: {}", result.format);
+        println!("Engine: {}", descriptor.id);
+    }
+    Ok(())
+}
+
+fn render_image_rotate(
+    registry: &RuntimeRegistry,
+    request: RotateRequest,
+    requested_engine: Option<&str>,
+    json: bool,
+) -> Result<(), YuError> {
+    let descriptor = registry.resolve_engine("image.rotate", requested_engine)?;
+    let result = image_engine(descriptor)?
+        .rotate(&request)
+        .map_err(map_image_error)?;
+    if json {
+        print_json(&ResultEnvelope::new("image.rotate", result).with_engine(descriptor));
+    } else {
+        println!(
+            "Rotated {} -> {} ({} degrees clockwise, {}x{})",
+            result.input, result.output, result.degrees, result.width, result.height
+        );
+        println!("Format: {}", result.format);
+        println!("Engine: {}", descriptor.id);
+    }
+    Ok(())
+}
+
+fn render_image_convert(
+    registry: &RuntimeRegistry,
+    request: ConvertRequest,
+    requested_engine: Option<&str>,
+    json: bool,
+) -> Result<(), YuError> {
+    let descriptor = registry.resolve_engine("image.convert", requested_engine)?;
+    let result = image_engine(descriptor)?
+        .convert(&request)
+        .map_err(map_image_error)?;
+    if json {
+        print_json(&ResultEnvelope::new("image.convert", result).with_engine(descriptor));
+    } else {
+        println!(
+            "Converted {} -> {} ({} -> {}, {}x{})",
+            result.input,
+            result.output,
+            result.source_format,
+            result.format,
+            result.width,
+            result.height
+        );
+        println!("Engine: {}", descriptor.id);
+    }
     Ok(())
 }
 

@@ -88,10 +88,74 @@ pub struct ResizeResult {
     pub format: String,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CropRequest {
+    pub input: PathBuf,
+    pub output: PathBuf,
+    pub x: u32,
+    pub y: u32,
+    pub width: u32,
+    pub height: u32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct CropResult {
+    pub input: String,
+    pub output: String,
+    pub source_width: u32,
+    pub source_height: u32,
+    pub x: u32,
+    pub y: u32,
+    pub width: u32,
+    pub height: u32,
+    pub format: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RotateRequest {
+    pub input: PathBuf,
+    pub output: PathBuf,
+    pub degrees: u16,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct RotateResult {
+    pub input: String,
+    pub output: String,
+    pub source_width: u32,
+    pub source_height: u32,
+    pub degrees: u16,
+    pub width: u32,
+    pub height: u32,
+    pub format: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ConvertRequest {
+    pub input: PathBuf,
+    pub output: PathBuf,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct ConvertResult {
+    pub input: String,
+    pub output: String,
+    pub source_format: String,
+    pub format: String,
+    pub width: u32,
+    pub height: u32,
+}
+
 pub trait ImageEngine {
     fn id(&self) -> &'static str;
 
     fn info(&self, path: &Path) -> Result<ImageInfo, ImageOperationError>;
 
     fn resize(&self, request: &ResizeRequest) -> Result<ResizeResult, ImageOperationError>;
+
+    fn crop(&self, request: &CropRequest) -> Result<CropResult, ImageOperationError>;
+
+    fn rotate(&self, request: &RotateRequest) -> Result<RotateResult, ImageOperationError>;
+
+    fn convert(&self, request: &ConvertRequest) -> Result<ConvertResult, ImageOperationError>;
 }
