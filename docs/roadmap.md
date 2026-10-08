@@ -256,6 +256,13 @@ Only release-blocking fixes may change the frozen candidate line. Feature work c
 
 **Goal:** introduce modifications without compromising source-file safety.
 
+M4a is developed on `feature/m4a-raster-operations`, based on the
+technical-v0.1 frozen main commit `5526dc4465c4e79ad7f2757d06b3b1693642b8af`.
+It adds crop, right-angle rotate and format convert to the built-in raster
+engine, with explicit no-clobber publication and CLI integration tests.
+This is **post-v0.1 feature development**, not a change to the frozen RC.
+M4b/M4c safe replacement, dry-run and PSD mutation remain separate work.
+
 Candidate capabilities:
 
 - image crop/rotate/convert;

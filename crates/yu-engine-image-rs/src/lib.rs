@@ -5,7 +5,8 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 use yu_capability_image::{
-    ImageEngine, ImageInfo, ImageOperationError, ResizeRequest, ResizeResult,
+    ConvertRequest, ConvertResult, CropRequest, CropResult, ImageEngine, ImageInfo,
+    ImageOperationError, ResizeRequest, ResizeResult, RotateRequest, RotateResult,
 };
 
 pub const ENGINE_ID: &str = "raster-rs";
@@ -35,19 +36,7 @@ impl ImageEngine for RustImageEngine {
     }
 
     fn resize(&self, request: &ResizeRequest) -> Result<ResizeResult, ImageOperationError> {
-        if request.output.exists() {
-            return Err(ImageOperationError::output_conflict(format!(
-                "output already exists: {}",
-                request.output.display()
-            )));
-        }
-
-        let output_format = ImageFormat::from_path(&request.output).map_err(|error| {
-            ImageOperationError::unsupported(format!(
-                "cannot infer a supported output format from {}: {error}",
-                request.output.display()
-            ))
-        })?;
+        let output_format = supported_output_format(&request.output)?;
 
         let (image, _) = open_image(&request.input)?;
         let source_width = image.width();
@@ -68,6 +57,103 @@ impl ImageEngine for RustImageEngine {
             format: format_name(output_format),
         })
     }
+
+    fn crop(&self, request: &CropRequest) -> Result<CropResult, ImageOperationError> {
+        let format = supported_output_format(&request.output)?;
+        let (image, _) = open_image(&request.input)?;
+        let (source_width, source_height) = (image.width(), image.height());
+
+        if request.width == 0 || request.height == 0 {
+            return Err(ImageOperationError::invalid_input(
+                "crop width and height must be greater than zero",
+            ));
+        }
+        let right = request.x.checked_add(request.width);
+        let bottom = request.y.checked_add(request.height);
+        if !matches!(right, Some(x) if x <= source_width)
+            || !matches!(bottom, Some(y) if y <= source_height)
+        {
+            return Err(ImageOperationError::invalid_input(
+                "crop rectangle extends outside source image bounds",
+            ));
+        }
+
+        let cropped = image.crop_imm(request.x, request.y, request.width, request.height);
+        write_new_file(&cropped, &request.output, format)?;
+        Ok(CropResult {
+            input: request.input.to_string_lossy().into_owned(),
+            output: request.output.to_string_lossy().into_owned(),
+            source_width,
+            source_height,
+            x: request.x,
+            y: request.y,
+            width: request.width,
+            height: request.height,
+            format: format_name(format),
+        })
+    }
+
+    fn rotate(&self, request: &RotateRequest) -> Result<RotateResult, ImageOperationError> {
+        // Only right-angle geometry is part of M4a. Arbitrary-angle
+        // resampling and background handling require a separate contract.
+        if !matches!(request.degrees, 90 | 180 | 270) {
+            return Err(ImageOperationError::invalid_input(
+                "rotation must be 90, 180, or 270 degrees clockwise",
+            ));
+        }
+        let format = supported_output_format(&request.output)?;
+        let (image, _) = open_image(&request.input)?;
+        let (source_width, source_height) = (image.width(), image.height());
+        let rotated = match request.degrees {
+            90 => image.rotate90(),
+            180 => image.rotate180(),
+            270 => image.rotate270(),
+            _ => unreachable!("degrees validated above"),
+        };
+        write_new_file(&rotated, &request.output, format)?;
+        Ok(RotateResult {
+            input: request.input.to_string_lossy().into_owned(),
+            output: request.output.to_string_lossy().into_owned(),
+            source_width,
+            source_height,
+            degrees: request.degrees,
+            width: rotated.width(),
+            height: rotated.height(),
+            format: format_name(format),
+        })
+    }
+
+    fn convert(&self, request: &ConvertRequest) -> Result<ConvertResult, ImageOperationError> {
+        let format = supported_output_format(&request.output)?;
+        let (image, source_format) = open_image(&request.input)?;
+        write_new_file(&image, &request.output, format)?;
+        Ok(ConvertResult {
+            input: request.input.to_string_lossy().into_owned(),
+            output: request.output.to_string_lossy().into_owned(),
+            source_format: format_name(source_format),
+            format: format_name(format),
+            width: image.width(),
+            height: image.height(),
+        })
+    }
+}
+
+fn supported_output_format(path: &Path) -> Result<ImageFormat, ImageOperationError> {
+    let format = ImageFormat::from_path(path).map_err(|error| {
+        ImageOperationError::unsupported(format!(
+            "cannot infer a supported output format from {}: {error}",
+            path.display()
+        ))
+    })?;
+    if !matches!(
+        format,
+        ImageFormat::Png | ImageFormat::Jpeg | ImageFormat::WebP
+    ) {
+        return Err(ImageOperationError::unsupported(
+            "built-in image output supports PNG, JPEG, and WebP only",
+        ));
+    }
+    Ok(format)
 }
 
 fn open_image(path: &Path) -> Result<(DynamicImage, ImageFormat), ImageOperationError> {
@@ -105,10 +191,19 @@ fn write_new_file(
         return Err(map_encode_error(error, output));
     }
 
-    if let Err(error) = fs::rename(&temporary, output) {
-        let _ = fs::remove_file(&temporary);
+    // Atomic no-clobber publication on the same filesystem. Unlike rename,
+    // hard_link cannot replace an output created during encoding.
+    let publish = fs::hard_link(&temporary, output);
+    let _ = fs::remove_file(&temporary);
+    if let Err(error) = publish {
+        if error.kind() == std::io::ErrorKind::AlreadyExists {
+            return Err(ImageOperationError::output_conflict(format!(
+                "output already exists: {}",
+                output.display()
+            )));
+        }
         return Err(ImageOperationError::execution(format!(
-            "cannot move completed image to {}: {error}",
+            "cannot publish completed image to {}: {error}",
             output.display()
         )));
     }

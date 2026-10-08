@@ -287,6 +287,21 @@ impl RuntimeRegistry {
                 summary: "Resize a raster image.".to_owned(),
                 engines: vec!["raster-rs".to_owned()],
             },
+            CapabilityDescriptor {
+                id: "image.crop".to_owned(),
+                summary: "Crop a raster image by a bounded rectangle.".to_owned(),
+                engines: vec!["raster-rs".to_owned()],
+            },
+            CapabilityDescriptor {
+                id: "image.rotate".to_owned(),
+                summary: "Rotate a raster image clockwise by 90, 180, or 270 degrees.".to_owned(),
+                engines: vec!["raster-rs".to_owned()],
+            },
+            CapabilityDescriptor {
+                id: "image.convert".to_owned(),
+                summary: "Convert raster output to PNG, JPEG, or WebP.".to_owned(),
+                engines: vec!["raster-rs".to_owned()],
+            },
         ];
 
         let engines = vec![
@@ -314,7 +329,13 @@ impl RuntimeRegistry {
                 provider: EngineProvider::BuiltIn,
                 state: EngineState::Ready,
                 version: Some(env!("CARGO_PKG_VERSION").to_owned()),
-                capabilities: vec!["image.info".to_owned(), "image.resize".to_owned()],
+                capabilities: vec![
+                    "image.info".to_owned(),
+                    "image.resize".to_owned(),
+                    "image.crop".to_owned(),
+                    "image.rotate".to_owned(),
+                    "image.convert".to_owned(),
+                ],
             },
         ];
 
@@ -491,7 +512,10 @@ mod tests {
                 "engine.deactivate",
                 "engine.remove",
                 "image.info",
-                "image.resize"
+                "image.resize",
+                "image.crop",
+                "image.rotate",
+                "image.convert"
             ]
         );
     }

@@ -43,9 +43,9 @@ formats: PNG, JPEG, WebP
 | --- | --- | --- | --- |
 | `image.info` | Supported | `raster-rs` / Rust `image` | ImageMagick/libvips later |
 | `image.resize` | Supported | `raster-rs` / Rust `image` | fast_image_resize/ImageMagick/libvips later |
-| `image.crop` | Planned | Rust built-in | ImageMagick/libvips |
-| `image.rotate` | Planned | Rust built-in | ImageMagick |
-| `image.convert` | Planned | Rust built-in where format support exists | ImageMagick/libvips |
+| `image.crop` | Supported (M4a branch) | `raster-rs` | Bounds-checked rectangle; new PNG/JPEG/WebP output |
+| `image.rotate` | Supported (M4a branch) | `raster-rs` | Clockwise 90/180/270 degrees; new output |
+| `image.convert` | Supported (M4a branch) | `raster-rs` | PNG/JPEG/WebP output by file extension |
 
 Current resize semantics:
 
@@ -57,6 +57,14 @@ Current resize semantics:
 - encoding is selected from the output extension.
 
 The first implementation deliberately favors a small, predictable dependency footprint over maximum format breadth or peak resizing throughput.
+
+M4a adds crop, right-angle rotate and format convert using the existing built-in
+engine. All three read the original image and publish only to a new destination.
+Output extension controls encoding (PNG/JPEG/WebP); no automatic EXIF/ICC
+preservation or lossless JPEG conversion is promised. Destination publication
+uses a same-filesystem hard link from a completed temporary file, so an
+existing destination is not overwritten, including on a concurrent race.
+The output filesystem must support regular-file hard links.
 
 ## PSD / PSB
 
