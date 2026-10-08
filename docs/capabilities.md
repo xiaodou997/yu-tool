@@ -83,6 +83,16 @@ replacement flags, no-clobber is unchanged. This is not an atomic compare-and-
 swap against unrelated external writers, a promise of crash durability, or
 preservation of the former destination's metadata/hardlink identity.
 
+M4b-3 (`develop`) adds typed post-write verification receipts to all four
+built-in raster mutations. YuTool decodes/checks the staged encoding before
+publication, then reopens the **actual destination** to verify format,
+dimensions and byte-level SHA-256 against staging. Success JSON includes
+`output_receipt.status=verified`, an optional prior digest for replacement,
+and `verified_output` with SHA-256, bytes, width, height and format.
+Dry-run has `status=planned` without a fabricated new digest. Errors after
+publication are `VERIFICATION_FAILED` and may leave a published output;
+no automatic rollback or external-writer atomic CAS is promised.
+
 ## PSD / PSB
 
 M3 selected the v0.1 engine strategy in ADR 0006. The implemented five-operation baseline is frozen in [M3 Freeze](milestones/m3-freeze.md), with supported/partial/unsupported boundaries and exact evidence. Capability availability still depends on the active package; implementation freeze is not public release.

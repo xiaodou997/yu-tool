@@ -329,6 +329,53 @@ left in place by the operation and the staged file is cleaned up. Crash/power
 loss durability and rollback after publication are not claimed. No PSD output
 replacement, batch approval or general force-overwrite is part of M4b-2.
 
+### Post-write verification and output receipt — M4b-3 (`develop` only)
+
+After encoding a built-in raster mutation, YuTool **decodes the staged file**
+and checks the actual encoded format and dimensions before publication. After
+the existing no-clobber hard-link or guarded replacement rename succeeds,
+YuTool **reopens the published destination**, decodes it and hashes the bytes
+using SHA-256. The published output must match the staged verification result
+(format, dimensions, byte length and hash). A success receipt therefore
+describes the observed destination at the time verification completed, not
+just the requested transformation or staged file.
+
+All four operations (`image.resize`, `image.crop`, `image.rotate`,
+`image.convert`) add the same JSON `result.output_receipt` object:
+
+```json
+{
+  "status": "verified",
+  "previous_sha256": "<old-output-sha256-if-replaced>",
+  "verified_output": {
+    "sha256": "<new-output-sha256>",
+    "bytes": 12345,
+    "width": 800,
+    "height": 600,
+    "format": "png"
+  }
+}
+```
+
+`previous_sha256` is omitted for a newly created file; with guarded
+replacement it is the validated former destination digest. The new
+`verified_output.sha256` can be used to bind the **next** guarded operation.
+The exact output length and geometry come from re-reading the published
+artifact.
+
+A successful `--dry-run` returns `output_receipt.status="planned"`; it
+may carry a validated `previous_sha256` for a would-replace plan, but never
+contains `verified_output` or a fabricated new digest. Plans do not reserve
+destinations.
+
+Staging verification failure prevents publication. If **post-publication**
+verification fails, the command reports `VERIFICATION_FAILED` (exit 1),
+does not emit a success result, and explains that the destination **may
+already have been published**. YuTool does not automatically roll back or
+retry a possibly modified file: re-inspect and hash the destination before
+the next operation. The receipt is point-in-time evidence, not an atomic
+compare-and-swap or crash-durability guarantee.
+
 ## PSD commands
 
 ADR 0006 selects `ag-psd 31.0.2` as the preferred v0.1 Managed PSD engine. PR #22 wires the four read-only commands below to the explicitly activated Managed package. PR #23 adds partial 8-bit RGB layer bitmap export; rendering remains deferred.

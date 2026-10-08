@@ -532,11 +532,71 @@ fn image_dry_run_previews_all_mutations_without_writing() {
         assert_eq!(reply["result"]["width"], width);
         assert_eq!(reply["result"]["height"], height);
         assert_eq!(reply["result"]["format"], "webp");
+        assert_eq!(reply["result"]["output_receipt"]["status"], "planned");
+        assert!(
+            reply["result"]["output_receipt"]
+                .get("verified_output")
+                .is_none()
+        );
+        assert!(
+            reply["result"]["output_receipt"]
+                .get("previous_sha256")
+                .is_none()
+        );
         assert!(
             !destination.exists(),
             "dry-run created output for {operation}"
         );
         assert_eq!(fs::read(&input).unwrap(), original);
+    }
+    fs::remove_file(input).unwrap();
+}
+
+#[test]
+fn image_output_receipts_are_derived_from_real_published_files() {
+    let input = temp_path("verify-output-input", "png");
+    create_png(&input, 6, 4);
+    let original = fs::read(&input).unwrap();
+    let cases = [
+        ("resize", vec!["--width", "3"], "png", (3, 2)),
+        (
+            "crop",
+            vec!["--x", "1", "--y", "1", "--width", "3", "--height", "2"],
+            "jpg",
+            (3, 2),
+        ),
+        ("rotate", vec!["--degrees", "90"], "webp", (4, 6)),
+        ("convert", vec![], "jpg", (6, 4)),
+    ];
+    for (name, arguments, extension, dimensions) in cases {
+        let output_path = temp_path("verify-output", extension);
+        let mut args = vec!["image", name, input.to_str().unwrap()];
+        args.extend_from_slice(&arguments);
+        args.extend_from_slice(&["-o", output_path.to_str().unwrap(), "--json"]);
+        let json = parse_stdout(&run(&args));
+        assert_eq!(json["result"]["dry_run"], false);
+        assert_eq!(json["result"]["replaced"], false);
+        let receipt = &json["result"]["output_receipt"];
+        assert_eq!(receipt["status"], "verified");
+        assert!(receipt.get("previous_sha256").is_none());
+        let file = fs::read(&output_path).unwrap();
+        let verified = &receipt["verified_output"];
+        assert_eq!(verified["sha256"], fixture_sha256(&file));
+        assert_eq!(verified["bytes"], file.len() as u64);
+        assert_eq!(
+            verified["format"],
+            if extension == "jpg" {
+                "jpeg"
+            } else {
+                extension
+            }
+        );
+        assert_eq!(verified["width"], dimensions.0);
+        assert_eq!(verified["height"], dimensions.1);
+        let reopened = image::open(&output_path).unwrap();
+        assert_eq!((reopened.width(), reopened.height()), dimensions);
+        assert_eq!(fs::read(&input).unwrap(), original);
+        fs::remove_file(output_path).unwrap();
     }
     fs::remove_file(input).unwrap();
 }
@@ -704,12 +764,21 @@ fn image_replace_valid_sha256_can_replace_with_all_four_operations() {
         assert_eq!(json["result"]["dry_run"], false);
         assert_eq!(json["result"]["width"], width);
         assert_eq!(json["result"]["height"], height);
+        assert_eq!(json["result"]["output_receipt"]["status"], "verified");
+        assert_eq!(json["result"]["output_receipt"]["previous_sha256"], hash);
         let decoded = image::open(&destination).unwrap();
         assert_eq!(
             (decoded.width(), decoded.height()),
             (width as u32, height as u32)
         );
         assert_eq!(fs::read(&input).unwrap(), source);
+        let verified = &json["result"]["output_receipt"]["verified_output"];
+        let bytes = fs::read(&destination).unwrap();
+        assert_eq!(verified["sha256"], fixture_sha256(&bytes));
+        assert_eq!(verified["bytes"], bytes.len() as u64);
+        assert_eq!(verified["format"], "png");
+        assert_eq!(verified["width"], width);
+        assert_eq!(verified["height"], height);
         let sidecar = destination.with_file_name(format!(
             ".{}.yu-replace.lock",
             destination.file_name().unwrap().to_string_lossy()
@@ -745,6 +814,16 @@ fn image_replace_dry_run_only_plans_and_preserves_existing_bytes() {
     assert_eq!(json["result"]["replaced"], false);
     assert_eq!(json["result"]["would_replace"], true);
     assert_eq!(json["result"]["dry_run"], true);
+    assert_eq!(json["result"]["output_receipt"]["status"], "planned");
+    assert_eq!(
+        json["result"]["output_receipt"]["previous_sha256"],
+        hash.to_ascii_lowercase()
+    );
+    assert!(
+        json["result"]["output_receipt"]
+            .get("verified_output")
+            .is_none()
+    );
     assert_eq!(fs::read(&output_path).unwrap(), original);
     fs::remove_file(input).unwrap();
     fs::remove_file(output_path).unwrap();
@@ -846,9 +925,15 @@ fn image_replace_allows_in_place_only_with_explicit_version_guard() {
     ]);
     let json = parse_stdout(&reply);
     assert_eq!(json["result"]["replaced"], true);
+    assert_eq!(json["result"]["output_receipt"]["previous_sha256"], hash);
+    assert_eq!(json["result"]["output_receipt"]["status"], "verified");
     let decoded = image::open(&input).unwrap();
     assert_eq!((decoded.width(), decoded.height()), (3, 2));
     assert_ne!(fs::read(&input).unwrap(), original);
+    assert_eq!(
+        json["result"]["output_receipt"]["verified_output"]["sha256"],
+        fixture_sha256(&fs::read(&input).unwrap())
+    );
     fs::remove_file(input).unwrap();
 }
 

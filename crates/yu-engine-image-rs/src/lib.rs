@@ -45,10 +45,12 @@ impl ImageEngine for RustImageEngine {
         let (width, height) =
             target_dimensions(source_width, source_height, request.width, request.height)?;
 
-        if !request.dry_run {
+        let output_receipt = if request.dry_run {
+            transaction.planned_receipt()
+        } else {
             let resized = image.resize_exact(width, height, image::imageops::FilterType::Lanczos3);
-            transaction.publish(&resized, output_format)?;
-        }
+            transaction.publish(&resized, output_format)?
+        };
 
         Ok(ResizeResult {
             input: request.input.to_string_lossy().into_owned(),
@@ -61,6 +63,7 @@ impl ImageEngine for RustImageEngine {
             dry_run: request.dry_run,
             replaced: transaction.replaced(),
             would_replace: transaction.would_replace(),
+            output_receipt,
         })
     }
 
@@ -86,10 +89,12 @@ impl ImageEngine for RustImageEngine {
             ));
         }
 
-        if !request.dry_run {
+        let output_receipt = if request.dry_run {
+            transaction.planned_receipt()
+        } else {
             let cropped = image.crop_imm(request.x, request.y, request.width, request.height);
-            transaction.publish(&cropped, format)?;
-        }
+            transaction.publish(&cropped, format)?
+        };
         Ok(CropResult {
             input: request.input.to_string_lossy().into_owned(),
             output: request.output.to_string_lossy().into_owned(),
@@ -103,6 +108,7 @@ impl ImageEngine for RustImageEngine {
             dry_run: request.dry_run,
             replaced: transaction.replaced(),
             would_replace: transaction.would_replace(),
+            output_receipt,
         })
     }
 
@@ -124,15 +130,17 @@ impl ImageEngine for RustImageEngine {
         } else {
             (source_height, source_width)
         };
-        if !request.dry_run {
+        let output_receipt = if request.dry_run {
+            transaction.planned_receipt()
+        } else {
             let rotated = match request.degrees {
                 90 => image.rotate90(),
                 180 => image.rotate180(),
                 270 => image.rotate270(),
                 _ => unreachable!("degrees validated above"),
             };
-            transaction.publish(&rotated, format)?;
-        }
+            transaction.publish(&rotated, format)?
+        };
         Ok(RotateResult {
             input: request.input.to_string_lossy().into_owned(),
             output: request.output.to_string_lossy().into_owned(),
@@ -145,6 +153,7 @@ impl ImageEngine for RustImageEngine {
             dry_run: request.dry_run,
             replaced: transaction.replaced(),
             would_replace: transaction.would_replace(),
+            output_receipt,
         })
     }
 
@@ -153,9 +162,11 @@ impl ImageEngine for RustImageEngine {
         let transaction =
             OutputTransaction::prepare(&request.output, &request.output_policy, request.dry_run)?;
         let (image, source_format) = open_image(&request.input)?;
-        if !request.dry_run {
-            transaction.publish(&image, format)?;
-        }
+        let output_receipt = if request.dry_run {
+            transaction.planned_receipt()
+        } else {
+            transaction.publish(&image, format)?
+        };
         Ok(ConvertResult {
             input: request.input.to_string_lossy().into_owned(),
             output: request.output.to_string_lossy().into_owned(),
@@ -166,6 +177,7 @@ impl ImageEngine for RustImageEngine {
             dry_run: request.dry_run,
             replaced: transaction.replaced(),
             would_replace: transaction.would_replace(),
+            output_receipt,
         })
     }
 }

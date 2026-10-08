@@ -11,6 +11,7 @@ pub enum ImageErrorKind {
     Unsupported,
     OutputConflict,
     Execution,
+    Verification,
 }
 
 #[derive(Debug, Clone)]
@@ -47,6 +48,13 @@ impl ImageOperationError {
             message: message.into(),
         }
     }
+
+    pub fn verification(message: impl Into<String>) -> Self {
+        Self {
+            kind: ImageErrorKind::Verification,
+            message: message.into(),
+        }
+    }
 }
 
 impl fmt::Display for ImageOperationError {
@@ -76,6 +84,50 @@ pub struct OutputPolicy {
     pub expected_sha256: Option<String>,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum OutputReceiptStatus {
+    Planned,
+    Verified,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct VerifiedOutput {
+    pub sha256: String,
+    pub bytes: u64,
+    pub width: u32,
+    pub height: u32,
+    pub format: String,
+}
+
+/// Dry-run has no verified output bytes. Real success must reopen the published file.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct OutputReceipt {
+    pub status: OutputReceiptStatus,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub previous_sha256: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub verified_output: Option<VerifiedOutput>,
+}
+
+impl OutputReceipt {
+    pub fn planned(previous_sha256: Option<String>) -> Self {
+        Self {
+            status: OutputReceiptStatus::Planned,
+            previous_sha256,
+            verified_output: None,
+        }
+    }
+
+    pub fn verified(previous_sha256: Option<String>, output: VerifiedOutput) -> Self {
+        Self {
+            status: OutputReceiptStatus::Verified,
+            previous_sha256,
+            verified_output: Some(output),
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ResizeRequest {
     pub input: PathBuf,
@@ -98,6 +150,7 @@ pub struct ResizeResult {
     pub dry_run: bool,
     pub replaced: bool,
     pub would_replace: bool,
+    pub output_receipt: OutputReceipt,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -126,6 +179,7 @@ pub struct CropResult {
     pub dry_run: bool,
     pub replaced: bool,
     pub would_replace: bool,
+    pub output_receipt: OutputReceipt,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -150,6 +204,7 @@ pub struct RotateResult {
     pub dry_run: bool,
     pub replaced: bool,
     pub would_replace: bool,
+    pub output_receipt: OutputReceipt,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -171,6 +226,7 @@ pub struct ConvertResult {
     pub dry_run: bool,
     pub replaced: bool,
     pub would_replace: bool,
+    pub output_receipt: OutputReceipt,
 }
 
 pub trait ImageEngine {

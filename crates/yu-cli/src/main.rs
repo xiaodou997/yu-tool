@@ -890,6 +890,7 @@ fn map_image_error(error: ImageOperationError) -> YuError {
         ImageErrorKind::Unsupported => ErrorCode::UnsupportedCapability,
         ImageErrorKind::OutputConflict => ErrorCode::OutputConflict,
         ImageErrorKind::Execution => ErrorCode::ExecutionFailed,
+        ImageErrorKind::Verification => ErrorCode::VerificationFailed,
     };
 
     YuError::new(code, error.message)
@@ -913,4 +914,26 @@ fn print_json_to_stderr<T: Serialize>(value: &T) {
     let rendered =
         serde_json::to_string_pretty(value).expect("serializing YuTool error should not fail");
     eprintln!("{rendered}");
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn post_write_verification_failure_is_not_a_success_exit() {
+        let error = map_image_error(ImageOperationError::verification(
+            "output may already be published; inspect before retrying",
+        ));
+        assert_eq!(error.code, ErrorCode::VerificationFailed);
+        assert_eq!(error.exit_code(), 1);
+        let json = serde_json::to_value(ErrorEnvelope::from(&error)).unwrap();
+        assert_eq!(json["error"]["code"], "VERIFICATION_FAILED");
+        assert!(
+            json["error"]["message"]
+                .as_str()
+                .unwrap()
+                .contains("published")
+        );
+    }
 }

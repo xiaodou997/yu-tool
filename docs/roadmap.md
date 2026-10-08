@@ -278,6 +278,12 @@ in the CLI specification. The `main` RC and signing/release gates remain
 untouched; GitHub Actions are not a required development gate while quota
 is unavailable.
 
+M4b-3 follows `develop@b5dccf94f89ff5b568b2cd6c6079023fd2894daf`:
+verify encoded staging, reopen/hash/decode the published destination, and
+return a typed receipt with old/new SHA-256, bytes, dimensions and format.
+Dry-run stays a plan. Errors after publication never claim success or
+automatically roll back. This feature is isolated from v0.1 frozen `main`.
+
 Candidate capabilities:
 
 - image crop/rotate/convert;
