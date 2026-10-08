@@ -116,12 +116,19 @@ Node/ag-psd remain optional and must not become YuTool core dependencies. The pr
 | `psd.layer.export` | Partial | Active Managed ag-psd `.yu2`; stored 8-bit RGB bitmap → RGBA8/PNG; new output only |
 | `psd.render` | Deferred | no v0.1 fidelity promise |
 | high-bit layer export | Unsupported in v0.1 | normalization contract unresolved |
-| layer rename | Future | mutation safety not frozen |
-| show/hide layer | Future | mutation safety not frozen |
-| layer opacity | Future | mutation safety not frozen |
+| layer rename | Future / feasibility probed | M4c-1 has four restricted metadata-only research candidates; not a public write capability |
+| show/hide layer | Future / blocked | M4c-1 metadata round trip is insufficient: cached composite may be stale |
+| layer opacity | Future / blocked | M4c-1 metadata round trip is insufficient: cached composite may be stale |
 | layer move/delete | Future | mutation safety not frozen |
 | text-layer editing | Future/Research | must be capability-tested |
 | Smart Object editing | Future/Research | must be capability-tested |
+
+M4c-1 **does not** register any new PSD capability. Its pinned ag-psd
+experiment saved/reparsed 40/48 trials but rejected 8 high-bit writes, found
+unexpected effects/resource changes on advanced files and observed a
+cached-composite change even on a no-op control. No unrestricted mutation,
+automatic fallback, silent stripping of unknown blocks, or in-place PSD
+write is accepted. See [the M4c-1 risk report](psd-mutation-feasibility-m4c1.md).
 
 PR #22 exposes the four read-only operations through the public CLI. PR #23 adds layer bitmap export to the separately versioned `31.0.2+node22.23.3.yu2` package. Effective capabilities use the exact active version, not the inventory union of all installed versions. This does not promise arbitrary PSD feature coverage or full rendering fidelity. The package is still a prototype with CI artifacts and placeholder distribution URLs; no public catalog is claimed.
 

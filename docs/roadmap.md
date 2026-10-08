@@ -284,6 +284,27 @@ return a typed receipt with old/new SHA-256, bytes, dimensions and format.
 Dry-run stays a plan. Errors after publication never claim success or
 automatically roll back. This feature is isolated from v0.1 frozen `main`.
 
+### M4c-1 — PSD mutation feasibility spike
+
+Based on `develop@9c9ea881585b7b7c1ec54f4b6c73fb507a480285`,
+the pinned Node 22.23.3 / ag-psd 31.0.2 probe ran **48** source-preserving
+no-op/rename/visibility/opacity cases across 12 PSD/PSB fixtures.
+Forty saved and reparsed, eight high-bit writes failed closed, and the
+experiment surfaced unintended layer-effect/resource changes and a no-op
+cached-composite mismatch. Visibility/opacity can also leave a stale
+composite preview. Four simple-document/group/duplicate-name rename
+cases pass the measured metadata checks, but **none authorizes a public PSD
+mutation capability**. This is a negative safety gate with a narrow research
+candidate, not a completed PSD editor.
+
+See the [M4c-1 investigation](psd-mutation-feasibility-m4c1.md) and
+[machine evidence](data/m4c1-psd-mutation-evidence-v1.json).
+
+Next is M4c-2 scope/contract work: conservative PSD format/feature preflight,
+independent editor fidelity tests, and a design for explicit version-bound
+output-only mutation. No `yu psd` write CLI or v0.1 RC change is permitted
+by M4c-1.
+
 Candidate capabilities:
 
 - image crop/rotate/convert;
