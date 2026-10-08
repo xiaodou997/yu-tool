@@ -1,0 +1,104 @@
+{
+  "schema_version": "1",
+  "milestone": "M4c-2",
+  "status": "research_contract_frozen",
+  "public_mutation_authorized": false,
+  "preflight_only": true,
+  "source_evidence": {
+    "base_commit": "ff61d9aa975e9decc5f19bd555e0d916e529060d",
+    "experiment": "docs/data/m4c1-psd-mutation-evidence-v1.json"
+  },
+  "engine": {
+    "id": "ag-psd",
+    "version": "31.0.2",
+    "node_version": "22.23.3"
+  },
+  "research_admission": {
+    "mode": "exact_known_fixture_sha256_only",
+    "operations": ["rename"],
+    "allowed_layer_kinds": ["pixel", "group"],
+    "formats": ["psd", "psb"],
+    "color_mode": "rgb",
+    "bit_depth": 8,
+    "max_source_bytes": 8388608,
+    "max_pixels": 2000000,
+    "max_layers": 64,
+    "required_request_fields": [
+      "contract_version",
+      "operation",
+      "input_path",
+      "expected_source_sha256",
+      "layer_id",
+      "expected_old_name",
+      "new_name",
+      "output_path"
+    ],
+    "output_policy": "new_path_only_without_side_effects",
+    "public_write": "blocked_pending_independent_editor_fidelity_and_opaque_data_audit"
+  },
+  "known_fixtures": [
+    {
+      "id": "simple-psd",
+      "path": "fixtures/psd/upstream/psd-tools/2layers.psd",
+      "sha256": "406ddf7cbf5a1065b992b9c0d2a59be6290a371b90f23b9a04c0e6bbc94beb0c",
+      "format": "psd",
+      "width": 101,
+      "height": 55,
+      "layer_count": 2,
+      "research_target": {"layer_id": "L0001", "name": "Фон", "kind": "pixel"}
+    },
+    {
+      "id": "simple-psb",
+      "path": "fixtures/psd/upstream/psd-tools/2layers.psb",
+      "sha256": "863c51eb4d4e72214a3cbdf06a0594c485e4262d899318b1ba914d4c848382ab",
+      "format": "psb",
+      "width": 101,
+      "height": 55,
+      "layer_count": 2,
+      "research_target": {"layer_id": "L0001", "name": "Фон", "kind": "pixel"}
+    },
+    {
+      "id": "nested-group",
+      "path": "fixtures/psd/upstream/psd-tools/group.psd",
+      "sha256": "1aaf572b69f0b0fa7c04b7b3a14c97e310a0c7bbdc06e733c9dd0d0cdcf7df1c",
+      "format": "psd",
+      "width": 100,
+      "height": 200,
+      "layer_count": 3,
+      "research_target": {"layer_id": "L0002", "name": "Group 1", "kind": "group"}
+    },
+    {
+      "id": "duplicate-names",
+      "path": "fixtures/psd/derived/duplicate-layer-names.psd",
+      "sha256": "8af765f631fa11637e5bf826696452a1c9b00f2b970d6d5c74bd2415bb7dedd9",
+      "format": "psd",
+      "width": 101,
+      "height": 55,
+      "layer_count": 2,
+      "research_target": {"layer_id": "L0002", "name": "X", "kind": "pixel"}
+    }
+  ],
+  "blocked_categories": [
+    "arbitrary_user_files",
+    "unknown_or_unparsed_additional_info_blocks",
+    "unknown_opaque_resources_or_linked_assets",
+    "text_shape_mask_effect_smart_object_target",
+    "blend_or_effect_metadata_loss",
+    "high_bit_depth_or_non_rgb",
+    "visibility_and_opacity_composite_cache_fidelity",
+    "mutation_of_source_file",
+    "replacement_of_any_existing_output",
+    "unversioned_or_name_based_layer_selection",
+    "implicit_engine_fallback"
+  ],
+  "error_codes": [
+    "INVALID_ARGUMENT",
+    "INVALID_INPUT",
+    "SOURCE_VERSION_CONFLICT",
+    "OUTPUT_CONFLICT",
+    "UNSUPPORTED_DOCUMENT",
+    "UNSUPPORTED_OPERATION",
+    "ENGINE_INCOMPATIBLE",
+    "EXECUTION_FAILED"
+  ]
+}

@@ -300,10 +300,24 @@ candidate, not a completed PSD editor.
 See the [M4c-1 investigation](psd-mutation-feasibility-m4c1.md) and
 [machine evidence](data/m4c1-psd-mutation-evidence-v1.json).
 
-Next is M4c-2 scope/contract work: conservative PSD format/feature preflight,
-independent editor fidelity tests, and a design for explicit version-bound
-output-only mutation. No `yu psd` write CLI or v0.1 RC change is permitted
-by M4c-1.
+### M4c-2 — PSD safe-mutation scope / contract freeze
+
+Starting from `develop@ff61d9aa975e9decc5f19bd555e0d916e529060d`,
+ADR 0014 freezes a **research-only, default-deny PSD mutation policy**:
+exact SHA-256 identity for four prior reviewed fixtures (simple PSD/PSB,
+group and duplicate names), 8-bit RGB, bounded source, canonical layer
+ID + expected old name, source byte version binding, new path only and
+read-only plan. Only **rename** is a research candidate. Arbitrary user
+PSD files, unknown/opaque resources, complex effects, masks, text,
+Smart Objects, high bit depth, visibility/opacity and general writes
+remain **blocked**. No `yu psd` public write command or Managed protocol
+change is authorized.
+
+See [ADR 0014](decisions/0014-psd-mutation-input-scope-freeze.md),
+[machine policy](data/psd-safe-mutation-scope-m4c2-v1.json) and
+[acceptance](testing/m4c2-psd-input-scope-freeze.md).
+Next: independent raw-block scanner and full-fidelity editor acceptance
+before expanding any input class beyond the exact reviewed research fixtures.
 
 Candidate capabilities:
 

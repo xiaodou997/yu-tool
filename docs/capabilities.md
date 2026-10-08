@@ -130,6 +130,18 @@ cached-composite change even on a no-op control. No unrestricted mutation,
 automatic fallback, silent stripping of unknown blocks, or in-place PSD
 write is accepted. See [the M4c-1 risk report](psd-mutation-feasibility-m4c1.md).
 
+M4c-2 freezes [ADR 0014](decisions/0014-psd-mutation-input-scope-freeze.md):
+the **only** PSD mutation research candidate is metadata-only rename of an
+exact, known M4c-1 fixture identity, with selected canonical layer ID,
+previous-name and source SHA-256 binding and a separate absent output
+destination. A standalone **read-only** preflight validates this policy;
+its `research_candidate` response always contains
+`write_authorized=false`. Arbitrary PSD/PSB inputs are not admitted,
+because parsed metadata alone cannot detect opaque/unknown blocks.
+Visibility/opacity, complex effects, Smart Objects, unknown resources and
+production PSD mutation are still **unsupported**. No new capability is
+advertised by `yu capabilities`.
+
 PR #22 exposes the four read-only operations through the public CLI. PR #23 adds layer bitmap export to the separately versioned `31.0.2+node22.23.3.yu2` package. Effective capabilities use the exact active version, not the inventory union of all installed versions. This does not promise arbitrary PSD feature coverage or full rendering fidelity. The package is still a prototype with CI artifacts and placeholder distribution URLs; no public catalog is claimed.
 
 Compatibility roles:
