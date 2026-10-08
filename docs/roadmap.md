@@ -269,6 +269,15 @@ without writing outputs; safe overwrite/replacement, durable approvals, and
 PSD mutation remain separate follow-ups. The frozen v0.1 `main` does not
 receive M4 changes.
 
+M4b-2 follows `develop@fbe1bf9719a5b42c1035c29edb1b0e7ae958a069`:
+explicit version-bound replacement on the four built-in image operations,
+same-directory stage/publish, double SHA-256 validation, safe cleanup and
+YuTool-cooperating writer serialization. There is no portable filesystem
+compare-and-swap and the known race against uncooperative writers is stated
+in the CLI specification. The `main` RC and signing/release gates remain
+untouched; GitHub Actions are not a required development gate while quota
+is unavailable.
+
 Candidate capabilities:
 
 - image crop/rotate/convert;

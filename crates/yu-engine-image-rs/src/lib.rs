@@ -1,9 +1,8 @@
+mod output;
+
 use image::{ColorType, DynamicImage, ImageError as NativeImageError, ImageFormat, ImageReader};
-use std::{
-    fs,
-    path::{Path, PathBuf},
-    time::{SystemTime, UNIX_EPOCH},
-};
+use output::OutputTransaction;
+use std::path::Path;
 use yu_capability_image::{
     ConvertRequest, ConvertResult, CropRequest, CropResult, ImageEngine, ImageInfo,
     ImageOperationError, ResizeRequest, ResizeResult, RotateRequest, RotateResult,
@@ -37,7 +36,8 @@ impl ImageEngine for RustImageEngine {
 
     fn resize(&self, request: &ResizeRequest) -> Result<ResizeResult, ImageOperationError> {
         let output_format = supported_output_format(&request.output)?;
-        preflight_destination(&request.output)?;
+        let transaction =
+            OutputTransaction::prepare(&request.output, &request.output_policy, request.dry_run)?;
 
         let (image, _) = open_image(&request.input)?;
         let source_width = image.width();
@@ -47,7 +47,7 @@ impl ImageEngine for RustImageEngine {
 
         if !request.dry_run {
             let resized = image.resize_exact(width, height, image::imageops::FilterType::Lanczos3);
-            write_new_file(&resized, &request.output, output_format)?;
+            transaction.publish(&resized, output_format)?;
         }
 
         Ok(ResizeResult {
@@ -59,12 +59,15 @@ impl ImageEngine for RustImageEngine {
             height,
             format: format_name(output_format),
             dry_run: request.dry_run,
+            replaced: transaction.replaced(),
+            would_replace: transaction.would_replace(),
         })
     }
 
     fn crop(&self, request: &CropRequest) -> Result<CropResult, ImageOperationError> {
         let format = supported_output_format(&request.output)?;
-        preflight_destination(&request.output)?;
+        let transaction =
+            OutputTransaction::prepare(&request.output, &request.output_policy, request.dry_run)?;
         let (image, _) = open_image(&request.input)?;
         let (source_width, source_height) = (image.width(), image.height());
 
@@ -85,7 +88,7 @@ impl ImageEngine for RustImageEngine {
 
         if !request.dry_run {
             let cropped = image.crop_imm(request.x, request.y, request.width, request.height);
-            write_new_file(&cropped, &request.output, format)?;
+            transaction.publish(&cropped, format)?;
         }
         Ok(CropResult {
             input: request.input.to_string_lossy().into_owned(),
@@ -98,6 +101,8 @@ impl ImageEngine for RustImageEngine {
             height: request.height,
             format: format_name(format),
             dry_run: request.dry_run,
+            replaced: transaction.replaced(),
+            would_replace: transaction.would_replace(),
         })
     }
 
@@ -110,7 +115,8 @@ impl ImageEngine for RustImageEngine {
             ));
         }
         let format = supported_output_format(&request.output)?;
-        preflight_destination(&request.output)?;
+        let transaction =
+            OutputTransaction::prepare(&request.output, &request.output_policy, request.dry_run)?;
         let (image, _) = open_image(&request.input)?;
         let (source_width, source_height) = (image.width(), image.height());
         let (width, height) = if request.degrees == 180 {
@@ -125,7 +131,7 @@ impl ImageEngine for RustImageEngine {
                 270 => image.rotate270(),
                 _ => unreachable!("degrees validated above"),
             };
-            write_new_file(&rotated, &request.output, format)?;
+            transaction.publish(&rotated, format)?;
         }
         Ok(RotateResult {
             input: request.input.to_string_lossy().into_owned(),
@@ -137,15 +143,18 @@ impl ImageEngine for RustImageEngine {
             height,
             format: format_name(format),
             dry_run: request.dry_run,
+            replaced: transaction.replaced(),
+            would_replace: transaction.would_replace(),
         })
     }
 
     fn convert(&self, request: &ConvertRequest) -> Result<ConvertResult, ImageOperationError> {
         let format = supported_output_format(&request.output)?;
-        preflight_destination(&request.output)?;
+        let transaction =
+            OutputTransaction::prepare(&request.output, &request.output_policy, request.dry_run)?;
         let (image, source_format) = open_image(&request.input)?;
         if !request.dry_run {
-            write_new_file(&image, &request.output, format)?;
+            transaction.publish(&image, format)?;
         }
         Ok(ConvertResult {
             input: request.input.to_string_lossy().into_owned(),
@@ -155,43 +164,9 @@ impl ImageEngine for RustImageEngine {
             width: image.width(),
             height: image.height(),
             dry_run: request.dry_run,
+            replaced: transaction.replaced(),
+            would_replace: transaction.would_replace(),
         })
-    }
-}
-
-/// Read-only best-effort preflight. Publication independently guards the
-/// destination atomically, because a file can appear after this check.
-fn preflight_destination(output: &Path) -> Result<(), ImageOperationError> {
-    match fs::symlink_metadata(output) {
-        Ok(_) => {
-            return Err(ImageOperationError::output_conflict(format!(
-                "output already exists: {}",
-                output.display()
-            )));
-        }
-        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
-        Err(error) => {
-            return Err(ImageOperationError::execution(format!(
-                "cannot inspect output {}: {error}",
-                output.display()
-            )));
-        }
-    }
-
-    let parent = output
-        .parent()
-        .filter(|p| !p.as_os_str().is_empty())
-        .unwrap_or(Path::new("."));
-    match fs::metadata(parent) {
-        Ok(metadata) if metadata.is_dir() => Ok(()),
-        Ok(_) => Err(ImageOperationError::invalid_input(format!(
-            "output parent is not a directory: {}",
-            parent.display()
-        ))),
-        Err(error) => Err(ImageOperationError::invalid_input(format!(
-            "output parent is unavailable ({}): {error}",
-            parent.display()
-        ))),
     }
 }
 
@@ -234,55 +209,6 @@ fn open_image(path: &Path) -> Result<(DynamicImage, ImageFormat), ImageOperation
 
     let image = reader.decode().map_err(map_decode_error)?;
     Ok((image, format))
-}
-
-fn write_new_file(
-    image: &DynamicImage,
-    output: &Path,
-    format: ImageFormat,
-) -> Result<(), ImageOperationError> {
-    let temporary = temporary_output_path(output);
-
-    if let Err(error) = image.save_with_format(&temporary, format) {
-        let _ = fs::remove_file(&temporary);
-        return Err(map_encode_error(error, output));
-    }
-
-    // Atomic no-clobber publication on the same filesystem. Unlike rename,
-    // hard_link cannot replace an output created during encoding.
-    let publish = fs::hard_link(&temporary, output);
-    let _ = fs::remove_file(&temporary);
-    if let Err(error) = publish {
-        if error.kind() == std::io::ErrorKind::AlreadyExists {
-            return Err(ImageOperationError::output_conflict(format!(
-                "output already exists: {}",
-                output.display()
-            )));
-        }
-        return Err(ImageOperationError::execution(format!(
-            "cannot publish completed image to {}: {error}",
-            output.display()
-        )));
-    }
-
-    Ok(())
-}
-
-fn temporary_output_path(output: &Path) -> PathBuf {
-    let file_name = output
-        .file_name()
-        .map(|name| name.to_string_lossy().into_owned())
-        .unwrap_or_else(|| "output".to_owned());
-
-    let nonce = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map(|duration| duration.as_nanos())
-        .unwrap_or_default();
-
-    output.with_file_name(format!(
-        ".{file_name}.yu-{}-{nonce}.tmp",
-        std::process::id()
-    ))
 }
 
 fn target_dimensions(
@@ -348,19 +274,6 @@ fn map_decode_error(error: NativeImageError) -> ImageOperationError {
             ImageOperationError::unsupported(format!("image format is not supported: {error}"))
         }
         _ => ImageOperationError::invalid_input(format!("cannot decode image: {error}")),
-    }
-}
-
-fn map_encode_error(error: NativeImageError, output: &Path) -> ImageOperationError {
-    match error {
-        NativeImageError::Unsupported(_) => ImageOperationError::unsupported(format!(
-            "output format is not supported for {}: {error}",
-            output.display()
-        )),
-        _ => ImageOperationError::execution(format!(
-            "cannot encode image to {}: {error}",
-            output.display()
-        )),
     }
 }
 

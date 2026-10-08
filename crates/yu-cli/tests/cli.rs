@@ -640,6 +640,252 @@ fn image_dry_run_treats_dangling_output_symlink_as_conflict() {
 }
 
 #[test]
+fn image_replace_requires_explicit_flag_and_sha256_argument() {
+    let input = temp_path("replace-args-input", "png");
+    let output_path = temp_path("replace-args-output", "png");
+    create_png(&input, 4, 2);
+    let hash = fixture_sha256(b"old");
+    for extra in [
+        vec!["--replace"],
+        vec!["--expected-output-sha256", hash.as_str()],
+    ] {
+        let mut args = vec![
+            "image",
+            "convert",
+            input.to_str().unwrap(),
+            "-o",
+            output_path.to_str().unwrap(),
+        ];
+        args.extend(extra);
+        args.push("--json");
+        let result = run(&args);
+        assert_eq!(result.status.code(), Some(2));
+        let error: Value = serde_json::from_slice(&result.stderr).unwrap();
+        assert_eq!(error["error"]["code"], "INVALID_ARGUMENT");
+        assert!(!output_path.exists());
+    }
+    fs::remove_file(input).unwrap();
+}
+
+#[test]
+fn image_replace_valid_sha256_can_replace_with_all_four_operations() {
+    let input = temp_path("replace-valid-input", "png");
+    create_png(&input, 4, 2);
+    let source = fs::read(&input).unwrap();
+    for (name, extra, width, height) in [
+        ("resize", vec!["--width", "2"], 2, 1),
+        (
+            "crop",
+            vec!["--x", "1", "--y", "0", "--width", "2", "--height", "1"],
+            2,
+            1,
+        ),
+        ("rotate", vec!["--degrees", "90"], 2, 4),
+        ("convert", vec![], 4, 2),
+    ] {
+        let destination = temp_path("replace-valid-output", "png");
+        create_png(&destination, 1, 1);
+        let before = fs::read(&destination).unwrap();
+        let hash = fixture_sha256(&before);
+        let mut args = vec!["image", name, input.to_str().unwrap()];
+        args.extend_from_slice(&extra);
+        args.extend_from_slice(&[
+            "-o",
+            destination.to_str().unwrap(),
+            "--replace",
+            "--expected-output-sha256",
+            hash.as_str(),
+            "--json",
+        ]);
+        let output = run(&args);
+        let json = parse_stdout(&output);
+        assert_eq!(json["result"]["replaced"], true);
+        assert_eq!(json["result"]["would_replace"], false);
+        assert_eq!(json["result"]["dry_run"], false);
+        assert_eq!(json["result"]["width"], width);
+        assert_eq!(json["result"]["height"], height);
+        let decoded = image::open(&destination).unwrap();
+        assert_eq!(
+            (decoded.width(), decoded.height()),
+            (width as u32, height as u32)
+        );
+        assert_eq!(fs::read(&input).unwrap(), source);
+        let sidecar = destination.with_file_name(format!(
+            ".{}.yu-replace.lock",
+            destination.file_name().unwrap().to_string_lossy()
+        ));
+        assert!(!sidecar.exists());
+        fs::remove_file(destination).unwrap();
+    }
+    fs::remove_file(input).unwrap();
+}
+
+#[test]
+fn image_replace_dry_run_only_plans_and_preserves_existing_bytes() {
+    let input = temp_path("replace-plan-input", "png");
+    let output_path = temp_path("replace-plan-output", "webp");
+    create_png(&input, 4, 2);
+    fs::write(&output_path, b"old-preview-file").unwrap();
+    let original = fs::read(&output_path).unwrap();
+    let hash = fixture_sha256(&original).to_uppercase();
+    let output = run(&[
+        "image",
+        "convert",
+        input.to_str().unwrap(),
+        "-o",
+        output_path.to_str().unwrap(),
+        "--replace",
+        "--expected-output-sha256",
+        &hash,
+        "--dry-run",
+        "--json",
+    ]);
+    let json = parse_stdout(&output);
+    assert_eq!(json["operation"], "image.convert");
+    assert_eq!(json["result"]["replaced"], false);
+    assert_eq!(json["result"]["would_replace"], true);
+    assert_eq!(json["result"]["dry_run"], true);
+    assert_eq!(fs::read(&output_path).unwrap(), original);
+    fs::remove_file(input).unwrap();
+    fs::remove_file(output_path).unwrap();
+}
+
+#[test]
+fn image_replace_rejects_stale_hash_missing_destination_and_bad_hash() {
+    let input = temp_path("replace-reject-input", "png");
+    let output_path = temp_path("replace-reject-output", "png");
+    create_png(&input, 4, 2);
+    fs::write(&output_path, b"newer-version").unwrap();
+    let original = fs::read(&output_path).unwrap();
+    let stale_hash = fixture_sha256(b"older-version");
+    let valid_hash = fixture_sha256(&original);
+    let bad = "not-a-sha256";
+    for (hash, expected_error) in [
+        (stale_hash.as_str(), "OUTPUT_CONFLICT"),
+        (bad, "INVALID_INPUT"),
+    ] {
+        let reply = run(&[
+            "image",
+            "convert",
+            input.to_str().unwrap(),
+            "-o",
+            output_path.to_str().unwrap(),
+            "--replace",
+            "--expected-output-sha256",
+            hash,
+            "--json",
+        ]);
+        assert_eq!(reply.status.code(), Some(2));
+        let error: Value = serde_json::from_slice(&reply.stderr).unwrap();
+        assert_eq!(error["error"]["code"], expected_error);
+        assert_eq!(fs::read(&output_path).unwrap(), original);
+    }
+    fs::remove_file(&output_path).unwrap();
+    let reply = run(&[
+        "image",
+        "convert",
+        input.to_str().unwrap(),
+        "-o",
+        output_path.to_str().unwrap(),
+        "--replace",
+        "--expected-output-sha256",
+        &valid_hash,
+        "--json",
+    ]);
+    assert_eq!(reply.status.code(), Some(2));
+    let error: Value = serde_json::from_slice(&reply.stderr).unwrap();
+    assert_eq!(error["error"]["code"], "OUTPUT_CONFLICT");
+    assert!(!output_path.exists());
+    fs::remove_file(input).unwrap();
+}
+
+#[test]
+fn image_replace_refuses_directory_even_when_named_as_png() {
+    let input = temp_path("replace-directory-input", "png");
+    let target = temp_path("replace-directory-output", "png");
+    create_png(&input, 4, 2);
+    fs::create_dir(&target).unwrap();
+    let hash = fixture_sha256(b"does-not-matter");
+    let reply = run(&[
+        "image",
+        "convert",
+        input.to_str().unwrap(),
+        "-o",
+        target.to_str().unwrap(),
+        "--replace",
+        "--expected-output-sha256",
+        &hash,
+        "--json",
+    ]);
+    assert_eq!(reply.status.code(), Some(2));
+    let error: Value = serde_json::from_slice(&reply.stderr).unwrap();
+    assert_eq!(error["error"]["code"], "INVALID_INPUT");
+    assert!(target.is_dir());
+    fs::remove_file(input).unwrap();
+    fs::remove_dir(target).unwrap();
+}
+
+#[test]
+fn image_replace_allows_in_place_only_with_explicit_version_guard() {
+    let input = temp_path("replace-in-place", "png");
+    create_png(&input, 6, 4);
+    let original = fs::read(&input).unwrap();
+    let hash = fixture_sha256(&original);
+    let reply = run(&[
+        "image",
+        "resize",
+        input.to_str().unwrap(),
+        "--width",
+        "3",
+        "-o",
+        input.to_str().unwrap(),
+        "--replace",
+        "--expected-output-sha256",
+        &hash,
+        "--json",
+    ]);
+    let json = parse_stdout(&reply);
+    assert_eq!(json["result"]["replaced"], true);
+    let decoded = image::open(&input).unwrap();
+    assert_eq!((decoded.width(), decoded.height()), (3, 2));
+    assert_ne!(fs::read(&input).unwrap(), original);
+    fs::remove_file(input).unwrap();
+}
+
+#[cfg(unix)]
+#[test]
+fn image_replace_rejects_symlink_destination_without_changing_target() {
+    use std::os::unix::fs::symlink;
+    let input = temp_path("replace-link-input", "png");
+    let target = temp_path("replace-link-target", "png");
+    let destination = temp_path("replace-link-output", "png");
+    create_png(&input, 4, 2);
+    create_png(&target, 2, 2);
+    let original = fs::read(&target).unwrap();
+    symlink(&target, &destination).unwrap();
+    let hash = fixture_sha256(&original);
+    let reply = run(&[
+        "image",
+        "convert",
+        input.to_str().unwrap(),
+        "-o",
+        destination.to_str().unwrap(),
+        "--replace",
+        "--expected-output-sha256",
+        &hash,
+        "--json",
+    ]);
+    assert_eq!(reply.status.code(), Some(2));
+    let error: Value = serde_json::from_slice(&reply.stderr).unwrap();
+    assert_eq!(error["error"]["code"], "INVALID_INPUT");
+    assert_eq!(fs::read(&target).unwrap(), original);
+    assert_eq!(fs::read_link(&destination).unwrap(), target);
+    fs::remove_file(input).unwrap();
+    fs::remove_file(target).unwrap();
+    fs::remove_file(destination).unwrap();
+}
+
+#[test]
 fn explicit_incompatible_engine_returns_structured_error() {
     let input = temp_path("engine-input", "png");
     create_png(&input, 4, 2);

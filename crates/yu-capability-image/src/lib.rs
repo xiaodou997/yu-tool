@@ -69,6 +69,13 @@ pub struct ImageInfo {
     pub has_alpha: bool,
 }
 
+/// Absence preserves no-clobber behavior. Presence permits replacement
+/// only when the destination's current bytes match this SHA-256.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct OutputPolicy {
+    pub expected_sha256: Option<String>,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ResizeRequest {
     pub input: PathBuf,
@@ -76,6 +83,7 @@ pub struct ResizeRequest {
     pub width: Option<u32>,
     pub height: Option<u32>,
     pub dry_run: bool,
+    pub output_policy: OutputPolicy,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -88,6 +96,8 @@ pub struct ResizeResult {
     pub height: u32,
     pub format: String,
     pub dry_run: bool,
+    pub replaced: bool,
+    pub would_replace: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -99,6 +109,7 @@ pub struct CropRequest {
     pub width: u32,
     pub height: u32,
     pub dry_run: bool,
+    pub output_policy: OutputPolicy,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -113,6 +124,8 @@ pub struct CropResult {
     pub height: u32,
     pub format: String,
     pub dry_run: bool,
+    pub replaced: bool,
+    pub would_replace: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -121,6 +134,7 @@ pub struct RotateRequest {
     pub output: PathBuf,
     pub degrees: u16,
     pub dry_run: bool,
+    pub output_policy: OutputPolicy,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -134,6 +148,8 @@ pub struct RotateResult {
     pub height: u32,
     pub format: String,
     pub dry_run: bool,
+    pub replaced: bool,
+    pub would_replace: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -141,6 +157,7 @@ pub struct ConvertRequest {
     pub input: PathBuf,
     pub output: PathBuf,
     pub dry_run: bool,
+    pub output_policy: OutputPolicy,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -152,6 +169,8 @@ pub struct ConvertResult {
     pub width: u32,
     pub height: u32,
     pub dry_run: bool,
+    pub replaced: bool,
+    pub would_replace: bool,
 }
 
 pub trait ImageEngine {

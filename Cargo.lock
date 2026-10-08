@@ -1963,6 +1963,7 @@ name = "yu-engine-image-rs"
 version = "0.1.0"
 dependencies = [
  "image",
+ "sha2",
  "yu-capability-image",
 ]
 

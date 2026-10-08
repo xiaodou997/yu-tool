@@ -1,6 +1,6 @@
 mod psd;
 
-use clap::{Parser, Subcommand};
+use clap::{Args, Parser, Subcommand};
 use serde::Serialize;
 use std::{
     fs,
@@ -8,8 +8,8 @@ use std::{
     process::{ExitCode, Termination},
 };
 use yu_capability_image::{
-    ConvertRequest, CropRequest, ImageEngine, ImageErrorKind, ImageOperationError, ResizeRequest,
-    RotateRequest,
+    ConvertRequest, CropRequest, ImageEngine, ImageErrorKind, ImageOperationError, OutputPolicy,
+    ResizeRequest, RotateRequest,
 };
 use yu_core::{
     EngineDescriptor, EngineProvider, EngineState, ErrorCode, ErrorEnvelope, ResultEnvelope,
@@ -82,6 +82,25 @@ enum EngineCommand {
     Remove { engine: String, version: String },
 }
 
+#[derive(Debug, Args)]
+struct ReplaceOptions {
+    /// Explicitly replace an existing output, bound to its exact SHA-256.
+    #[arg(long, requires = "expected_output_sha256")]
+    replace: bool,
+    /// Exact existing destination hash (64 hexadecimal digits).
+    #[arg(long, requires = "replace", value_name = "SHA256")]
+    expected_output_sha256: Option<String>,
+}
+
+impl ReplaceOptions {
+    fn into_policy(self) -> OutputPolicy {
+        debug_assert_eq!(self.replace, self.expected_output_sha256.is_some());
+        OutputPolicy {
+            expected_sha256: self.expected_output_sha256,
+        }
+    }
+}
+
 #[derive(Debug, Subcommand)]
 enum ImageCommand {
     /// Inspect image dimensions, format, and color information.
@@ -107,6 +126,9 @@ enum ImageCommand {
         #[arg(long, help = "Preview without writing a file")]
         dry_run: bool,
 
+        #[command(flatten)]
+        replacement: ReplaceOptions,
+
         #[arg(long, help = "Use a specific engine instead of automatic resolution")]
         engine: Option<String>,
     },
@@ -125,6 +147,8 @@ enum ImageCommand {
         output: PathBuf,
         #[arg(long, help = "Preview without writing a file")]
         dry_run: bool,
+        #[command(flatten)]
+        replacement: ReplaceOptions,
         #[arg(long, help = "Use a specific engine instead of automatic resolution")]
         engine: Option<String>,
     },
@@ -137,6 +161,8 @@ enum ImageCommand {
         output: PathBuf,
         #[arg(long, help = "Preview without writing a file")]
         dry_run: bool,
+        #[command(flatten)]
+        replacement: ReplaceOptions,
         #[arg(long, help = "Use a specific engine instead of automatic resolution")]
         engine: Option<String>,
     },
@@ -147,6 +173,8 @@ enum ImageCommand {
         output: PathBuf,
         #[arg(long, help = "Preview without writing a file")]
         dry_run: bool,
+        #[command(flatten)]
+        replacement: ReplaceOptions,
         #[arg(long, help = "Use a specific engine instead of automatic resolution")]
         engine: Option<String>,
     },
@@ -225,6 +253,7 @@ fn run(cli: Cli) -> Result<(), YuError> {
                     height,
                     output,
                     dry_run,
+                    replacement,
                     engine,
                 },
         } => render_image_resize(
@@ -235,6 +264,7 @@ fn run(cli: Cli) -> Result<(), YuError> {
                 width,
                 height,
                 dry_run,
+                output_policy: replacement.into_policy(),
             },
             engine.as_deref(),
             cli.json,
@@ -249,6 +279,7 @@ fn run(cli: Cli) -> Result<(), YuError> {
                     height,
                     output,
                     dry_run,
+                    replacement,
                     engine,
                 },
         } => render_image_crop(
@@ -261,6 +292,7 @@ fn run(cli: Cli) -> Result<(), YuError> {
                 width,
                 height,
                 dry_run,
+                output_policy: replacement.into_policy(),
             },
             engine.as_deref(),
             cli.json,
@@ -272,6 +304,7 @@ fn run(cli: Cli) -> Result<(), YuError> {
                     degrees,
                     output,
                     dry_run,
+                    replacement,
                     engine,
                 },
         } => render_image_rotate(
@@ -281,6 +314,7 @@ fn run(cli: Cli) -> Result<(), YuError> {
                 output,
                 degrees,
                 dry_run,
+                output_policy: replacement.into_policy(),
             },
             engine.as_deref(),
             cli.json,
@@ -291,6 +325,7 @@ fn run(cli: Cli) -> Result<(), YuError> {
                     input,
                     output,
                     dry_run,
+                    replacement,
                     engine,
                 },
         } => render_image_convert(
@@ -299,6 +334,7 @@ fn run(cli: Cli) -> Result<(), YuError> {
                 input,
                 output,
                 dry_run,
+                output_policy: replacement.into_policy(),
             },
             engine.as_deref(),
             cli.json,

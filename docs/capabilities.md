@@ -73,6 +73,16 @@ the JSON result. A successful plan performs no encoding or file writes and
 does not guarantee that a later real execution can publish. The existing
 no-clobber behavior is unchanged; overwrite/replacement is still deferred.
 
+M4b-2 (`develop`) adds an **opt-in, content-hash-bound output replacement**
+to the same four raster mutations: `--replace --expected-output-sha256 HASH`.
+It refuses absent/non-regular/symlink destinations, wrong versions and
+unverified writes. It stages encoded output before a final hash recheck and
+OS replacement rename, holding a create-new sidecar lock against competing
+YuTool operations. JSON adds `replaced` / `would_replace`; without explicit
+replacement flags, no-clobber is unchanged. This is not an atomic compare-and-
+swap against unrelated external writers, a promise of crash durability, or
+preservation of the former destination's metadata/hardlink identity.
+
 ## PSD / PSB
 
 M3 selected the v0.1 engine strategy in ADR 0006. The implemented five-operation baseline is frozen in [M3 Freeze](milestones/m3-freeze.md), with supported/partial/unsupported boundaries and exact evidence. Capability availability still depends on the active package; implementation freeze is not public release.

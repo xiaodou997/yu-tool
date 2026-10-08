@@ -283,6 +283,52 @@ support, encoder errors and concurrent filesystem changes may differ at
 execution time. There is no persistent approval token, `--overwrite`,
 source modification or atomic replacement in M4b-1.
 
+### Version-bound output replacement — M4b-2 (`develop` only)
+
+All four built-in raster mutation commands accept the paired flags:
+
+```bash
+# Linux: sha256sum existing.png
+# macOS: shasum -a 256 existing.png
+# Windows PowerShell: (Get-FileHash existing.png -Algorithm SHA256).Hash
+yu image resize input.png --width 800 -o existing.png \
+  --replace --expected-output-sha256 <64-hex-digit-SHA256> --json
+```
+
+`--replace` is not an unguarded force switch: it **requires**
+`--expected-output-sha256`, and the hash option cannot appear without
+`--replace`. The hash is computed from the existing destination **bytes**
+(not dimensions, file modification time or source-image hash). Upper/lowercase
+hex is accepted. If no destination exists, the guarded replace fails
+`OUTPUT_CONFLICT`; omit both options to create a new destination instead.
+
+The destination must be a regular file, not a symlink, dangling symlink or
+directory. A mismatch returns `OUTPUT_CONFLICT` (exit 2) without publishing
+anything. The encoder writes a private, uniquely created staged file in the
+same directory. It checks the original destination hash again after encoding
+and then attempts an OS rename to the destination. Successful real execution
+returns `result.replaced=true`; `--dry-run` with these flags validates the
+existing destination and reports `result.would_replace=true` but writes
+nothing. All results also have the complementary bool set to false.
+
+The replacement lock `.<name>.yu-replace.lock` serializes cooperating
+YuTool invocations during a real replacement; it is never created during a
+dry-run and is removed on normal completion/error. If a process is killed,
+an orphaned lock may require operator investigation and manual cleanup;
+YuTool never silently steals it. A replacement of the input path itself is
+possible **only** with the same explicit version-bound flags. Replacing a
+file creates a new filesystem entry/inode; hardlink relationships, previous
+file permissions and metadata are not preserved by contract.
+
+**Concurrency limitation:** an external program which does not respect
+YuTool's lock may change the file after the final hash verification and
+before rename. There is no cross-platform atomic filesystem compare-and-swap;
+SHA verification + a rename must not be represented as that stronger guarantee.
+If rename fails (e.g. Windows file sharing denial), the original target is
+left in place by the operation and the staged file is cleaned up. Crash/power
+loss durability and rollback after publication are not claimed. No PSD output
+replacement, batch approval or general force-overwrite is part of M4b-2.
+
 ## PSD commands
 
 ADR 0006 selects `ag-psd 31.0.2` as the preferred v0.1 Managed PSD engine. PR #22 wires the four read-only commands below to the explicitly activated Managed package. PR #23 adds partial 8-bit RGB layer bitmap export; rendering remains deferred.
