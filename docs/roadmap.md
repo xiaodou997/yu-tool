@@ -319,6 +319,25 @@ See [ADR 0014](decisions/0014-psd-mutation-input-scope-freeze.md),
 Next: independent raw-block scanner and full-fidelity editor acceptance
 before expanding any input class beyond the exact reviewed research fixtures.
 
+### M4c-3 — PSD/PSB byte-level metadata inventory
+
+Starting at `develop@00d0c2fb2b67f3fc5561374498d2fb3365358f92`,
+the read-only standalone research scanner inventories raw Image Resources,
+layer records, Additional Layer Information, PSB long-length tagged blocks
+and opaque section boundaries with offsets and byte-level fingerprints.
+Unknown tags/resource IDs are surfaced rather than dropped. In the
+committed corpus 13 valid PSD/PSB inputs scan, one malformed file is
+rejected, and **11/13** valid inputs contain unknown resource IDs or tags.
+All scans report `mutation_authorized=false` and `safe_to_rewrite=false`,
+including the two fixtures without unknown blocks. A recognizable block
+does not prove that any editor can preserve its contents.
+
+See [ADR 0015](decisions/0015-psd-raw-block-inventory-boundary.md),
+[inventory evidence](data/psd-raw-block-inventory-m4c3-v1.json) and
+[acceptance](testing/m4c3-psd-raw-block-inventory.md). M4c-4 should
+investigate nested layer records and independent preservation/fidelity
+before any policy expansion or PSD write CLI.
+
 Candidate capabilities:
 
 - image crop/rotate/convert;

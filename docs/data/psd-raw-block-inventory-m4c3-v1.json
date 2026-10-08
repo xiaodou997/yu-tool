@@ -1,0 +1,402 @@
+{
+  "schema_version": "1",
+  "milestone": "M4c-3",
+  "engine": "byte-scanner (no PSD writer)",
+  "mutation_authorized": false,
+  "total_fixtures": 14,
+  "scanned": 13,
+  "rejected": 1,
+  "with_unknown_blocks": 11,
+  "cases": [
+    {
+      "fixture": "bench-advanced-blending",
+      "path": "fixtures/psd/benchmark/upstream/psd-tools/advanced-blending.psd",
+      "outcome": "structurally_parsed",
+      "sha256": "433b583db7361a0be3dd6be74031288da16f1a01b4573c125e1bdcdc9697acf4",
+      "file_bytes": 961076,
+      "format": "psd",
+      "bit_depth": 8,
+      "color_mode": 3,
+      "top_level_layer_records": 4,
+      "image_resource_count": 33,
+      "additional_block_count": 53,
+      "unknown_block_count": 11,
+      "unknown_resources": [
+        1013,
+        1016,
+        4000,
+        4001,
+        4002,
+        10000
+      ],
+      "unknown_layer_keys": [
+        "Patt",
+        "lnsr",
+        "lyvr"
+      ],
+      "risks": [
+        "merged_composite_payload_not_decoded",
+        "opaque_payload_not_proven_roundtrip_safe",
+        "unknown_metadata"
+      ],
+      "mutation_authorized": false
+    },
+    {
+      "fixture": "bench-baseline-rgb",
+      "path": "fixtures/psd/benchmark/upstream/psd-tools/background-red-opacity-80.psd",
+      "outcome": "structurally_parsed",
+      "sha256": "391f4c009b9bd4cc5fdffb3799c3476f7d690874e6ca458463ab7fe3b5739aee",
+      "file_bytes": 500483,
+      "format": "psd",
+      "bit_depth": 8,
+      "color_mode": 3,
+      "top_level_layer_records": 2,
+      "image_resource_count": 30,
+      "additional_block_count": 22,
+      "unknown_block_count": 6,
+      "unknown_resources": [
+        1013,
+        1016,
+        10000
+      ],
+      "unknown_layer_keys": [
+        "Patt",
+        "lnsr"
+      ],
+      "risks": [
+        "merged_composite_payload_not_decoded",
+        "noncanonical_layer_info_padding",
+        "opaque_payload_not_proven_roundtrip_safe",
+        "unknown_metadata"
+      ],
+      "mutation_authorized": false
+    },
+    {
+      "fixture": "bench-high-bit-psb",
+      "path": "fixtures/psd/benchmark/upstream/psd-tools/32bit.psb",
+      "outcome": "structurally_parsed",
+      "sha256": "232bde4537492a671d22b7ff7025a786bc8110677ce5add180103f977be4f5ee",
+      "file_bytes": 282992,
+      "format": "psb",
+      "bit_depth": 32,
+      "color_mode": 3,
+      "top_level_layer_records": 0,
+      "image_resource_count": 29,
+      "additional_block_count": 4,
+      "unknown_block_count": 5,
+      "unknown_resources": [
+        1013,
+        1016,
+        4000,
+        4001,
+        10000
+      ],
+      "unknown_layer_keys": [],
+      "risks": [
+        "8B64_signature_requires_fidelity_review",
+        "embedded_layer_records_not_recursively_decoded",
+        "high_bit_depth_not_writable",
+        "merged_composite_payload_not_decoded",
+        "noncanonical_tagged_block_alignment",
+        "opaque_payload_not_proven_roundtrip_safe",
+        "unknown_metadata"
+      ],
+      "mutation_authorized": false
+    },
+    {
+      "fixture": "bench-high-bit-rgb",
+      "path": "fixtures/psd/benchmark/upstream/psd-tools/posterize-16bit-rgb.psd",
+      "outcome": "structurally_parsed",
+      "sha256": "f349d0e2e253e1d7b3dcd8645d555a1605b7e2d6bba1b99de164ab7853e4871c",
+      "file_bytes": 415176,
+      "format": "psd",
+      "bit_depth": 16,
+      "color_mode": 3,
+      "top_level_layer_records": 0,
+      "image_resource_count": 29,
+      "additional_block_count": 8,
+      "unknown_block_count": 6,
+      "unknown_resources": [
+        1013,
+        1016,
+        10000
+      ],
+      "unknown_layer_keys": [
+        "CAI ",
+        "GenI",
+        "OCIO"
+      ],
+      "risks": [
+        "embedded_layer_records_not_recursively_decoded",
+        "high_bit_depth_not_writable",
+        "merged_composite_payload_not_decoded",
+        "noncanonical_tagged_block_alignment",
+        "opaque_payload_not_proven_roundtrip_safe",
+        "unknown_metadata"
+      ],
+      "mutation_authorized": false
+    },
+    {
+      "fixture": "bench-layer-effects",
+      "path": "fixtures/psd/benchmark/upstream/psd-tools/layer-effects.psd",
+      "outcome": "structurally_parsed",
+      "sha256": "6ab41ce6e17b3287c703dc4cf4d898506ffc1bd9babf20d0f1de5ef6df1d2e1e",
+      "file_bytes": 735149,
+      "format": "psd",
+      "bit_depth": 8,
+      "color_mode": 3,
+      "top_level_layer_records": 12,
+      "image_resource_count": 27,
+      "additional_block_count": 149,
+      "unknown_block_count": 5,
+      "unknown_resources": [
+        1013,
+        1016,
+        10000
+      ],
+      "unknown_layer_keys": [
+        "Patt",
+        "extd"
+      ],
+      "risks": [
+        "merged_composite_payload_not_decoded",
+        "opaque_payload_not_proven_roundtrip_safe",
+        "unknown_metadata"
+      ],
+      "mutation_authorized": false
+    },
+    {
+      "fixture": "bench-masks",
+      "path": "fixtures/psd/benchmark/upstream/psd-tools/masks2.psd",
+      "outcome": "structurally_parsed",
+      "sha256": "5f9e03f6f1c8ac04dd1e15f7253b489942c3958c00a0e4876b2f944f8ce31d67",
+      "file_bytes": 815749,
+      "format": "psd",
+      "bit_depth": 8,
+      "color_mode": 3,
+      "top_level_layer_records": 3,
+      "image_resource_count": 25,
+      "additional_block_count": 37,
+      "unknown_block_count": 8,
+      "unknown_resources": [
+        1013,
+        1016,
+        10000
+      ],
+      "unknown_layer_keys": [
+        "Patt",
+        "lnsr",
+        "pths"
+      ],
+      "risks": [
+        "merged_composite_payload_not_decoded",
+        "noncanonical_layer_info_padding",
+        "noncanonical_tagged_block_alignment",
+        "opaque_payload_not_proven_roundtrip_safe",
+        "unknown_metadata"
+      ],
+      "mutation_authorized": false
+    },
+    {
+      "fixture": "bench-smart-object",
+      "path": "fixtures/psd/benchmark/upstream/psd-tools/placed-layer.psd",
+      "outcome": "structurally_parsed",
+      "sha256": "69ea01bf88cb85c48d3a78c3bb9e06ae141c9c9fc6a88267eae95c315e16180e",
+      "file_bytes": 114796,
+      "format": "psd",
+      "bit_depth": 8,
+      "color_mode": 3,
+      "top_level_layer_records": 4,
+      "image_resource_count": 25,
+      "additional_block_count": 45,
+      "unknown_block_count": 5,
+      "unknown_resources": [
+        1013,
+        1016,
+        10000
+      ],
+      "unknown_layer_keys": [
+        "Patt",
+        "lnsr"
+      ],
+      "risks": [
+        "merged_composite_payload_not_decoded",
+        "opaque_payload_not_proven_roundtrip_safe",
+        "unknown_metadata"
+      ],
+      "mutation_authorized": false
+    },
+    {
+      "fixture": "duplicate-layer-names",
+      "path": "fixtures/psd/derived/duplicate-layer-names.psd",
+      "outcome": "structurally_parsed",
+      "sha256": "8af765f631fa11637e5bf826696452a1c9b00f2b970d6d5c74bd2415bb7dedd9",
+      "file_bytes": 14176,
+      "format": "psd",
+      "bit_depth": 8,
+      "color_mode": 3,
+      "top_level_layer_records": 2,
+      "image_resource_count": 2,
+      "additional_block_count": 2,
+      "unknown_block_count": 0,
+      "unknown_resources": [],
+      "unknown_layer_keys": [],
+      "risks": [
+        "absent_global_layer_mask_length",
+        "merged_composite_payload_not_decoded",
+        "opaque_payload_not_proven_roundtrip_safe"
+      ],
+      "mutation_authorized": false
+    },
+    {
+      "fixture": "layer-masks",
+      "path": "fixtures/psd/upstream/psd-tools/masks-2.psd",
+      "outcome": "structurally_parsed",
+      "sha256": "cc6363e24089c2f8910ae44b8067825e2af5e1c43c5d8b3bc6323934fa3cfacd",
+      "file_bytes": 25590,
+      "format": "psd",
+      "bit_depth": 8,
+      "color_mode": 3,
+      "top_level_layer_records": 3,
+      "image_resource_count": 26,
+      "additional_block_count": 41,
+      "unknown_block_count": 7,
+      "unknown_resources": [
+        1013,
+        1016,
+        10000
+      ],
+      "unknown_layer_keys": [
+        "Patt",
+        "lyvr"
+      ],
+      "risks": [
+        "merged_composite_payload_not_decoded",
+        "opaque_payload_not_proven_roundtrip_safe",
+        "unknown_metadata"
+      ],
+      "mutation_authorized": false
+    },
+    {
+      "fixture": "malformed-truncated-header",
+      "path": "fixtures/psd/malformed/truncated-header.psd",
+      "outcome": "rejected",
+      "error_code": "INVALID_INPUT",
+      "mutation_authorized": false
+    },
+    {
+      "fixture": "nested-group",
+      "path": "fixtures/psd/upstream/psd-tools/group.psd",
+      "outcome": "structurally_parsed",
+      "sha256": "1aaf572b69f0b0fa7c04b7b3a14c97e310a0c7bbdc06e733c9dd0d0cdcf7df1c",
+      "file_bytes": 31480,
+      "format": "psd",
+      "bit_depth": 8,
+      "color_mode": 3,
+      "top_level_layer_records": 4,
+      "image_resource_count": 27,
+      "additional_block_count": 36,
+      "unknown_block_count": 10,
+      "unknown_resources": [
+        1013,
+        1016,
+        4000,
+        4001,
+        10000
+      ],
+      "unknown_layer_keys": [
+        "Patt",
+        "lnsr"
+      ],
+      "risks": [
+        "merged_composite_payload_not_decoded",
+        "noncanonical_layer_info_padding",
+        "opaque_payload_not_proven_roundtrip_safe",
+        "unknown_metadata"
+      ],
+      "mutation_authorized": false
+    },
+    {
+      "fixture": "simple-pixel-layers-psb",
+      "path": "fixtures/psd/upstream/psd-tools/2layers.psb",
+      "outcome": "structurally_parsed",
+      "sha256": "863c51eb4d4e72214a3cbdf06a0594c485e4262d899318b1ba914d4c848382ab",
+      "file_bytes": 34781,
+      "format": "psb",
+      "bit_depth": 8,
+      "color_mode": 3,
+      "top_level_layer_records": 2,
+      "image_resource_count": 25,
+      "additional_block_count": 20,
+      "unknown_block_count": 4,
+      "unknown_resources": [
+        1013,
+        1016,
+        10000
+      ],
+      "unknown_layer_keys": [
+        "Patt"
+      ],
+      "risks": [
+        "8B64_signature_requires_fidelity_review",
+        "merged_composite_payload_not_decoded",
+        "noncanonical_layer_info_padding",
+        "opaque_payload_not_proven_roundtrip_safe",
+        "unknown_metadata"
+      ],
+      "mutation_authorized": false
+    },
+    {
+      "fixture": "simple-pixel-layers-psd",
+      "path": "fixtures/psd/upstream/psd-tools/2layers.psd",
+      "outcome": "structurally_parsed",
+      "sha256": "406ddf7cbf5a1065b992b9c0d2a59be6290a371b90f23b9a04c0e6bbc94beb0c",
+      "file_bytes": 14176,
+      "format": "psd",
+      "bit_depth": 8,
+      "color_mode": 3,
+      "top_level_layer_records": 2,
+      "image_resource_count": 2,
+      "additional_block_count": 2,
+      "unknown_block_count": 0,
+      "unknown_resources": [],
+      "unknown_layer_keys": [],
+      "risks": [
+        "absent_global_layer_mask_length",
+        "merged_composite_payload_not_decoded",
+        "opaque_payload_not_proven_roundtrip_safe"
+      ],
+      "mutation_authorized": false
+    },
+    {
+      "fixture": "text-layer",
+      "path": "fixtures/psd/upstream/psd-tools/type-layer.psd",
+      "outcome": "structurally_parsed",
+      "sha256": "b24e6f4c7277dd499ebb20c88ac06698f4563e75bfeb6aa6cb0d2466140fd81f",
+      "file_bytes": 43944,
+      "format": "psd",
+      "bit_depth": 8,
+      "color_mode": 3,
+      "top_level_layer_records": 1,
+      "image_resource_count": 27,
+      "additional_block_count": 15,
+      "unknown_block_count": 5,
+      "unknown_resources": [
+        1013,
+        1016,
+        10000
+      ],
+      "unknown_layer_keys": [
+        "Patt",
+        "lnsr"
+      ],
+      "risks": [
+        "merged_composite_payload_not_decoded",
+        "noncanonical_layer_info_padding",
+        "opaque_payload_not_proven_roundtrip_safe",
+        "unknown_metadata"
+      ],
+      "mutation_authorized": false
+    }
+  ]
+}

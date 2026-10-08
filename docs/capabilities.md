@@ -142,6 +142,15 @@ Visibility/opacity, complex effects, Smart Objects, unknown resources and
 production PSD mutation are still **unsupported**. No new capability is
 advertised by `yu capabilities`.
 
+M4c-3 adds a **research-only raw PSD/PSB block scanner** under
+`yu-psd-spike`, not a production engine capability. It inventories raw
+Image Resources, layer Additional Layer Information and document tagged
+blocks, reports unknown identifiers and strict bounds errors, and retains
+opaque content fingerprints. All results remain explicitly
+`mutation_authorized=false`; section parsing does not certify compressed
+image integrity, Adobe feature preservation or editor fidelity.
+See [ADR 0015](decisions/0015-psd-raw-block-inventory-boundary.md).
+
 PR #22 exposes the four read-only operations through the public CLI. PR #23 adds layer bitmap export to the separately versioned `31.0.2+node22.23.3.yu2` package. Effective capabilities use the exact active version, not the inventory union of all installed versions. This does not promise arbitrary PSD feature coverage or full rendering fidelity. The package is still a prototype with CI artifacts and placeholder distribution URLs; no public catalog is claimed.
 
 Compatibility roles:
