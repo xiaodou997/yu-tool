@@ -66,6 +66,13 @@ uses a same-filesystem hard link from a completed temporary file, so an
 existing destination is not overwritten, including on a concurrent race.
 The output filesystem must support regular-file hard links.
 
+M4b-1 adds `--dry-run` to all four built-in mutations (including resize):
+read/decode the input, validate geometry and format, inspect output conflicts
+and parent-directory existence, and return an additive `dry_run` boolean in
+the JSON result. A successful plan performs no encoding or file writes and
+does not guarantee that a later real execution can publish. The existing
+no-clobber behavior is unchanged; overwrite/replacement is still deferred.
+
 ## PSD / PSB
 
 M3 selected the v0.1 engine strategy in ADR 0006. The implemented five-operation baseline is frozen in [M3 Freeze](milestones/m3-freeze.md), with supported/partial/unsupported boundaries and exact evidence. Capability availability still depends on the active package; implementation freeze is not public release.

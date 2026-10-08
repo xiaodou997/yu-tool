@@ -37,6 +37,7 @@ impl ImageEngine for RustImageEngine {
 
     fn resize(&self, request: &ResizeRequest) -> Result<ResizeResult, ImageOperationError> {
         let output_format = supported_output_format(&request.output)?;
+        preflight_destination(&request.output)?;
 
         let (image, _) = open_image(&request.input)?;
         let source_width = image.width();
@@ -44,8 +45,10 @@ impl ImageEngine for RustImageEngine {
         let (width, height) =
             target_dimensions(source_width, source_height, request.width, request.height)?;
 
-        let resized = image.resize_exact(width, height, image::imageops::FilterType::Lanczos3);
-        write_new_file(&resized, &request.output, output_format)?;
+        if !request.dry_run {
+            let resized = image.resize_exact(width, height, image::imageops::FilterType::Lanczos3);
+            write_new_file(&resized, &request.output, output_format)?;
+        }
 
         Ok(ResizeResult {
             input: request.input.to_string_lossy().into_owned(),
@@ -55,11 +58,13 @@ impl ImageEngine for RustImageEngine {
             width,
             height,
             format: format_name(output_format),
+            dry_run: request.dry_run,
         })
     }
 
     fn crop(&self, request: &CropRequest) -> Result<CropResult, ImageOperationError> {
         let format = supported_output_format(&request.output)?;
+        preflight_destination(&request.output)?;
         let (image, _) = open_image(&request.input)?;
         let (source_width, source_height) = (image.width(), image.height());
 
@@ -78,8 +83,10 @@ impl ImageEngine for RustImageEngine {
             ));
         }
 
-        let cropped = image.crop_imm(request.x, request.y, request.width, request.height);
-        write_new_file(&cropped, &request.output, format)?;
+        if !request.dry_run {
+            let cropped = image.crop_imm(request.x, request.y, request.width, request.height);
+            write_new_file(&cropped, &request.output, format)?;
+        }
         Ok(CropResult {
             input: request.input.to_string_lossy().into_owned(),
             output: request.output.to_string_lossy().into_owned(),
@@ -90,6 +97,7 @@ impl ImageEngine for RustImageEngine {
             width: request.width,
             height: request.height,
             format: format_name(format),
+            dry_run: request.dry_run,
         })
     }
 
@@ -102,31 +110,43 @@ impl ImageEngine for RustImageEngine {
             ));
         }
         let format = supported_output_format(&request.output)?;
+        preflight_destination(&request.output)?;
         let (image, _) = open_image(&request.input)?;
         let (source_width, source_height) = (image.width(), image.height());
-        let rotated = match request.degrees {
-            90 => image.rotate90(),
-            180 => image.rotate180(),
-            270 => image.rotate270(),
-            _ => unreachable!("degrees validated above"),
+        let (width, height) = if request.degrees == 180 {
+            (source_width, source_height)
+        } else {
+            (source_height, source_width)
         };
-        write_new_file(&rotated, &request.output, format)?;
+        if !request.dry_run {
+            let rotated = match request.degrees {
+                90 => image.rotate90(),
+                180 => image.rotate180(),
+                270 => image.rotate270(),
+                _ => unreachable!("degrees validated above"),
+            };
+            write_new_file(&rotated, &request.output, format)?;
+        }
         Ok(RotateResult {
             input: request.input.to_string_lossy().into_owned(),
             output: request.output.to_string_lossy().into_owned(),
             source_width,
             source_height,
             degrees: request.degrees,
-            width: rotated.width(),
-            height: rotated.height(),
+            width,
+            height,
             format: format_name(format),
+            dry_run: request.dry_run,
         })
     }
 
     fn convert(&self, request: &ConvertRequest) -> Result<ConvertResult, ImageOperationError> {
         let format = supported_output_format(&request.output)?;
+        preflight_destination(&request.output)?;
         let (image, source_format) = open_image(&request.input)?;
-        write_new_file(&image, &request.output, format)?;
+        if !request.dry_run {
+            write_new_file(&image, &request.output, format)?;
+        }
         Ok(ConvertResult {
             input: request.input.to_string_lossy().into_owned(),
             output: request.output.to_string_lossy().into_owned(),
@@ -134,7 +154,44 @@ impl ImageEngine for RustImageEngine {
             format: format_name(format),
             width: image.width(),
             height: image.height(),
+            dry_run: request.dry_run,
         })
+    }
+}
+
+/// Read-only best-effort preflight. Publication independently guards the
+/// destination atomically, because a file can appear after this check.
+fn preflight_destination(output: &Path) -> Result<(), ImageOperationError> {
+    match fs::symlink_metadata(output) {
+        Ok(_) => {
+            return Err(ImageOperationError::output_conflict(format!(
+                "output already exists: {}",
+                output.display()
+            )));
+        }
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+        Err(error) => {
+            return Err(ImageOperationError::execution(format!(
+                "cannot inspect output {}: {error}",
+                output.display()
+            )));
+        }
+    }
+
+    let parent = output
+        .parent()
+        .filter(|p| !p.as_os_str().is_empty())
+        .unwrap_or(Path::new("."));
+    match fs::metadata(parent) {
+        Ok(metadata) if metadata.is_dir() => Ok(()),
+        Ok(_) => Err(ImageOperationError::invalid_input(format!(
+            "output parent is not a directory: {}",
+            parent.display()
+        ))),
+        Err(error) => Err(ImageOperationError::invalid_input(format!(
+            "output parent is unavailable ({}): {error}",
+            parent.display()
+        ))),
     }
 }
 

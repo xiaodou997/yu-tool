@@ -261,7 +261,13 @@ technical-v0.1 frozen main commit `5526dc4465c4e79ad7f2757d06b3b1693642b8af`.
 It adds crop, right-angle rotate and format convert to the built-in raster
 engine, with explicit no-clobber publication and CLI integration tests.
 This is **post-v0.1 feature development**, not a change to the frozen RC.
-M4b/M4c safe replacement, dry-run and PSD mutation remain separate work.
+M4b safe replacement and PSD mutation remain separate follow-ups beyond M4a.
+
+M4b-1 builds on the merged M4a `develop@990a237be4a1505c7d49dd87c460560c31a63768`.
+It implements image-only `--dry-run` preflight and structured dry-run results
+without writing outputs; safe overwrite/replacement, durable approvals, and
+PSD mutation remain separate follow-ups. The frozen v0.1 `main` does not
+receive M4 changes.
 
 Candidate capabilities:
 

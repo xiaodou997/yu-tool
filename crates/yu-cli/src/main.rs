@@ -104,6 +104,9 @@ enum ImageCommand {
         #[arg(short, long)]
         output: PathBuf,
 
+        #[arg(long, help = "Preview without writing a file")]
+        dry_run: bool,
+
         #[arg(long, help = "Use a specific engine instead of automatic resolution")]
         engine: Option<String>,
     },
@@ -120,6 +123,8 @@ enum ImageCommand {
         height: u32,
         #[arg(short, long)]
         output: PathBuf,
+        #[arg(long, help = "Preview without writing a file")]
+        dry_run: bool,
         #[arg(long, help = "Use a specific engine instead of automatic resolution")]
         engine: Option<String>,
     },
@@ -130,6 +135,8 @@ enum ImageCommand {
         degrees: u16,
         #[arg(short, long)]
         output: PathBuf,
+        #[arg(long, help = "Preview without writing a file")]
+        dry_run: bool,
         #[arg(long, help = "Use a specific engine instead of automatic resolution")]
         engine: Option<String>,
     },
@@ -138,6 +145,8 @@ enum ImageCommand {
         input: PathBuf,
         #[arg(short, long)]
         output: PathBuf,
+        #[arg(long, help = "Preview without writing a file")]
+        dry_run: bool,
         #[arg(long, help = "Use a specific engine instead of automatic resolution")]
         engine: Option<String>,
     },
@@ -215,6 +224,7 @@ fn run(cli: Cli) -> Result<(), YuError> {
                     width,
                     height,
                     output,
+                    dry_run,
                     engine,
                 },
         } => render_image_resize(
@@ -224,6 +234,7 @@ fn run(cli: Cli) -> Result<(), YuError> {
                 output,
                 width,
                 height,
+                dry_run,
             },
             engine.as_deref(),
             cli.json,
@@ -237,6 +248,7 @@ fn run(cli: Cli) -> Result<(), YuError> {
                     width,
                     height,
                     output,
+                    dry_run,
                     engine,
                 },
         } => render_image_crop(
@@ -248,6 +260,7 @@ fn run(cli: Cli) -> Result<(), YuError> {
                 y,
                 width,
                 height,
+                dry_run,
             },
             engine.as_deref(),
             cli.json,
@@ -258,6 +271,7 @@ fn run(cli: Cli) -> Result<(), YuError> {
                     input,
                     degrees,
                     output,
+                    dry_run,
                     engine,
                 },
         } => render_image_rotate(
@@ -266,6 +280,7 @@ fn run(cli: Cli) -> Result<(), YuError> {
                 input,
                 output,
                 degrees,
+                dry_run,
             },
             engine.as_deref(),
             cli.json,
@@ -275,11 +290,16 @@ fn run(cli: Cli) -> Result<(), YuError> {
                 ImageCommand::Convert {
                     input,
                     output,
+                    dry_run,
                     engine,
                 },
         } => render_image_convert(
             &registry,
-            ConvertRequest { input, output },
+            ConvertRequest {
+                input,
+                output,
+                dry_run,
+            },
             engine.as_deref(),
             cli.json,
         ),
@@ -687,7 +707,12 @@ fn render_image_resize(
     }
 
     println!(
-        "Resized {} -> {} ({}x{} -> {}x{})",
+        "{} {} -> {} ({}x{} -> {}x{})",
+        if result.dry_run {
+            "Would resize"
+        } else {
+            "Resized"
+        },
         result.input,
         result.output,
         result.source_width,
@@ -697,6 +722,9 @@ fn render_image_resize(
     );
     println!("Format: {}", result.format);
     println!("Engine: {}", descriptor.id);
+    if result.dry_run {
+        println!("Dry run: no output file written");
+    }
     Ok(())
 }
 
@@ -714,11 +742,24 @@ fn render_image_crop(
         print_json(&ResultEnvelope::new("image.crop", result).with_engine(descriptor));
     } else {
         println!(
-            "Cropped {} -> {} (x={}, y={}, {}x{})",
-            result.input, result.output, result.x, result.y, result.width, result.height
+            "{} {} -> {} (x={}, y={}, {}x{})",
+            if result.dry_run {
+                "Would crop"
+            } else {
+                "Cropped"
+            },
+            result.input,
+            result.output,
+            result.x,
+            result.y,
+            result.width,
+            result.height
         );
         println!("Format: {}", result.format);
         println!("Engine: {}", descriptor.id);
+        if result.dry_run {
+            println!("Dry run: no output file written");
+        }
     }
     Ok(())
 }
@@ -737,11 +778,23 @@ fn render_image_rotate(
         print_json(&ResultEnvelope::new("image.rotate", result).with_engine(descriptor));
     } else {
         println!(
-            "Rotated {} -> {} ({} degrees clockwise, {}x{})",
-            result.input, result.output, result.degrees, result.width, result.height
+            "{} {} -> {} ({} degrees clockwise, {}x{})",
+            if result.dry_run {
+                "Would rotate"
+            } else {
+                "Rotated"
+            },
+            result.input,
+            result.output,
+            result.degrees,
+            result.width,
+            result.height
         );
         println!("Format: {}", result.format);
         println!("Engine: {}", descriptor.id);
+        if result.dry_run {
+            println!("Dry run: no output file written");
+        }
     }
     Ok(())
 }
@@ -760,7 +813,12 @@ fn render_image_convert(
         print_json(&ResultEnvelope::new("image.convert", result).with_engine(descriptor));
     } else {
         println!(
-            "Converted {} -> {} ({} -> {}, {}x{})",
+            "{} {} -> {} ({} -> {}, {}x{})",
+            if result.dry_run {
+                "Would convert"
+            } else {
+                "Converted"
+            },
             result.input,
             result.output,
             result.source_format,
@@ -769,6 +827,9 @@ fn render_image_convert(
             result.height
         );
         println!("Engine: {}", descriptor.id);
+        if result.dry_run {
+            println!("Dry run: no output file written");
+        }
     }
     Ok(())
 }

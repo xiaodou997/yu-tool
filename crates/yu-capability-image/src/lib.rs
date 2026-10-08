@@ -75,6 +75,7 @@ pub struct ResizeRequest {
     pub output: PathBuf,
     pub width: Option<u32>,
     pub height: Option<u32>,
+    pub dry_run: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -86,6 +87,7 @@ pub struct ResizeResult {
     pub width: u32,
     pub height: u32,
     pub format: String,
+    pub dry_run: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -96,6 +98,7 @@ pub struct CropRequest {
     pub y: u32,
     pub width: u32,
     pub height: u32,
+    pub dry_run: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -109,6 +112,7 @@ pub struct CropResult {
     pub width: u32,
     pub height: u32,
     pub format: String,
+    pub dry_run: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -116,6 +120,7 @@ pub struct RotateRequest {
     pub input: PathBuf,
     pub output: PathBuf,
     pub degrees: u16,
+    pub dry_run: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -128,12 +133,14 @@ pub struct RotateResult {
     pub width: u32,
     pub height: u32,
     pub format: String,
+    pub dry_run: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ConvertRequest {
     pub input: PathBuf,
     pub output: PathBuf,
+    pub dry_run: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -144,6 +151,7 @@ pub struct ConvertResult {
     pub format: String,
     pub width: u32,
     pub height: u32,
+    pub dry_run: bool,
 }
 
 pub trait ImageEngine {

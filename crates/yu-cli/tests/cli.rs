@@ -181,6 +181,7 @@ fn image_resize_width_only_preserves_aspect_ratio() {
     assert_eq!(json["result"]["source_height"], 2);
     assert_eq!(json["result"]["width"], 2);
     assert_eq!(json["result"]["height"], 1);
+    assert_eq!(json["result"]["dry_run"], false);
 
     let resized = image::open(&output_path).expect("resized image should decode");
     assert_eq!(resized.width(), 2);
@@ -447,6 +448,195 @@ fn image_convert_refuses_existing_destination_and_unknown_format() {
     fs::remove_file(input).unwrap();
     fs::remove_file(&output_path).unwrap();
     fs::remove_file(output_path.with_extension("png")).unwrap();
+}
+
+#[test]
+fn image_dry_run_previews_all_mutations_without_writing() {
+    let input = temp_path("dry-run-input", "png");
+    let destination = temp_path("dry-run-output", "webp");
+    create_png(&input, 6, 4);
+    let original = fs::read(&input).unwrap();
+    let source = input.to_str().unwrap();
+    let output = destination.to_str().unwrap();
+    let cases = [
+        (
+            vec![
+                "image",
+                "resize",
+                source,
+                "--width",
+                "3",
+                "-o",
+                output,
+                "--dry-run",
+                "--json",
+            ],
+            "image.resize",
+            (3, 2),
+        ),
+        (
+            vec![
+                "image",
+                "crop",
+                source,
+                "--x",
+                "1",
+                "--y",
+                "0",
+                "--width",
+                "3",
+                "--height",
+                "2",
+                "-o",
+                output,
+                "--dry-run",
+                "--json",
+            ],
+            "image.crop",
+            (3, 2),
+        ),
+        (
+            vec![
+                "image",
+                "rotate",
+                source,
+                "--degrees",
+                "270",
+                "-o",
+                output,
+                "--dry-run",
+                "--json",
+            ],
+            "image.rotate",
+            (4, 6),
+        ),
+        (
+            vec![
+                "image",
+                "convert",
+                source,
+                "-o",
+                output,
+                "--dry-run",
+                "--json",
+            ],
+            "image.convert",
+            (6, 4),
+        ),
+    ];
+    for (args, operation, (width, height)) in cases {
+        let reply = parse_stdout(&run(&args));
+        assert_eq!(reply["operation"], operation);
+        assert_eq!(reply["engine"]["id"], "raster-rs");
+        assert_eq!(reply["result"]["dry_run"], true);
+        assert_eq!(reply["result"]["width"], width);
+        assert_eq!(reply["result"]["height"], height);
+        assert_eq!(reply["result"]["format"], "webp");
+        assert!(
+            !destination.exists(),
+            "dry-run created output for {operation}"
+        );
+        assert_eq!(fs::read(&input).unwrap(), original);
+    }
+    fs::remove_file(input).unwrap();
+}
+
+#[test]
+fn image_dry_run_checks_existing_destination_and_invalid_geometry() {
+    let input = temp_path("dry-guard-input", "png");
+    let destination = temp_path("dry-guard-output", "png");
+    create_png(&input, 6, 4);
+    fs::write(&destination, b"unchanged").unwrap();
+
+    let reply = run(&[
+        "image",
+        "resize",
+        input.to_str().unwrap(),
+        "--width",
+        "3",
+        "-o",
+        destination.to_str().unwrap(),
+        "--dry-run",
+        "--json",
+    ]);
+    assert_eq!(reply.status.code(), Some(2));
+    let error: Value = serde_json::from_slice(&reply.stderr).unwrap();
+    assert_eq!(error["error"]["code"], "OUTPUT_CONFLICT");
+    assert_eq!(fs::read(&destination).unwrap(), b"unchanged");
+    fs::remove_file(&destination).unwrap();
+
+    let reply = run(&[
+        "image",
+        "crop",
+        input.to_str().unwrap(),
+        "--x",
+        "5",
+        "--y",
+        "0",
+        "--width",
+        "3",
+        "--height",
+        "1",
+        "-o",
+        destination.to_str().unwrap(),
+        "--dry-run",
+        "--json",
+    ]);
+    assert_eq!(reply.status.code(), Some(2));
+    let error: Value = serde_json::from_slice(&reply.stderr).unwrap();
+    assert_eq!(error["error"]["code"], "INVALID_INPUT");
+    assert!(!destination.exists());
+    fs::remove_file(input).unwrap();
+}
+
+#[test]
+fn image_dry_run_rejects_missing_parent_before_claiming_success() {
+    let input = temp_path("dry-parent-input", "png");
+    let destination = temp_path("dry-missing-dir", "dir").join("out.webp");
+    create_png(&input, 2, 2);
+    let reply = run(&[
+        "image",
+        "convert",
+        input.to_str().unwrap(),
+        "-o",
+        destination.to_str().unwrap(),
+        "--dry-run",
+        "--json",
+    ]);
+    assert_eq!(reply.status.code(), Some(2));
+    let error: Value = serde_json::from_slice(&reply.stderr).unwrap();
+    assert_eq!(error["error"]["code"], "INVALID_INPUT");
+    assert!(!destination.exists());
+    fs::remove_file(input).unwrap();
+}
+
+#[cfg(unix)]
+#[test]
+fn image_dry_run_treats_dangling_output_symlink_as_conflict() {
+    use std::os::unix::fs::symlink;
+
+    let input = temp_path("dry-symlink-input", "png");
+    let destination = temp_path("dry-symlink-output", "webp");
+    let nonexistent = temp_path("dry-symlink-target", "webp");
+    create_png(&input, 2, 2);
+    symlink(&nonexistent, &destination).unwrap();
+
+    let reply = run(&[
+        "image",
+        "convert",
+        input.to_str().unwrap(),
+        "-o",
+        destination.to_str().unwrap(),
+        "--dry-run",
+        "--json",
+    ]);
+    assert_eq!(reply.status.code(), Some(2));
+    let error: Value = serde_json::from_slice(&reply.stderr).unwrap();
+    assert_eq!(error["error"]["code"], "OUTPUT_CONFLICT");
+    assert_eq!(fs::read_link(&destination).unwrap(), nonexistent);
+
+    fs::remove_file(input).unwrap();
+    fs::remove_file(destination).unwrap();
 }
 
 #[test]

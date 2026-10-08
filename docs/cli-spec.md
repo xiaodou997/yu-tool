@@ -257,6 +257,32 @@ in the destination directory; existing destinations produce `OUTPUT_CONFLICT`
 (exit 2) and are never replaced, even if created during encoding. Unsupported
 output formats return `UNSUPPORTED_CAPABILITY` (exit 3).
 
+### Image mutation dry-run — M4b-1
+
+The four built-in raster mutations (`resize`, `crop`, `rotate`, `convert`)
+accept `--dry-run`. Examples:
+
+```bash
+yu image resize photo.png --width 900 -o resized.webp --dry-run --json
+yu image crop photo.png --x 5 --y 10 --width 200 --height 100 -o crop.png --dry-run --json
+yu image rotate photo.png --degrees 90 -o rotated.png --dry-run --json
+yu image convert photo.png -o output.jpg --dry-run --json
+```
+
+Dry-run decodes the input and validates operation parameters, output format,
+absence of a destination (including a dangling symlink), and an existing
+parent directory, then returns the usual operation result with
+`result.dry_run=true` and calculated geometry/formats. Normal execution
+returns `result.dry_run=false`. Dry-run never encodes, creates, or publishes
+an output file. It rejects existing output paths with `OUTPUT_CONFLICT`
+rather than promising to overwrite them.
+
+This is a **best-effort preflight**, not a guarantee that subsequent real
+execution will succeed: permissions, available space, filesystem hard-link
+support, encoder errors and concurrent filesystem changes may differ at
+execution time. There is no persistent approval token, `--overwrite`,
+source modification or atomic replacement in M4b-1.
+
 ## PSD commands
 
 ADR 0006 selects `ag-psd 31.0.2` as the preferred v0.1 Managed PSD engine. PR #22 wires the four read-only commands below to the explicitly activated Managed package. PR #23 adds partial 8-bit RGB layer bitmap export; rendering remains deferred.
