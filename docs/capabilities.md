@@ -162,6 +162,19 @@ meets a verified preservation gate. See
 [ADR 0016](decisions/0016-psd-nested-block-noop-fidelity.md). There is
 still **no production PSD mutation capability**.
 
+M4c-5 confirmed a **narrow, research-only** fixed-width `luni` name
+byte-patch path for the four exact M4c-2 fixture hashes. Unlike ag-psd
+whole-document serialization, it copies the original file and changes
+only explicitly verified name-byte ranges; the output keeps all other
+PSD/PSB bytes (including compressed channels, image resources and merged
+image data) identical. Independent raw inventory and ag-psd read-only
+parsing agree that only the selected logical name changed. However,
+three cases retain a potentially inconsistent legacy Pascal name,
+different-length renames remain unsupported, and real Photoshop/editor
+interoperability has not been tested. See
+[ADR 0017](decisions/0017-psd-byte-preserving-rename-research.md).
+No `yu` PSD writer or mutation capability has been exposed.
+
 PR #22 exposes the four read-only operations through the public CLI. PR #23 adds layer bitmap export to the separately versioned `31.0.2+node22.23.3.yu2` package. Effective capabilities use the exact active version, not the inventory union of all installed versions. This does not promise arbitrary PSD feature coverage or full rendering fidelity. The package is still a prototype with CI artifacts and placeholder distribution URLs; no public catalog is claimed.
 
 Compatibility roles:

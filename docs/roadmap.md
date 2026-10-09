@@ -356,6 +356,26 @@ See [ADR 0016](decisions/0016-psd-nested-block-noop-fidelity.md),
 lossless preservation and independent editor validation before any release
 gate for PSD mutation can change.
 
+### M4c-5 — PSD fixed-width byte-preserving rename feasibility
+
+Based on `develop@3c8769c93389f9d24847df2c3e9748852d57eb7d`,
+the research-only tool tested an exact, fixed UTF-16BE-length `luni`
+name patch on the four known M4c-2 SHA-256 fixtures without running
+ag-psd's whole-document writer. All four disposable copies passed:
+same total bytes, every non-name byte unchanged, raw channel/image-resource
+and merged-composite fingerprints identical, and ag-psd read-only
+reinspection showing only the selected layer's name changed.
+The nested-group case updates matching ASCII Pascal and Unicode names
+together; **three other cases retain mismatched legacy name representations**.
+
+See [ADR 0017](decisions/0017-psd-byte-preserving-rename-research.md),
+[byte-level evidence](data/m4c5-psd-byte-patch-evidence-v1.json) and
+[M4c-5 acceptance](testing/m4c5-psd-byte-preserving-rename.md).
+This experiment is **not** a PSD production editor: only exact known
+fixtures, equal-size Unicode renames, output to ignored `target/`,
+and **zero authorized public PSD writes**. Next prioritize independent
+Photoshop/legacy-name display fidelity and output-only approval semantics.
+
 Candidate capabilities:
 
 - image crop/rotate/convert;
