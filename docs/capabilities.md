@@ -175,6 +175,17 @@ interoperability has not been tested. See
 [ADR 0017](decisions/0017-psd-byte-preserving-rename-research.md).
 No `yu` PSD writer or mutation capability has been exposed.
 
+M4c-6 adds independent PSD inspection: pinned `psd-tools 1.20.0` agrees
+with ag-psd's 4/4 patched Unicode names and preview pixels, but native
+**Photoshop 2026** read-only layer inspection passes only 2/4 cases.
+Photoshop exposes localized **Background** names on two modified PSD/PSB
+fixtures rather than the changed `luni` name. The legacy Pascal and
+Unicode dual-name ambiguity remains open, and different-length renames
+are only mathematical length-rebase plans with no implementation.
+All actual documents were closed without saving; no Photoshop save/reopen,
+independent native visual fidelity or public PSD writer is authorized.
+See [ADR 0018](decisions/0018-psd-dual-name-photoshop-acceptance.md).
+
 PR #22 exposes the four read-only operations through the public CLI. PR #23 adds layer bitmap export to the separately versioned `31.0.2+node22.23.3.yu2` package. Effective capabilities use the exact active version, not the inventory union of all installed versions. This does not promise arbitrary PSD feature coverage or full rendering fidelity. The package is still a prototype with CI artifacts and placeholder distribution URLs; no public catalog is claimed.
 
 Compatibility roles:

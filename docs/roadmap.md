@@ -376,6 +376,26 @@ fixtures, equal-size Unicode renames, output to ignored `target/`,
 and **zero authorized public PSD writes**. Next prioritize independent
 Photoshop/legacy-name display fidelity and output-only approval semantics.
 
+### M4c-6 — Dual layer-name semantics and independent Photoshop read tests
+
+Starting from `develop@07fdda430c1b6b9588e1d592785d2b7772fdf044`,
+the research-only matrix used ag-psd 31.0.2, independent Python
+psd-tools 1.20.0 and **real Adobe Photoshop 2026 on macOS**.
+The two parsers agree on 4/4 Unicode-targeted renames and psd-tools
+preview pixel hashes; native Photoshop name reads verify **2/4**.
+Photoshop treats both edited `Фон → Дом` cases as special localized
+**Background (`背景`)** layers and does not expose the changed Unicode
+name. Only the group and non-background duplicate-name cases pass native
+name reading. Photoshop documents were opened read-only and closed without
+saving. Length-changing renames remain **plan-only**, not implemented.
+
+See [ADR 0018](decisions/0018-psd-dual-name-photoshop-acceptance.md),
+[independent reader evidence](data/m4c6-dual-name-fidelity-v1.json),
+[real Photoshop name receipt](data/m4c6-photoshop-name-receipt-v1.json)
+and [acceptance](testing/m4c6-dual-name-photoshop.md). Full editor
+save/reopen, Photoshop composite fidelity, non-ASCII legacy display and
+safe background semantics are **not approved**. No `yu psd` write command.
+
 Candidate capabilities:
 
 - image crop/rotate/convert;

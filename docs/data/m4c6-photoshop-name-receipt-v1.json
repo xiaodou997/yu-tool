@@ -1,0 +1,157 @@
+{
+  "schema_version": "1",
+  "milestone": "M4c-6",
+  "application": "Adobe Photoshop 2026 on macOS",
+  "operation": "open/read_layer_names/close_without_saving",
+  "visual_or_save_roundtrip_certified": false,
+  "public_write_authorized": false,
+  "summary": {
+    "fixtures": 4,
+    "read_verified": 2,
+    "unavailable_or_mismatch": 2,
+    "saved_or_modified_inputs": 0,
+    "production_writes_authorized": 0
+  },
+  "cases": [
+    {
+      "fixture": "simple-psd",
+      "source_sha256": "406ddf7cbf5a1065b992b9c0d2a59be6290a371b90f23b9a04c0e6bbc94beb0c",
+      "candidate_sha256": "1bd189a0f3c49f4460ef0b9ad2bc1aa5d35bff3f12f82b42787c2d41c429721d",
+      "expected_old_name": "Фон",
+      "expected_new_name": "Дом",
+      "expected_kind": "layer",
+      "status": "source_name_not_as_expected",
+      "photoshop_layer_name_read_verified": false,
+      "photoshop_save_or_visual_roundtrip_verified": false,
+      "production_write_authorized": false,
+      "photoshop_source_layers": [
+        {
+          "kind": "layer",
+          "name": "Слой"
+        },
+        {
+          "kind": "background",
+          "name": "背景"
+        }
+      ],
+      "photoshop_candidate_layers": [
+        {
+          "kind": "layer",
+          "name": "Слой"
+        },
+        {
+          "kind": "background",
+          "name": "背景"
+        }
+      ],
+      "all_input_and_candidate_bytes_unchanged_by_photoshop": true
+    },
+    {
+      "fixture": "simple-psb",
+      "source_sha256": "863c51eb4d4e72214a3cbdf06a0594c485e4262d899318b1ba914d4c848382ab",
+      "candidate_sha256": "723b6a279bd1e09b4bb2b3409ea4dcaaf37166f791588d2157cfb97ce96329bb",
+      "expected_old_name": "Фон",
+      "expected_new_name": "Дом",
+      "expected_kind": "layer",
+      "status": "source_name_not_as_expected",
+      "photoshop_layer_name_read_verified": false,
+      "photoshop_save_or_visual_roundtrip_verified": false,
+      "production_write_authorized": false,
+      "photoshop_source_layers": [
+        {
+          "kind": "layer",
+          "name": "Слой"
+        },
+        {
+          "kind": "background",
+          "name": "背景"
+        }
+      ],
+      "photoshop_candidate_layers": [
+        {
+          "kind": "layer",
+          "name": "Слой"
+        },
+        {
+          "kind": "background",
+          "name": "背景"
+        }
+      ],
+      "all_input_and_candidate_bytes_unchanged_by_photoshop": true
+    },
+    {
+      "fixture": "nested-group",
+      "source_sha256": "1aaf572b69f0b0fa7c04b7b3a14c97e310a0c7bbdc06e733c9dd0d0cdcf7df1c",
+      "candidate_sha256": "48d003ea6d48a6d99a916935794d3e82d365e558bacfc6c777f8e9a1e103f88e",
+      "expected_old_name": "Group 1",
+      "expected_new_name": "Group 2",
+      "expected_kind": "group",
+      "status": "read_verified",
+      "photoshop_layer_name_read_verified": true,
+      "photoshop_save_or_visual_roundtrip_verified": false,
+      "production_write_authorized": false,
+      "photoshop_source_layers": [
+        {
+          "kind": "group",
+          "name": "Group 1"
+        },
+        {
+          "kind": "layer",
+          "name": "Shape 1"
+        },
+        {
+          "kind": "background",
+          "name": "背景"
+        }
+      ],
+      "photoshop_candidate_layers": [
+        {
+          "kind": "group",
+          "name": "Group 2"
+        },
+        {
+          "kind": "layer",
+          "name": "Shape 1"
+        },
+        {
+          "kind": "background",
+          "name": "背景"
+        }
+      ],
+      "all_input_and_candidate_bytes_unchanged_by_photoshop": true
+    },
+    {
+      "fixture": "duplicate-names",
+      "source_sha256": "8af765f631fa11637e5bf826696452a1c9b00f2b970d6d5c74bd2415bb7dedd9",
+      "candidate_sha256": "07f51b4b0bc6f4f6f5b11789a8b0c4c8a40796df7aff9880177bec0d13782858",
+      "expected_old_name": "X",
+      "expected_new_name": "Y",
+      "expected_kind": "layer",
+      "status": "read_verified",
+      "photoshop_layer_name_read_verified": true,
+      "photoshop_save_or_visual_roundtrip_verified": false,
+      "production_write_authorized": false,
+      "photoshop_source_layers": [
+        {
+          "kind": "layer",
+          "name": "X"
+        },
+        {
+          "kind": "background",
+          "name": "背景"
+        }
+      ],
+      "photoshop_candidate_layers": [
+        {
+          "kind": "layer",
+          "name": "Y"
+        },
+        {
+          "kind": "background",
+          "name": "背景"
+        }
+      ],
+      "all_input_and_candidate_bytes_unchanged_by_photoshop": true
+    }
+  ]
+}
