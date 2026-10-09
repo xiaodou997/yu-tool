@@ -151,6 +151,17 @@ opaque content fingerprints. All results remain explicitly
 image integrity, Adobe feature preservation or editor fidelity.
 See [ADR 0015](decisions/0015-psd-raw-block-inventory-boundary.md).
 
+M4c-4 deepens the **research-only** scanner to parse embedded
+`Layr`/`Lr16`/`Lr32` records and compares ag-psd's no-op read/write
+output with original PSD bytes, resources, layer tags, channel fingerprints
+and decoded composite/layer pixels. The evidence shows raw differences in
+all 11 saved samples, including removal of resources on some samples and a
+decoded composite difference on one, while high-bit writes fail closed.
+Raw-byte re-encoding alone is not equated with visual damage, but none
+meets a verified preservation gate. See
+[ADR 0016](decisions/0016-psd-nested-block-noop-fidelity.md). There is
+still **no production PSD mutation capability**.
+
 PR #22 exposes the four read-only operations through the public CLI. PR #23 adds layer bitmap export to the separately versioned `31.0.2+node22.23.3.yu2` package. Effective capabilities use the exact active version, not the inventory union of all installed versions. This does not promise arbitrary PSD feature coverage or full rendering fidelity. The package is still a prototype with CI artifacts and placeholder distribution URLs; no public catalog is claimed.
 
 Compatibility roles:

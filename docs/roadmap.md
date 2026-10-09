@@ -338,6 +338,24 @@ See [ADR 0015](decisions/0015-psd-raw-block-inventory-boundary.md),
 investigate nested layer records and independent preservation/fidelity
 before any policy expansion or PSD write CLI.
 
+### M4c-4 — Nested records and no-op save fidelity evidence
+
+Building on `develop@0151a31e11aadb361505b1d87bbf24f2d4a434f1`,
+the research-only parser now reads `Lr16`/`Lr32` nested records, per-channel
+fingerprints and embedded layer metadata. The pinned Node 22.23.3 /
+ag-psd 31.0.2 no-op writer comparison attempted 13 PSD/PSB fixtures:
+11 reopened, 2 high-bit writes rejected, **11/11 saved files differ in
+raw bytes**, and one differs in decoded composite pixels. Multiple files
+lose raw Image Resource and tagged blocks. Byte re-encoding and semantic
+change are recorded separately, and **zero files are certified safe to
+rewrite**. No general PSD save or public mutation operation is enabled.
+
+See [ADR 0016](decisions/0016-psd-nested-block-noop-fidelity.md),
+[machine evidence](data/m4c4-psd-noop-fidelity-v1.json) and
+[acceptance](testing/m4c4-nested-raw-noop-fidelity.md). M4c-5 must study
+lossless preservation and independent editor validation before any release
+gate for PSD mutation can change.
+
 Candidate capabilities:
 
 - image crop/rotate/convert;

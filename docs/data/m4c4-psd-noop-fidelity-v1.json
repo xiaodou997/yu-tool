@@ -1,0 +1,1447 @@
+{
+  "schema_version": "1",
+  "milestone": "M4c-4",
+  "public_write_authorized": false,
+  "runtime": {
+    "node": "22.23.3",
+    "ag_psd": "31.0.2",
+    "platform": "darwin",
+    "arch": "arm64"
+  },
+  "summary": {
+    "fixture_count": 13,
+    "saved_reopened": 11,
+    "failed_closed": 2,
+    "raw_diff_found": 11,
+    "composite_encoded_bytes_changed": 8,
+    "semantic_composite_mismatch": 1,
+    "fidelity_certified": 0
+  },
+  "cases": [
+    {
+      "fixture": "bench-advanced-blending",
+      "input": "fixtures/psd/benchmark/upstream/psd-tools/advanced-blending.psd",
+      "source_sha256": "433b583db7361a0be3dd6be74031288da16f1a01b4573c125e1bdcdc9697acf4",
+      "status": "saved_reopened",
+      "public_write_authorized": false,
+      "header_format": "psd",
+      "bits_per_channel": 8,
+      "raw_diff": {
+        "raw_source_sha256": "433b583db7361a0be3dd6be74031288da16f1a01b4573c125e1bdcdc9697acf4",
+        "raw_output_sha256": "91d385186232c70bb84e3242f215d63cb8690ff76b1aa3843883aa7fe2fd4ac6",
+        "byte_equal": false,
+        "source_bytes": 961076,
+        "output_bytes": 963544,
+        "same_header": true,
+        "resources": {
+          "added_count": 0,
+          "removed_count": 11,
+          "changed_count": 1,
+          "added": [],
+          "removed": [
+            "1028:#0",
+            "1083:#0",
+            "1077:#0",
+            "10000:#0",
+            "1013:#0",
+            "1016:#0",
+            "1039:#0",
+            "1058:#0",
+            "4000:#0",
+            "4001:#0",
+            "4002:#0"
+          ],
+          "changed": [
+            "1050:#0"
+          ]
+        },
+        "additional_layer_blocks": {
+          "added_count": 0,
+          "removed_count": 6,
+          "changed_count": 6,
+          "added": [],
+          "removed": [
+            "layer:0:lnsr#0",
+            "layer:0:lyid#0",
+            "layer:0:lspf#0",
+            "layer:0:lclr#0",
+            "layer:0:shmd#0",
+            "layer:0:fxrp#0"
+          ],
+          "changed": [
+            "layer:1:lfx2#0",
+            "layer:1:lrFX#0",
+            "layer:2:lfx2#0",
+            "layer:2:lrFX#0",
+            "document:-:Patt#0",
+            "document:-:artd#0"
+          ]
+        },
+        "channels": {
+          "added_count": 0,
+          "removed_count": 0,
+          "changed_count": 4,
+          "added": [],
+          "removed": [],
+          "changed": [
+            "1:0:-1#0",
+            "1:4:-2#0",
+            "2:0:-1#0",
+            "2:4:-2#0"
+          ]
+        },
+        "layer_properties": {
+          "added_count": 0,
+          "removed_count": 0,
+          "changed_count": 0,
+          "added": [],
+          "removed": [],
+          "changed": []
+        },
+        "sections": {
+          "added_count": 0,
+          "removed_count": 0,
+          "changed_count": 2,
+          "added": [],
+          "removed": [],
+          "changed": [
+            "image_resources#0",
+            "layer_info#0"
+          ]
+        },
+        "unknown": {
+          "added_count": 0,
+          "removed_count": 7,
+          "changed_count": 0,
+          "added": [],
+          "removed": [
+            "image_resource:-:10000#0",
+            "image_resource:-:1013#0",
+            "image_resource:-:1016#0",
+            "image_resource:-:4000#0",
+            "image_resource:-:4001#0",
+            "image_resource:-:4002#0",
+            "tagged_block:layer:lnsr#0"
+          ],
+          "changed": []
+        },
+        "nested_layer_properties": {
+          "added_count": 0,
+          "removed_count": 0,
+          "changed_count": 0,
+          "added": [],
+          "removed": [],
+          "changed": []
+        },
+        "nested_channel_bytes": {
+          "added_count": 0,
+          "removed_count": 0,
+          "changed_count": 0,
+          "added": [],
+          "removed": [],
+          "changed": []
+        },
+        "merged_composite_byte_equal": false,
+        "nested_before": 0,
+        "nested_after": 0,
+        "differences_found": true
+      },
+      "semantic_check": {
+        "composite_pixels_equal": true,
+        "logical_layer_count_equal": true,
+        "layer_attributes_equal": true,
+        "decoded_layer_image_hashes_equal": true,
+        "any_mismatch": false
+      },
+      "unexpected_raw_changes": true,
+      "fidelity_certified": false,
+      "source_unchanged": true
+    },
+    {
+      "fixture": "bench-baseline-rgb",
+      "input": "fixtures/psd/benchmark/upstream/psd-tools/background-red-opacity-80.psd",
+      "source_sha256": "391f4c009b9bd4cc5fdffb3799c3476f7d690874e6ca458463ab7fe3b5739aee",
+      "status": "saved_reopened",
+      "public_write_authorized": false,
+      "header_format": "psd",
+      "bits_per_channel": 8,
+      "raw_diff": {
+        "raw_source_sha256": "391f4c009b9bd4cc5fdffb3799c3476f7d690874e6ca458463ab7fe3b5739aee",
+        "raw_output_sha256": "9759e16d9ddbe11ffff80bbde287c5a212942e2da2b10df261d6a09cf118ddc8",
+        "byte_equal": false,
+        "source_bytes": 500483,
+        "output_bytes": 470655,
+        "same_header": true,
+        "resources": {
+          "added_count": 0,
+          "removed_count": 7,
+          "changed_count": 0,
+          "added": [],
+          "removed": [
+            "1028:#0",
+            "1083:#0",
+            "1077:#0",
+            "10000:#0",
+            "1013:#0",
+            "1016:#0",
+            "1058:#0"
+          ],
+          "changed": []
+        },
+        "additional_layer_blocks": {
+          "added_count": 0,
+          "removed_count": 1,
+          "changed_count": 0,
+          "added": [],
+          "removed": [
+            "document:-:Patt#0"
+          ],
+          "changed": []
+        },
+        "channels": {
+          "added_count": 3,
+          "removed_count": 4,
+          "changed_count": 4,
+          "added": [
+            "0:0:0#0",
+            "0:1:1#0",
+            "0:2:2#0"
+          ],
+          "removed": [
+            "0:0:-1#0",
+            "0:1:0#0",
+            "0:2:1#0",
+            "0:3:2#0"
+          ],
+          "changed": [
+            "1:0:-1#0",
+            "1:1:0#0",
+            "1:2:1#0",
+            "1:3:2#0"
+          ]
+        },
+        "layer_properties": {
+          "added_count": 0,
+          "removed_count": 0,
+          "changed_count": 1,
+          "added": [],
+          "removed": [],
+          "changed": [
+            "0#0"
+          ]
+        },
+        "sections": {
+          "added_count": 0,
+          "removed_count": 0,
+          "changed_count": 2,
+          "added": [],
+          "removed": [],
+          "changed": [
+            "image_resources#0",
+            "layer_info#0"
+          ]
+        },
+        "unknown": {
+          "added_count": 0,
+          "removed_count": 4,
+          "changed_count": 0,
+          "added": [],
+          "removed": [
+            "image_resource:-:10000#0",
+            "image_resource:-:1013#0",
+            "image_resource:-:1016#0",
+            "tagged_block:document:Patt#0"
+          ],
+          "changed": []
+        },
+        "nested_layer_properties": {
+          "added_count": 0,
+          "removed_count": 0,
+          "changed_count": 0,
+          "added": [],
+          "removed": [],
+          "changed": []
+        },
+        "nested_channel_bytes": {
+          "added_count": 0,
+          "removed_count": 0,
+          "changed_count": 0,
+          "added": [],
+          "removed": [],
+          "changed": []
+        },
+        "merged_composite_byte_equal": false,
+        "nested_before": 0,
+        "nested_after": 0,
+        "differences_found": true
+      },
+      "semantic_check": {
+        "composite_pixels_equal": false,
+        "logical_layer_count_equal": true,
+        "layer_attributes_equal": true,
+        "decoded_layer_image_hashes_equal": true,
+        "any_mismatch": true
+      },
+      "unexpected_raw_changes": true,
+      "fidelity_certified": false,
+      "source_unchanged": true
+    },
+    {
+      "fixture": "bench-high-bit-psb",
+      "input": "fixtures/psd/benchmark/upstream/psd-tools/32bit.psb",
+      "source_sha256": "232bde4537492a671d22b7ff7025a786bc8110677ce5add180103f977be4f5ee",
+      "status": "failed_closed",
+      "public_write_authorized": false,
+      "error": "bitsPerChannel other than 8 are not supported for writing",
+      "source_unchanged": true
+    },
+    {
+      "fixture": "bench-high-bit-rgb",
+      "input": "fixtures/psd/benchmark/upstream/psd-tools/posterize-16bit-rgb.psd",
+      "source_sha256": "f349d0e2e253e1d7b3dcd8645d555a1605b7e2d6bba1b99de164ab7853e4871c",
+      "status": "failed_closed",
+      "public_write_authorized": false,
+      "error": "bitsPerChannel other than 8 are not supported for writing",
+      "source_unchanged": true
+    },
+    {
+      "fixture": "bench-layer-effects",
+      "input": "fixtures/psd/benchmark/upstream/psd-tools/layer-effects.psd",
+      "source_sha256": "6ab41ce6e17b3287c703dc4cf4d898506ffc1bd9babf20d0f1de5ef6df1d2e1e",
+      "status": "saved_reopened",
+      "public_write_authorized": false,
+      "header_format": "psd",
+      "bits_per_channel": 8,
+      "raw_diff": {
+        "raw_source_sha256": "6ab41ce6e17b3287c703dc4cf4d898506ffc1bd9babf20d0f1de5ef6df1d2e1e",
+        "raw_output_sha256": "a7e3fceb550d6df9e2a739ac5c88b2967c64b64c4ee55a1050dd2ea1bc91bcc9",
+        "byte_equal": false,
+        "source_bytes": 735149,
+        "output_bytes": 700233,
+        "same_header": true,
+        "resources": {
+          "added_count": 0,
+          "removed_count": 7,
+          "changed_count": 1,
+          "added": [],
+          "removed": [
+            "1028:#0",
+            "1083:#0",
+            "10000:#0",
+            "1013:#0",
+            "1016:#0",
+            "1039:#0",
+            "1058:#0"
+          ],
+          "changed": [
+            "1082:#0"
+          ]
+        },
+        "additional_layer_blocks": {
+          "added_count": 0,
+          "removed_count": 1,
+          "changed_count": 37,
+          "added": [],
+          "removed": [
+            "document:-:extd#0"
+          ],
+          "changed": [
+            "layer:0:lfx2#0",
+            "layer:0:lrFX#0",
+            "layer:1:lfx2#0",
+            "layer:1:lrFX#0",
+            "layer:1:TySh#0",
+            "layer:2:lfx2#0",
+            "layer:2:lrFX#0",
+            "layer:2:TySh#0",
+            "layer:3:lfx2#0",
+            "layer:3:lrFX#0",
+            "layer:3:TySh#0",
+            "layer:4:lfx2#0",
+            "layer:4:lrFX#0",
+            "layer:4:TySh#0",
+            "layer:4:brst#0",
+            "layer:5:lfx2#0",
+            "layer:5:lrFX#0",
+            "layer:5:TySh#0",
+            "layer:6:lfx2#0",
+            "layer:6:lrFX#0"
+          ]
+        },
+        "channels": {
+          "added_count": 3,
+          "removed_count": 4,
+          "changed_count": 41,
+          "added": [
+            "0:0:0#0",
+            "0:1:1#0",
+            "0:2:2#0"
+          ],
+          "removed": [
+            "0:0:-1#0",
+            "0:1:0#0",
+            "0:2:1#0",
+            "0:3:2#0"
+          ],
+          "changed": [
+            "1:0:-1#0",
+            "1:1:0#0",
+            "1:2:1#0",
+            "1:3:2#0",
+            "2:0:-1#0",
+            "2:1:0#0",
+            "2:2:1#0",
+            "2:3:2#0",
+            "3:0:-1#0",
+            "3:1:0#0",
+            "3:2:1#0",
+            "3:3:2#0",
+            "4:0:-1#0",
+            "5:0:-1#0",
+            "5:1:0#0",
+            "5:2:1#0",
+            "5:3:2#0",
+            "6:0:-1#0",
+            "6:1:0#0",
+            "6:2:1#0"
+          ]
+        },
+        "layer_properties": {
+          "added_count": 0,
+          "removed_count": 0,
+          "changed_count": 1,
+          "added": [],
+          "removed": [],
+          "changed": [
+            "0#0"
+          ]
+        },
+        "sections": {
+          "added_count": 0,
+          "removed_count": 0,
+          "changed_count": 2,
+          "added": [],
+          "removed": [],
+          "changed": [
+            "image_resources#0",
+            "layer_info#0"
+          ]
+        },
+        "unknown": {
+          "added_count": 0,
+          "removed_count": 4,
+          "changed_count": 0,
+          "added": [],
+          "removed": [
+            "image_resource:-:10000#0",
+            "image_resource:-:1013#0",
+            "image_resource:-:1016#0",
+            "tagged_block:document:extd#0"
+          ],
+          "changed": []
+        },
+        "nested_layer_properties": {
+          "added_count": 0,
+          "removed_count": 0,
+          "changed_count": 0,
+          "added": [],
+          "removed": [],
+          "changed": []
+        },
+        "nested_channel_bytes": {
+          "added_count": 0,
+          "removed_count": 0,
+          "changed_count": 0,
+          "added": [],
+          "removed": [],
+          "changed": []
+        },
+        "merged_composite_byte_equal": false,
+        "nested_before": 0,
+        "nested_after": 0,
+        "differences_found": true
+      },
+      "semantic_check": {
+        "composite_pixels_equal": true,
+        "logical_layer_count_equal": true,
+        "layer_attributes_equal": true,
+        "decoded_layer_image_hashes_equal": true,
+        "any_mismatch": false
+      },
+      "unexpected_raw_changes": true,
+      "fidelity_certified": false,
+      "source_unchanged": true
+    },
+    {
+      "fixture": "bench-masks",
+      "input": "fixtures/psd/benchmark/upstream/psd-tools/masks2.psd",
+      "source_sha256": "5f9e03f6f1c8ac04dd1e15f7253b489942c3958c00a0e4876b2f944f8ce31d67",
+      "status": "saved_reopened",
+      "public_write_authorized": false,
+      "header_format": "psd",
+      "bits_per_channel": 8,
+      "raw_diff": {
+        "raw_source_sha256": "5f9e03f6f1c8ac04dd1e15f7253b489942c3958c00a0e4876b2f944f8ce31d67",
+        "raw_output_sha256": "fde4684ba15e2c50673f6f6ab7b7a4faede62a19fb42c51b46e44766659f9674",
+        "byte_equal": false,
+        "source_bytes": 815749,
+        "output_bytes": 794512,
+        "same_header": true,
+        "resources": {
+          "added_count": 0,
+          "removed_count": 6,
+          "changed_count": 0,
+          "added": [],
+          "removed": [
+            "1083:#0",
+            "10000:#0",
+            "1013:#0",
+            "1016:#0",
+            "1039:#0",
+            "1058:#0"
+          ],
+          "changed": []
+        },
+        "additional_layer_blocks": {
+          "added_count": 0,
+          "removed_count": 1,
+          "changed_count": 1,
+          "added": [],
+          "removed": [
+            "document:-:Patt#0"
+          ],
+          "changed": [
+            "layer:2:TySh#0"
+          ]
+        },
+        "channels": {
+          "added_count": 0,
+          "removed_count": 0,
+          "changed_count": 10,
+          "added": [],
+          "removed": [],
+          "changed": [
+            "0:0:0#0",
+            "0:1:1#0",
+            "0:2:2#0",
+            "1:0:-1#0",
+            "1:4:-2#0",
+            "1:5:-3#0",
+            "2:0:-1#0",
+            "2:1:0#0",
+            "2:2:1#0",
+            "2:3:2#0"
+          ]
+        },
+        "layer_properties": {
+          "added_count": 0,
+          "removed_count": 0,
+          "changed_count": 0,
+          "added": [],
+          "removed": [],
+          "changed": []
+        },
+        "sections": {
+          "added_count": 0,
+          "removed_count": 0,
+          "changed_count": 2,
+          "added": [],
+          "removed": [],
+          "changed": [
+            "image_resources#0",
+            "layer_info#0"
+          ]
+        },
+        "unknown": {
+          "added_count": 0,
+          "removed_count": 4,
+          "changed_count": 0,
+          "added": [],
+          "removed": [
+            "image_resource:-:10000#0",
+            "image_resource:-:1013#0",
+            "image_resource:-:1016#0",
+            "tagged_block:document:Patt#0"
+          ],
+          "changed": []
+        },
+        "nested_layer_properties": {
+          "added_count": 0,
+          "removed_count": 0,
+          "changed_count": 0,
+          "added": [],
+          "removed": [],
+          "changed": []
+        },
+        "nested_channel_bytes": {
+          "added_count": 0,
+          "removed_count": 0,
+          "changed_count": 0,
+          "added": [],
+          "removed": [],
+          "changed": []
+        },
+        "merged_composite_byte_equal": false,
+        "nested_before": 0,
+        "nested_after": 0,
+        "differences_found": true
+      },
+      "semantic_check": {
+        "composite_pixels_equal": true,
+        "logical_layer_count_equal": true,
+        "layer_attributes_equal": true,
+        "decoded_layer_image_hashes_equal": true,
+        "any_mismatch": false
+      },
+      "unexpected_raw_changes": true,
+      "fidelity_certified": false,
+      "source_unchanged": true
+    },
+    {
+      "fixture": "bench-smart-object",
+      "input": "fixtures/psd/benchmark/upstream/psd-tools/placed-layer.psd",
+      "source_sha256": "69ea01bf88cb85c48d3a78c3bb9e06ae141c9c9fc6a88267eae95c315e16180e",
+      "status": "saved_reopened",
+      "public_write_authorized": false,
+      "header_format": "psd",
+      "bits_per_channel": 8,
+      "raw_diff": {
+        "raw_source_sha256": "69ea01bf88cb85c48d3a78c3bb9e06ae141c9c9fc6a88267eae95c315e16180e",
+        "raw_output_sha256": "4c36de26308526535997a42f835bc8e189187cd8583eab59183716f815a738b2",
+        "byte_equal": false,
+        "source_bytes": 114796,
+        "output_bytes": 110542,
+        "same_header": true,
+        "resources": {
+          "added_count": 0,
+          "removed_count": 6,
+          "changed_count": 0,
+          "added": [],
+          "removed": [
+            "1083:#0",
+            "10000:#0",
+            "1013:#0",
+            "1016:#0",
+            "1039:#0",
+            "1058:#0"
+          ],
+          "changed": []
+        },
+        "additional_layer_blocks": {
+          "added_count": 4,
+          "removed_count": 3,
+          "changed_count": 1,
+          "added": [
+            "layer:1:PlLd#0",
+            "layer:1:SoLd#0",
+            "layer:2:PlLd#0",
+            "layer:2:SoLd#0"
+          ],
+          "removed": [
+            "layer:1:SoLE#0",
+            "layer:2:SoLE#0",
+            "document:-:Patt#0"
+          ],
+          "changed": [
+            "document:-:lnkE#0"
+          ]
+        },
+        "channels": {
+          "added_count": 0,
+          "removed_count": 0,
+          "changed_count": 4,
+          "added": [],
+          "removed": [],
+          "changed": [
+            "2:0:-1#0",
+            "2:1:0#0",
+            "2:2:1#0",
+            "2:3:2#0"
+          ]
+        },
+        "layer_properties": {
+          "added_count": 0,
+          "removed_count": 0,
+          "changed_count": 0,
+          "added": [],
+          "removed": [],
+          "changed": []
+        },
+        "sections": {
+          "added_count": 0,
+          "removed_count": 0,
+          "changed_count": 2,
+          "added": [],
+          "removed": [],
+          "changed": [
+            "image_resources#0",
+            "layer_info#0"
+          ]
+        },
+        "unknown": {
+          "added_count": 0,
+          "removed_count": 4,
+          "changed_count": 0,
+          "added": [],
+          "removed": [
+            "image_resource:-:10000#0",
+            "image_resource:-:1013#0",
+            "image_resource:-:1016#0",
+            "tagged_block:document:Patt#0"
+          ],
+          "changed": []
+        },
+        "nested_layer_properties": {
+          "added_count": 0,
+          "removed_count": 0,
+          "changed_count": 0,
+          "added": [],
+          "removed": [],
+          "changed": []
+        },
+        "nested_channel_bytes": {
+          "added_count": 0,
+          "removed_count": 0,
+          "changed_count": 0,
+          "added": [],
+          "removed": [],
+          "changed": []
+        },
+        "merged_composite_byte_equal": false,
+        "nested_before": 0,
+        "nested_after": 0,
+        "differences_found": true
+      },
+      "semantic_check": {
+        "composite_pixels_equal": true,
+        "logical_layer_count_equal": true,
+        "layer_attributes_equal": true,
+        "decoded_layer_image_hashes_equal": true,
+        "any_mismatch": false
+      },
+      "unexpected_raw_changes": true,
+      "fidelity_certified": false,
+      "source_unchanged": true
+    },
+    {
+      "fixture": "duplicate-layer-names",
+      "input": "fixtures/psd/derived/duplicate-layer-names.psd",
+      "source_sha256": "8af765f631fa11637e5bf826696452a1c9b00f2b970d6d5c74bd2415bb7dedd9",
+      "status": "saved_reopened",
+      "public_write_authorized": false,
+      "header_format": "psd",
+      "bits_per_channel": 8,
+      "raw_diff": {
+        "raw_source_sha256": "8af765f631fa11637e5bf826696452a1c9b00f2b970d6d5c74bd2415bb7dedd9",
+        "raw_output_sha256": "2ccbd240795c658de84a60d0eb34dd72e20932d0d1c32e24c4b8b218a3f10e49",
+        "byte_equal": false,
+        "source_bytes": 14176,
+        "output_bytes": 14401,
+        "same_header": true,
+        "resources": {
+          "added_count": 2,
+          "removed_count": 0,
+          "changed_count": 0,
+          "added": [
+            "1026:#0",
+            "1072:#0"
+          ],
+          "removed": [],
+          "changed": []
+        },
+        "additional_layer_blocks": {
+          "added_count": 0,
+          "removed_count": 0,
+          "changed_count": 2,
+          "added": [],
+          "removed": [],
+          "changed": [
+            "layer:0:luni#0",
+            "layer:1:luni#0"
+          ]
+        },
+        "channels": {
+          "added_count": 0,
+          "removed_count": 0,
+          "changed_count": 7,
+          "added": [],
+          "removed": [],
+          "changed": [
+            "0:0:0#0",
+            "0:1:1#0",
+            "0:2:2#0",
+            "1:0:-1#0",
+            "1:1:0#0",
+            "1:2:1#0",
+            "1:3:2#0"
+          ]
+        },
+        "layer_properties": {
+          "added_count": 0,
+          "removed_count": 0,
+          "changed_count": 2,
+          "added": [],
+          "removed": [],
+          "changed": [
+            "0#0",
+            "1#0"
+          ]
+        },
+        "sections": {
+          "added_count": 1,
+          "removed_count": 0,
+          "changed_count": 2,
+          "added": [
+            "global_layer_mask_data#0"
+          ],
+          "removed": [],
+          "changed": [
+            "image_resources#0",
+            "layer_info#0"
+          ]
+        },
+        "unknown": {
+          "added_count": 0,
+          "removed_count": 0,
+          "changed_count": 0,
+          "added": [],
+          "removed": [],
+          "changed": []
+        },
+        "nested_layer_properties": {
+          "added_count": 0,
+          "removed_count": 0,
+          "changed_count": 0,
+          "added": [],
+          "removed": [],
+          "changed": []
+        },
+        "nested_channel_bytes": {
+          "added_count": 0,
+          "removed_count": 0,
+          "changed_count": 0,
+          "added": [],
+          "removed": [],
+          "changed": []
+        },
+        "merged_composite_byte_equal": false,
+        "nested_before": 0,
+        "nested_after": 0,
+        "differences_found": true
+      },
+      "semantic_check": {
+        "composite_pixels_equal": true,
+        "logical_layer_count_equal": true,
+        "layer_attributes_equal": true,
+        "decoded_layer_image_hashes_equal": true,
+        "any_mismatch": false
+      },
+      "unexpected_raw_changes": true,
+      "fidelity_certified": false,
+      "source_unchanged": true
+    },
+    {
+      "fixture": "layer-masks",
+      "input": "fixtures/psd/upstream/psd-tools/masks-2.psd",
+      "source_sha256": "cc6363e24089c2f8910ae44b8067825e2af5e1c43c5d8b3bc6323934fa3cfacd",
+      "status": "saved_reopened",
+      "public_write_authorized": false,
+      "header_format": "psd",
+      "bits_per_channel": 8,
+      "raw_diff": {
+        "raw_source_sha256": "cc6363e24089c2f8910ae44b8067825e2af5e1c43c5d8b3bc6323934fa3cfacd",
+        "raw_output_sha256": "31f2ed2c219197716def9a2d041475761bb3eb36e37d1a4658f99b8e3fcef2d0",
+        "byte_equal": false,
+        "source_bytes": 25590,
+        "output_bytes": 24436,
+        "same_header": true,
+        "resources": {
+          "added_count": 0,
+          "removed_count": 6,
+          "changed_count": 0,
+          "added": [],
+          "removed": [
+            "1028:#0",
+            "1083:#0",
+            "10000:#0",
+            "1013:#0",
+            "1016:#0",
+            "1058:#0"
+          ],
+          "changed": []
+        },
+        "additional_layer_blocks": {
+          "added_count": 0,
+          "removed_count": 1,
+          "changed_count": 0,
+          "added": [],
+          "removed": [
+            "document:-:Patt#0"
+          ],
+          "changed": []
+        },
+        "channels": {
+          "added_count": 0,
+          "removed_count": 0,
+          "changed_count": 4,
+          "added": [],
+          "removed": [],
+          "changed": [
+            "0:0:-1#0",
+            "0:4:-2#0",
+            "1:4:-2#0",
+            "2:0:-1#0"
+          ]
+        },
+        "layer_properties": {
+          "added_count": 0,
+          "removed_count": 0,
+          "changed_count": 2,
+          "added": [],
+          "removed": [],
+          "changed": [
+            "0#0",
+            "2#0"
+          ]
+        },
+        "sections": {
+          "added_count": 0,
+          "removed_count": 0,
+          "changed_count": 2,
+          "added": [],
+          "removed": [],
+          "changed": [
+            "image_resources#0",
+            "layer_info#0"
+          ]
+        },
+        "unknown": {
+          "added_count": 0,
+          "removed_count": 4,
+          "changed_count": 0,
+          "added": [],
+          "removed": [
+            "image_resource:-:10000#0",
+            "image_resource:-:1013#0",
+            "image_resource:-:1016#0",
+            "tagged_block:document:Patt#0"
+          ],
+          "changed": []
+        },
+        "nested_layer_properties": {
+          "added_count": 0,
+          "removed_count": 0,
+          "changed_count": 0,
+          "added": [],
+          "removed": [],
+          "changed": []
+        },
+        "nested_channel_bytes": {
+          "added_count": 0,
+          "removed_count": 0,
+          "changed_count": 0,
+          "added": [],
+          "removed": [],
+          "changed": []
+        },
+        "merged_composite_byte_equal": true,
+        "nested_before": 0,
+        "nested_after": 0,
+        "differences_found": true
+      },
+      "semantic_check": {
+        "composite_pixels_equal": true,
+        "logical_layer_count_equal": true,
+        "layer_attributes_equal": true,
+        "decoded_layer_image_hashes_equal": true,
+        "any_mismatch": false
+      },
+      "unexpected_raw_changes": true,
+      "fidelity_certified": false,
+      "source_unchanged": true
+    },
+    {
+      "fixture": "nested-group",
+      "input": "fixtures/psd/upstream/psd-tools/group.psd",
+      "source_sha256": "1aaf572b69f0b0fa7c04b7b3a14c97e310a0c7bbdc06e733c9dd0d0cdcf7df1c",
+      "status": "saved_reopened",
+      "public_write_authorized": false,
+      "header_format": "psd",
+      "bits_per_channel": 8,
+      "raw_diff": {
+        "raw_source_sha256": "1aaf572b69f0b0fa7c04b7b3a14c97e310a0c7bbdc06e733c9dd0d0cdcf7df1c",
+        "raw_output_sha256": "86b511304081b5d501ad0c616b005384ec796acdbf466726fb6af371b26a4a80",
+        "byte_equal": false,
+        "source_bytes": 31480,
+        "output_bytes": 27500,
+        "same_header": true,
+        "resources": {
+          "added_count": 0,
+          "removed_count": 7,
+          "changed_count": 2,
+          "added": [],
+          "removed": [
+            "1071:#0",
+            "10000:#0",
+            "1013:#0",
+            "1016:#0",
+            "1039:#0",
+            "1058:#0",
+            "4001:#0"
+          ],
+          "changed": [
+            "1064:#0",
+            "4000:#0"
+          ]
+        },
+        "additional_layer_blocks": {
+          "added_count": 0,
+          "removed_count": 6,
+          "changed_count": 1,
+          "added": [],
+          "removed": [
+            "layer:1:lnsr#0",
+            "layer:1:lyid#0",
+            "layer:1:lspf#0",
+            "layer:1:lclr#0",
+            "layer:1:fxrp#0",
+            "document:-:Patt#0"
+          ],
+          "changed": [
+            "layer:3:lsct#0"
+          ]
+        },
+        "channels": {
+          "added_count": 0,
+          "removed_count": 0,
+          "changed_count": 1,
+          "added": [],
+          "removed": [],
+          "changed": [
+            "2:0:-1#0"
+          ]
+        },
+        "layer_properties": {
+          "added_count": 0,
+          "removed_count": 0,
+          "changed_count": 0,
+          "added": [],
+          "removed": [],
+          "changed": []
+        },
+        "sections": {
+          "added_count": 0,
+          "removed_count": 0,
+          "changed_count": 2,
+          "added": [],
+          "removed": [],
+          "changed": [
+            "image_resources#0",
+            "layer_info#0"
+          ]
+        },
+        "unknown": {
+          "added_count": 0,
+          "removed_count": 6,
+          "changed_count": 0,
+          "added": [],
+          "removed": [
+            "image_resource:-:10000#0",
+            "image_resource:-:1013#0",
+            "image_resource:-:1016#0",
+            "image_resource:-:4001#0",
+            "tagged_block:layer:lnsr#3",
+            "tagged_block:document:Patt#0"
+          ],
+          "changed": []
+        },
+        "nested_layer_properties": {
+          "added_count": 0,
+          "removed_count": 0,
+          "changed_count": 0,
+          "added": [],
+          "removed": [],
+          "changed": []
+        },
+        "nested_channel_bytes": {
+          "added_count": 0,
+          "removed_count": 0,
+          "changed_count": 0,
+          "added": [],
+          "removed": [],
+          "changed": []
+        },
+        "merged_composite_byte_equal": true,
+        "nested_before": 0,
+        "nested_after": 0,
+        "differences_found": true
+      },
+      "semantic_check": {
+        "composite_pixels_equal": true,
+        "logical_layer_count_equal": true,
+        "layer_attributes_equal": true,
+        "decoded_layer_image_hashes_equal": true,
+        "any_mismatch": false
+      },
+      "unexpected_raw_changes": true,
+      "fidelity_certified": false,
+      "source_unchanged": true
+    },
+    {
+      "fixture": "simple-pixel-layers-psb",
+      "input": "fixtures/psd/upstream/psd-tools/2layers.psb",
+      "source_sha256": "863c51eb4d4e72214a3cbdf06a0594c485e4262d899318b1ba914d4c848382ab",
+      "status": "saved_reopened",
+      "public_write_authorized": false,
+      "header_format": "psb",
+      "bits_per_channel": 8,
+      "raw_diff": {
+        "raw_source_sha256": "863c51eb4d4e72214a3cbdf06a0594c485e4262d899318b1ba914d4c848382ab",
+        "raw_output_sha256": "7efe1e6c5e3c65161b3ff0e15597d99cb2ca899d746bec5b581b90b9025459ac",
+        "byte_equal": false,
+        "source_bytes": 34781,
+        "output_bytes": 33869,
+        "same_header": true,
+        "resources": {
+          "added_count": 0,
+          "removed_count": 5,
+          "changed_count": 1,
+          "added": [],
+          "removed": [
+            "1083:#0",
+            "10000:#0",
+            "1013:#0",
+            "1016:#0",
+            "1058:#0"
+          ],
+          "changed": [
+            "1082:#0"
+          ]
+        },
+        "additional_layer_blocks": {
+          "added_count": 0,
+          "removed_count": 1,
+          "changed_count": 0,
+          "added": [],
+          "removed": [
+            "document:-:Patt#0"
+          ],
+          "changed": []
+        },
+        "channels": {
+          "added_count": 0,
+          "removed_count": 0,
+          "changed_count": 7,
+          "added": [],
+          "removed": [],
+          "changed": [
+            "0:0:0#0",
+            "0:1:1#0",
+            "0:2:2#0",
+            "1:0:-1#0",
+            "1:1:0#0",
+            "1:2:1#0",
+            "1:3:2#0"
+          ]
+        },
+        "layer_properties": {
+          "added_count": 0,
+          "removed_count": 0,
+          "changed_count": 2,
+          "added": [],
+          "removed": [],
+          "changed": [
+            "0#0",
+            "1#0"
+          ]
+        },
+        "sections": {
+          "added_count": 0,
+          "removed_count": 0,
+          "changed_count": 2,
+          "added": [],
+          "removed": [],
+          "changed": [
+            "image_resources#0",
+            "layer_info#0"
+          ]
+        },
+        "unknown": {
+          "added_count": 0,
+          "removed_count": 4,
+          "changed_count": 0,
+          "added": [],
+          "removed": [
+            "image_resource:-:10000#0",
+            "image_resource:-:1013#0",
+            "image_resource:-:1016#0",
+            "tagged_block:document:Patt#0"
+          ],
+          "changed": []
+        },
+        "nested_layer_properties": {
+          "added_count": 0,
+          "removed_count": 0,
+          "changed_count": 0,
+          "added": [],
+          "removed": [],
+          "changed": []
+        },
+        "nested_channel_bytes": {
+          "added_count": 0,
+          "removed_count": 0,
+          "changed_count": 0,
+          "added": [],
+          "removed": [],
+          "changed": []
+        },
+        "merged_composite_byte_equal": false,
+        "nested_before": 0,
+        "nested_after": 0,
+        "differences_found": true
+      },
+      "semantic_check": {
+        "composite_pixels_equal": true,
+        "logical_layer_count_equal": true,
+        "layer_attributes_equal": true,
+        "decoded_layer_image_hashes_equal": true,
+        "any_mismatch": false
+      },
+      "unexpected_raw_changes": true,
+      "fidelity_certified": false,
+      "source_unchanged": true
+    },
+    {
+      "fixture": "simple-pixel-layers-psd",
+      "input": "fixtures/psd/upstream/psd-tools/2layers.psd",
+      "source_sha256": "406ddf7cbf5a1065b992b9c0d2a59be6290a371b90f23b9a04c0e6bbc94beb0c",
+      "status": "saved_reopened",
+      "public_write_authorized": false,
+      "header_format": "psd",
+      "bits_per_channel": 8,
+      "raw_diff": {
+        "raw_source_sha256": "406ddf7cbf5a1065b992b9c0d2a59be6290a371b90f23b9a04c0e6bbc94beb0c",
+        "raw_output_sha256": "900835d2685e49795afb457efc71b69fb3338edb2f32903ed6e133e8fdd94df4",
+        "byte_equal": false,
+        "source_bytes": 14176,
+        "output_bytes": 14413,
+        "same_header": true,
+        "resources": {
+          "added_count": 2,
+          "removed_count": 0,
+          "changed_count": 0,
+          "added": [
+            "1026:#0",
+            "1072:#0"
+          ],
+          "removed": [],
+          "changed": []
+        },
+        "additional_layer_blocks": {
+          "added_count": 0,
+          "removed_count": 0,
+          "changed_count": 0,
+          "added": [],
+          "removed": [],
+          "changed": []
+        },
+        "channels": {
+          "added_count": 0,
+          "removed_count": 0,
+          "changed_count": 7,
+          "added": [],
+          "removed": [],
+          "changed": [
+            "0:0:0#0",
+            "0:1:1#0",
+            "0:2:2#0",
+            "1:0:-1#0",
+            "1:1:0#0",
+            "1:2:1#0",
+            "1:3:2#0"
+          ]
+        },
+        "layer_properties": {
+          "added_count": 0,
+          "removed_count": 0,
+          "changed_count": 2,
+          "added": [],
+          "removed": [],
+          "changed": [
+            "0#0",
+            "1#0"
+          ]
+        },
+        "sections": {
+          "added_count": 1,
+          "removed_count": 0,
+          "changed_count": 2,
+          "added": [
+            "global_layer_mask_data#0"
+          ],
+          "removed": [],
+          "changed": [
+            "image_resources#0",
+            "layer_info#0"
+          ]
+        },
+        "unknown": {
+          "added_count": 0,
+          "removed_count": 0,
+          "changed_count": 0,
+          "added": [],
+          "removed": [],
+          "changed": []
+        },
+        "nested_layer_properties": {
+          "added_count": 0,
+          "removed_count": 0,
+          "changed_count": 0,
+          "added": [],
+          "removed": [],
+          "changed": []
+        },
+        "nested_channel_bytes": {
+          "added_count": 0,
+          "removed_count": 0,
+          "changed_count": 0,
+          "added": [],
+          "removed": [],
+          "changed": []
+        },
+        "merged_composite_byte_equal": false,
+        "nested_before": 0,
+        "nested_after": 0,
+        "differences_found": true
+      },
+      "semantic_check": {
+        "composite_pixels_equal": true,
+        "logical_layer_count_equal": true,
+        "layer_attributes_equal": true,
+        "decoded_layer_image_hashes_equal": true,
+        "any_mismatch": false
+      },
+      "unexpected_raw_changes": true,
+      "fidelity_certified": false,
+      "source_unchanged": true
+    },
+    {
+      "fixture": "text-layer",
+      "input": "fixtures/psd/upstream/psd-tools/type-layer.psd",
+      "source_sha256": "b24e6f4c7277dd499ebb20c88ac06698f4563e75bfeb6aa6cb0d2466140fd81f",
+      "status": "saved_reopened",
+      "public_write_authorized": false,
+      "header_format": "psd",
+      "bits_per_channel": 8,
+      "raw_diff": {
+        "raw_source_sha256": "b24e6f4c7277dd499ebb20c88ac06698f4563e75bfeb6aa6cb0d2466140fd81f",
+        "raw_output_sha256": "f40dee89f5da723a821f32417b0a724ff6f1a9e764d330b0d0f9f626fe0ef209",
+        "byte_equal": false,
+        "source_bytes": 43944,
+        "output_bytes": 39402,
+        "same_header": true,
+        "resources": {
+          "added_count": 0,
+          "removed_count": 7,
+          "changed_count": 0,
+          "added": [],
+          "removed": [
+            "1028:#0",
+            "1083:#0",
+            "10000:#0",
+            "1013:#0",
+            "1016:#0",
+            "1039:#0",
+            "1058:#0"
+          ],
+          "changed": []
+        },
+        "additional_layer_blocks": {
+          "added_count": 0,
+          "removed_count": 1,
+          "changed_count": 1,
+          "added": [],
+          "removed": [
+            "document:-:Patt#0"
+          ],
+          "changed": [
+            "layer:0:TySh#0"
+          ]
+        },
+        "channels": {
+          "added_count": 0,
+          "removed_count": 0,
+          "changed_count": 2,
+          "added": [],
+          "removed": [],
+          "changed": [
+            "0:0:-1#0",
+            "0:1:0#0"
+          ]
+        },
+        "layer_properties": {
+          "added_count": 0,
+          "removed_count": 0,
+          "changed_count": 0,
+          "added": [],
+          "removed": [],
+          "changed": []
+        },
+        "sections": {
+          "added_count": 0,
+          "removed_count": 0,
+          "changed_count": 2,
+          "added": [],
+          "removed": [],
+          "changed": [
+            "image_resources#0",
+            "layer_info#0"
+          ]
+        },
+        "unknown": {
+          "added_count": 0,
+          "removed_count": 4,
+          "changed_count": 0,
+          "added": [],
+          "removed": [
+            "image_resource:-:10000#0",
+            "image_resource:-:1013#0",
+            "image_resource:-:1016#0",
+            "tagged_block:document:Patt#0"
+          ],
+          "changed": []
+        },
+        "nested_layer_properties": {
+          "added_count": 0,
+          "removed_count": 0,
+          "changed_count": 0,
+          "added": [],
+          "removed": [],
+          "changed": []
+        },
+        "nested_channel_bytes": {
+          "added_count": 0,
+          "removed_count": 0,
+          "changed_count": 0,
+          "added": [],
+          "removed": [],
+          "changed": []
+        },
+        "merged_composite_byte_equal": true,
+        "nested_before": 0,
+        "nested_after": 0,
+        "differences_found": true
+      },
+      "semantic_check": {
+        "composite_pixels_equal": true,
+        "logical_layer_count_equal": true,
+        "layer_attributes_equal": true,
+        "decoded_layer_image_hashes_equal": true,
+        "any_mismatch": false
+      },
+      "unexpected_raw_changes": true,
+      "fidelity_certified": false,
+      "source_unchanged": true
+    }
+  ]
+}
