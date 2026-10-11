@@ -1,0 +1,24 @@
+{
+  "schema_version": "1",
+  "milestone": "M4c-7b/c",
+  "operation": "real_Photoshop_saveAs_close_reopen_isolated_copies_with_unchanged_control",
+  "application": "Adobe Photoshop 2026 (macOS)",
+  "public_write_authorized": false,
+  "status": "blocked_native_application_unresponsive",
+  "summary": {
+    "admitted_cases": 1,
+    "paired_research_save_reopen_passed": 0,
+    "blocked_or_mismatch": 1,
+    "product_write_authorizations": 0
+  },
+  "cases": [
+    {
+      "fixture": "nested-group",
+      "status": "blocked_native_application_unresponsive",
+      "reason": "Photoshop AppleScript document count probe timed out or failed",
+      "control_saved": false,
+      "candidate_saved": false,
+      "public_write_authorized": false
+    }
+  ]
+}

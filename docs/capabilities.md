@@ -186,6 +186,17 @@ All actual documents were closed without saving; no Photoshop save/reopen,
 independent native visual fidelity or public PSD writer is authorized.
 See [ADR 0018](decisions/0018-psd-dual-name-photoshop-acceptance.md).
 
+M4c-7a freezes a stricter **research-only PSD name patch gate**:
+only the exact reviewed nested-group fixture with matching old
+Unicode and ASCII Pascal names is currently a save/reopen research
+candidate. Both Photoshop Background fixtures and a duplicate-name
+pixel fixture with inconsistent legacy name are excluded. An
+unchanged-original paired Photoshop saveAs/reopen comparator exists,
+but the native AppleScript bridge was unresponsive during local
+execution, so this gate remains **BLOCKED** with no save receipt.
+See [ADR 0019](decisions/0019-psd-rename-admission-photoshop-control.md).
+No `yu psd rename` capability or general PSD save is exposed.
+
 PR #22 exposes the four read-only operations through the public CLI. PR #23 adds layer bitmap export to the separately versioned `31.0.2+node22.23.3.yu2` package. Effective capabilities use the exact active version, not the inventory union of all installed versions. This does not promise arbitrary PSD feature coverage or full rendering fidelity. The package is still a prototype with CI artifacts and placeholder distribution URLs; no public catalog is claimed.
 
 Compatibility roles:

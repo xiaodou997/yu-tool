@@ -1,0 +1,81 @@
+{
+  "schema_version": "1",
+  "milestone": "M4c-7a",
+  "public_write_authorized": false,
+  "summary": {
+    "examined": 4,
+    "research_save_reopen_candidates": 1,
+    "blocked": 3,
+    "production_writes_authorized": 0
+  },
+  "cases": [
+    {
+      "fixture": "simple-psd",
+      "source_sha256": "406ddf7cbf5a1065b992b9c0d2a59be6290a371b90f23b9a04c0e6bbc94beb0c",
+      "layer_id": "L0001",
+      "raw_index": 0,
+      "kind": "pixel",
+      "before": "Фон",
+      "after": "Дом",
+      "raw_legacy_ascii_matches_unicode": false,
+      "native_name_read_verified": false,
+      "gate": "blocked",
+      "reasons": [
+        "native_Background_name_not_reported",
+        "native_Photoshop_read_failed",
+        "legacy_Pascal_mismatch",
+        "non_ASCII_legacy_name_not_proven"
+      ],
+      "public_write_authorized": false
+    },
+    {
+      "fixture": "simple-psb",
+      "source_sha256": "863c51eb4d4e72214a3cbdf06a0594c485e4262d899318b1ba914d4c848382ab",
+      "layer_id": "L0001",
+      "raw_index": 0,
+      "kind": "pixel",
+      "before": "Фон",
+      "after": "Дом",
+      "raw_legacy_ascii_matches_unicode": false,
+      "native_name_read_verified": false,
+      "gate": "blocked",
+      "reasons": [
+        "native_Background_name_not_reported",
+        "native_Photoshop_read_failed",
+        "legacy_Pascal_mismatch",
+        "non_ASCII_legacy_name_not_proven"
+      ],
+      "public_write_authorized": false
+    },
+    {
+      "fixture": "nested-group",
+      "source_sha256": "1aaf572b69f0b0fa7c04b7b3a14c97e310a0c7bbdc06e733c9dd0d0cdcf7df1c",
+      "layer_id": "L0002",
+      "raw_index": 3,
+      "kind": "group",
+      "before": "Group 1",
+      "after": "Group 2",
+      "raw_legacy_ascii_matches_unicode": true,
+      "native_name_read_verified": true,
+      "gate": "research_save_reopen_candidate",
+      "reasons": [],
+      "public_write_authorized": false
+    },
+    {
+      "fixture": "duplicate-names",
+      "source_sha256": "8af765f631fa11637e5bf826696452a1c9b00f2b970d6d5c74bd2415bb7dedd9",
+      "layer_id": "L0002",
+      "raw_index": 1,
+      "kind": "pixel",
+      "before": "X",
+      "after": "Y",
+      "raw_legacy_ascii_matches_unicode": false,
+      "native_name_read_verified": true,
+      "gate": "blocked",
+      "reasons": [
+        "legacy_Pascal_mismatch"
+      ],
+      "public_write_authorized": false
+    }
+  ]
+}

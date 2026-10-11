@@ -1,0 +1,71 @@
+{
+  "schema_version": "1",
+  "milestone": "M4c-7a",
+  "status": "research_scope_freeze",
+  "public_write_authorized": false,
+  "supported_research_operation": "same_utf16_code_unit_count_rename",
+  "admission": "exact_M4c2_fixture_sha256_only",
+  "candidate_kinds": ["pixel", "group"],
+  "mandatory_gates": [
+    "source_sha256_matches_frozen_fixture",
+    "canonical_layer_id_and_raw_index_agree",
+    "Photoshop_target_is_not_Background",
+    "existing_luni_is_unique_and_unambiguous",
+    "legacy_Pascal_name_matches_old_Unicode_name",
+    "old_and_new_legacy_names_are_ascii_with_same_byte_length",
+    "new_Unicode_name_is_NFC_and_same_UTF16_code_unit_count",
+    "source_file_is_not_modified",
+    "output_is_isolated_create_new",
+    "independent_Photoshop_and_psd_tools_roundtrip_still_required"
+  ],
+  "excluded_layer_classes": [
+    "Photoshop_Background",
+    "text",
+    "shape",
+    "smart_object",
+    "unknown",
+    "masks_and_effects_not_independently_audited"
+  ],
+  "known_research_cases": [
+    {
+      "fixture": "simple-psd",
+      "layer_id": "L0001",
+      "raw_index": 0,
+      "proposed_name": "Дом",
+      "gate": "blocked",
+      "reason": "Photoshop reports a special localized Background layer"
+    },
+    {
+      "fixture": "simple-psb",
+      "layer_id": "L0001",
+      "raw_index": 0,
+      "proposed_name": "Дом",
+      "gate": "blocked",
+      "reason": "Photoshop reports a special localized Background layer"
+    },
+    {
+      "fixture": "nested-group",
+      "layer_id": "L0002",
+      "raw_index": 3,
+      "proposed_name": "Group 2",
+      "gate": "research_save_reopen_candidate",
+      "reason": "group; matching ASCII legacy and Unicode names; native Photoshop read succeeded"
+    },
+    {
+      "fixture": "duplicate-names",
+      "layer_id": "L0002",
+      "raw_index": 1,
+      "proposed_name": "Y",
+      "gate": "blocked",
+      "reason": "pre-existing mismatch between legacy Pascal name and Unicode name"
+    }
+  ],
+  "save_reopen_study": {
+    "application": "Adobe Photoshop 2026",
+    "inputs": "isolated disposable research copies only",
+    "control": "unchanged original copy saved under a new name",
+    "candidate": "byte-patched experimental copy saved under a distinct new name",
+    "compare": "Photoshop reopened names, independent logical layers, independent composite pixels, raw resource and metadata differences",
+    "production_permission": false
+  }
+}

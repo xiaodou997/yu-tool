@@ -396,6 +396,31 @@ and [acceptance](testing/m4c6-dual-name-photoshop.md). Full editor
 save/reopen, Photoshop composite fidelity, non-ASCII legacy display and
 safe background semantics are **not approved**. No `yu psd` write command.
 
+### M4c-7 — PSD rename scope freeze and paired Photoshop save gate
+
+Based on `develop@d197334c88d123b4a2a68600ea784c543b41755b`,
+M4c-7a now freezes a **deny-by-default** research gate:
+exact known input hashes, canonical/raw ID agreement, no native
+Background layer, matching ASCII Unicode/legacy Pascal name encodings and
+equal UTF-16 name length. Among four historical fixtures, only the
+**nested-group** rename is admitted for a *research* save/reopen study;
+the Background PSD/PSB and legacy-inconsistent duplicate-name cases are
+blocked. No public mutation authorization is granted.
+
+A native Photoshop 2026 paired saveAs/reopen experiment is implemented
+with unchanged-original control, distinct private scratch outputs,
+independent parser and composite comparisons. **M4c-7b/c are BLOCKED**:
+Photoshop's AppleScript channel timed out, including a read-only document
+count query. The bounded readiness gate did not permit any save, so there
+is no editor save/reopen acceptance evidence. The code and documented
+scope can freeze without declaring Photoshop fidelity passed.
+
+See [ADR 0019](decisions/0019-psd-rename-admission-photoshop-control.md),
+[scope policy](data/psd-rename-scope-m4c7-v1.json),
+[scope evidence](data/m4c7-rename-scope-evidence-v1.json),
+[blocked native receipt](data/m4c7-photoshop-control-v1.json) and
+[acceptance](testing/m4c7-rename-scope-and-photoshop-gate.md).
+
 Candidate capabilities:
 
 - image crop/rotate/convert;
