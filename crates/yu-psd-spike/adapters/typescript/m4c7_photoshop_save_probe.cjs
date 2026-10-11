@@ -14,21 +14,16 @@ const { readPhotoshopLayers } = require("./m4c6_photoshop_readonly.cjs");
 const { independentRead } = require("./m4c6_dual_name_fidelity.cjs");
 const { scan } = require("./m4c3_raw_block_inventory.cjs");
 const { buildReport: buildScope } = require("./m4c7_scope_freeze.cjs");
+const { classifyPhotoshopReadiness } = require("./m4c7c_native_readiness.cjs");
+const { compareSavedPair } = require("./m4c7c_saved_pair_gate.cjs");
 
 const ROOT = path.resolve(__dirname, "../../../../");
 const M4C2 = require(path.join(ROOT, "docs/data/psd-safe-mutation-scope-m4c2-v1.json"));
 const OUTPUT_ROOT = path.join(ROOT,"target/m4c7-psd-photoshop-save");
-const REPORT = path.join(ROOT,"docs/data/m4c7-photoshop-control-v1.json");
+const REPORT = path.join(ROOT,"docs/data/m4c7c-photoshop-control-v2.json");
 const AG_PATH = path.join(ROOT,"packaging/ag-psd-engine/node_modules/ag-psd");
 const sha = data=>crypto.createHash("sha256").update(data).digest("hex");
 
-function photoshopResponsive() {
-  const probe=spawnSync("/usr/bin/osascript",
-    ["-e",'tell application id "com.adobe.Photoshop" to count documents'],{
-      cwd:ROOT,encoding:"utf8",timeout:12000,maxBuffer:32768,
-    });
-  return probe.status===0 && /^\d+$/.test(probe.stdout.trim());
-}
 function requireAbsent(file) {
   try {
     fs.lstatSync(file);
@@ -44,6 +39,11 @@ function saveAsIndependentCopy(input,output) {
   assert.equal(path.dirname(path.resolve(input)),path.dirname(path.resolve(output)));
   assert.ok(path.resolve(input).startsWith(path.resolve(OUTPUT_ROOT) + path.sep));
   assert.ok(path.resolve(output).startsWith(path.resolve(OUTPUT_ROOT) + path.sep));
+  // This private run directory is an isolation boundary. Prechecking that
+  // output is absent is NOT an atomic no-clobber guarantee against a process
+  // with filesystem access; this is never allowed as a production publisher.
+  const native = classifyPhotoshopReadiness();
+  if (!native.ready) throw Error("Photoshop native save preflight blocked: "+native.status);
   const script = [
     "(function(){",
     "var d=null, prior=app.displayDialogs;",
@@ -121,13 +121,17 @@ function buildEvidence() {
   const scope=buildScope();
   assert.equal(scope.summary.research_save_reopen_candidates,1);
   const admitted=scope.cases.filter(x=>x.gate==="research_save_reopen_candidate");
-  if(!photoshopResponsive()) {
+  const nativePreflight = classifyPhotoshopReadiness();
+  if(!nativePreflight.ready) {
+    const status = nativePreflight.status==="apple_events_unresponsive" ?
+      "blocked_native_application_unresponsive" : "blocked_native_app_preflight";
     return JSON.stringify({
       schema_version:"1",milestone:"M4c-7b/c",
       operation:"real_Photoshop_saveAs_close_reopen_isolated_copies_with_unchanged_control",
       application:"Adobe Photoshop 2026 (macOS)",
       public_write_authorized:false,
-      status:"blocked_native_application_unresponsive",
+      status,
+      native_preflight:nativePreflight,
       summary:{
         admitted_cases:admitted.length,
         paired_research_save_reopen_passed:0,
@@ -136,9 +140,10 @@ function buildEvidence() {
       },
       cases:admitted.map(a=>({
         fixture:a.fixture,
-        status:"blocked_native_application_unresponsive",
-        reason:"Photoshop AppleScript document count probe timed out or failed",
+        status,
+        reason:"Photoshop native preflight declined: "+nativePreflight.status,
         control_saved:false,candidate_saved:false,
+        save_command_attempted:false,
         public_write_authorized:false,
       })),
     },null,2)+"\n";
@@ -162,6 +167,7 @@ function buildEvidence() {
       fixture:fixture.id,source_sha256:fixture.sha256,
       candidate_sha256:patched.candidate_sha256,
       status:"not_started",control_saved:false,candidate_saved:false,
+      save_command_attempted:false,
       public_write_authorized:false,
     };
     try {
@@ -171,6 +177,7 @@ function buildEvidence() {
          !editedLayers.some(x=>x.name===admittedCase.after&&x.kind==="group"))
         throw Error("native Photoshop selected group name failed");
       const before=independentRead(control),edited=independentRead(candidate);
+      output.save_command_attempted=true;
       const controlSave=saveAsIndependentCopy(control,savedControl);
       output.control_saved=true;
       const candidateSave=saveAsIndependentCopy(candidate,savedCandidate);
@@ -198,16 +205,27 @@ function buildEvidence() {
       output.output_candidate=candidateSave;
       output.control_raw_differences=compareRaw(control,savedControl);
       output.candidate_raw_differences=compareRaw(candidate,savedCandidate);
+      output.saved_pair_strict_raw_evidence=compareSavedPair(
+        fs.readFileSync(savedControl),fs.readFileSync(savedCandidate),{
+          raw_index:admittedCase.raw_index,
+          expected_old_name:admittedCase.before,
+          expected_new_name:admittedCase.after,
+        });
       output.save_roundtrip_research_passed=output.editor_control_name_preserved &&
         output.editor_candidate_name_preserved &&
         output.control_semantic_tree_preserved && output.candidate_semantic_tree_preserved &&
         output.independent_preview_control_preserved &&
         output.independent_preview_candidate_preserved &&
-        output.independent_preview_saved_control_vs_saved_candidate_equal;
+        output.independent_preview_saved_control_vs_saved_candidate_equal &&
+        output.saved_pair_strict_raw_evidence.strict_saved_pair_bytes_passed;
       output.status=output.save_roundtrip_research_passed?"paired_control_verified":"paired_control_mismatch";
     } catch(error) {
       output.status="blocked_or_failed";
       output.error=String(error?.message||error).slice(0,500);
+      output.saved_control_output_exists=fs.existsSync(savedControl);
+      output.saved_candidate_output_exists=fs.existsSync(savedCandidate);
+      // If a native save timed out, the application might still have emitted
+      // an output. Do not call the operation successfully completed.
     }
     // Must never change any input, independent of application-save outcome.
     assert.equal(sha(fs.readFileSync(realInput)),fixture.sha256);

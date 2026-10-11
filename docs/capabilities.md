@@ -197,6 +197,15 @@ execution, so this gate remains **BLOCKED** with no save receipt.
 See [ADR 0019](decisions/0019-psd-rename-admission-photoshop-control.md).
 No `yu psd rename` capability or general PSD save is exposed.
 
+M4c-7c adds a **research-only native-readiness classifier and strict
+saved-pair raw-byte comparator**. Photoshop's Apple Events channel
+remained unresponsive on the latest controlled probe, so no Photoshop
+saveAs/reopen output exists and production mutation is still blocked.
+The stricter comparator is regression-tested using synthetic
+control/candidate buffers; it refuses changes to any non-target bytes.
+See [ADR 0020](decisions/0020-psd-native-photoshop-readiness-gate.md)
+and the [native blocked receipt](data/m4c7c-photoshop-control-v2.json).
+
 PR #22 exposes the four read-only operations through the public CLI. PR #23 adds layer bitmap export to the separately versioned `31.0.2+node22.23.3.yu2` package. Effective capabilities use the exact active version, not the inventory union of all installed versions. This does not promise arbitrary PSD feature coverage or full rendering fidelity. The package is still a prototype with CI artifacts and placeholder distribution URLs; no public catalog is claimed.
 
 Compatibility roles:

@@ -421,6 +421,32 @@ See [ADR 0019](decisions/0019-psd-rename-admission-photoshop-control.md),
 [blocked native receipt](data/m4c7-photoshop-control-v1.json) and
 [acceptance](testing/m4c7-rename-scope-and-photoshop-gate.md).
 
+### M4c-7c — Native Photoshop readiness / saved-pair strict gate follow-up
+
+On `develop@930e1d83068926130a22274f618390e70c5f52f8`, a renewed
+macOS Photoshop 2026 probe found the process running but Apple Events
+still timed out. System Events could identify Photoshop as a process,
+but refused UI-window inspection due to `osascript` accessibility
+permissions; whether a Photoshop dialog is blocking remains unknown.
+
+Research safeguards now explicitly classify a missing/unresponsive
+application, permission denial, malformed native responses and user
+documents already open. Only a responsive empty Photoshop workspace
+can proceed. A strict experimental saved-control vs saved-candidate
+comparator now checks **every changed byte** against the one authorized
+Unicode/Pascal name range and rejects any unrelated raw resource,
+channel, metadata or composite difference. These negative checks pass
+in synthetic fixture experiments but do **not** count as a Photoshop
+save/reopen.
+
+The [new native receipt](data/m4c7c-photoshop-control-v2.json) records
+`apple_events_unresponsive`, **zero save commands attempted**,
+**zero native save/reopen passes**, and **zero PSD product writes**.
+See [ADR 0020](decisions/0020-psd-native-photoshop-readiness-gate.md)
+and [tests](testing/m4c7c-native-gate-and-saved-pair.md). Native
+Photoshop app recovery requires separately confirmed user control;
+do not force close or silently alter macOS permissions.
+
 Candidate capabilities:
 
 - image crop/rotate/convert;
