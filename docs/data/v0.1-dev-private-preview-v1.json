@@ -1,0 +1,78 @@
+{
+  "apple_notarization_performed": false,
+  "automatic_update": false,
+  "bundles": {
+    "linux": {
+      "bytes": 63612261,
+      "file": "yu-v0.1.0-dev.5526dc4-linux-x86_64.zip",
+      "internal_test_only": true,
+      "nested_cli_sha256": "98cb66df10a7bf698cffc04880a1c561ef9dc62996f0b774e3efa51bb9511bf9",
+      "nested_engine_sha256": "d3d420dde110f5774a7aba29ce3be1a6c41809b83c5732930c04b8c738b8bcb7",
+      "sha256": "e70de07097c68a77298211f463d55bc676b5ffa74daba69186391de34c578511",
+      "source_exact_main": true
+    },
+    "macos": {
+      "bytes": 54836207,
+      "file": "yu-v0.1.0-dev.5526dc4-macos-arm64.zip",
+      "internal_test_only": true,
+      "nested_cli_sha256": "388fb2f1f60cbca3166d6b14046ad06595813f45388e0c482d99defbc611bcfc",
+      "nested_engine_sha256": "cd1dc8caa0c8294114b39d8d5573e6d8647cd7aea09e094b073ad27afd7b406c",
+      "sha256": "5897360ddbc770e45232b2bbbf569cb585a88d38547105a6ae872b6e72c8e44a",
+      "source_exact_main": true
+    },
+    "windows": {
+      "bytes": 49492797,
+      "file": "yu-v0.1.0-dev.5526dc4-windows-x86_64.zip",
+      "internal_test_only": true,
+      "nested_cli_sha256": "b5feb4f11feb8c871d93e2720f2655c6e11f59eaa04169ecae9e3c18e27ba501",
+      "nested_engine_sha256": "07798e6b18de8d69902f5286d1dbccba557e59eb011625ae03f568ec0de1148c",
+      "sha256": "44c1c3c34c5e2f37d206dfc56980cf82f6ccbfe26681e739ec80d8a7ca8c6084",
+      "source_exact_main": true
+    }
+  },
+  "external_download_available": false,
+  "included_components": [
+    "exact CLI ZIP",
+    "exact Managed Engine ZIP",
+    "licenses",
+    "source-backed third-party notices",
+    "offline engine manifest",
+    "test instructions",
+    "SHA256SUMS"
+  ],
+  "inner_archives_repackaged": false,
+  "mac_nested_bundle_recheck": {
+    "clean_vm": false,
+    "failed_case_retries": 0,
+    "input_sha256": {
+      "candidate": "388fb2f1f60cbca3166d6b14046ad06595813f45388e0c482d99defbc611bcfc",
+      "engine": "cd1dc8caa0c8294114b39d8d5573e6d8647cd7aea09e094b073ad27afd7b406c",
+      "fixture": "406ddf7cbf5a1065b992b9c0d2a59be6290a371b90f23b9a04c0e6bbc94beb0c",
+      "manifest": "01d467862c86aa1e53fb230873615a0c14d935844207d20719e81140154be0cc"
+    },
+    "source_commit": "5526dc4465c4e79ad7f2757d06b3b1693642b8af",
+    "status": "PASS",
+    "steps": 20
+  },
+  "milestone": "yu-tool-v0.1.0-dev-private-preview",
+  "psd_mutation_available": false,
+  "public_release_authorized": false,
+  "public_release_ready": false,
+  "remaining_product_release_gates": [
+    "macOS notarization/Gatekeeper",
+    "Windows signing decision",
+    "minimum OS clean device",
+    "durable authorized distribution",
+    "final release authorization"
+  ],
+  "schema_version": "1",
+  "source_commit": "5526dc4465c4e79ad7f2757d06b3b1693642b8af",
+  "source_managed_package_run": 37342387756,
+  "source_tree": "6851265265d383bea9f1470b64635c3041790158",
+  "visibility": "private_local_only_no_upload",
+  "windows_and_linux_nested_archives": {
+    "new_outer_bundle_integrity": "PASS",
+    "new_outer_bundle_runtime_on_platform": "NOT_RERUN_ON_PHYSICAL_DEVICE",
+    "postmerge_original_ci_isolated_acceptance": "20/20 each"
+  }
+}
