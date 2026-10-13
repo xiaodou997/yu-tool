@@ -1,0 +1,90 @@
+{
+  "schema_version": "1",
+  "milestone": "M4c-14",
+  "operation": "PSD mutation release decision and cross-platform device evidence review",
+  "source_baseline_sha": "c6f80b4beb6b51ec64904405942b43c5ec312426",
+  "public_psd_write_authorized": false,
+  "status": "RESEARCH_HANDOFF_COMPLETE_PSD_PRODUCTION_WRITE_BLOCKED",
+  "platform_receipts": {
+    "darwin": {
+      "platform": "darwin",
+      "claimed_receipt_present": true,
+      "status": "LOCAL_SYSCALLS_OBSERVED_INDEPENDENT_REVIEW_REQUIRED",
+      "independently_attested": false,
+      "accepted_for_release": false,
+      "checks_observed": true,
+      "filesystem_opaque_type": "26",
+      "source_revision": "c6f80b4beb6b51ec64904405942b43c5ec312426",
+      "probe_sha256": "b3f2378861c1029d4900a2ac5f4d88ca99c341121fc52b41de74b8bff69feabf",
+      "pending": "independent real device provenance + filesystem-specific acceptance + power-loss & metadata review"
+    },
+    "win32": {
+      "platform": "win32",
+      "status": "PENDING_REAL_DEVICE_RECEIPT",
+      "claimed_receipt_present": false,
+      "independently_attested": false,
+      "accepted_for_release": false
+    },
+    "linux": {
+      "platform": "linux",
+      "status": "PENDING_REAL_DEVICE_RECEIPT",
+      "claimed_receipt_present": false,
+      "independently_attested": false,
+      "accepted_for_release": false
+    }
+  },
+  "gates": {
+    "research_only_local_mac_filesystem_calls_observed": true,
+    "all_required_platform_receipts_submitted": false,
+    "independent_device_provenance_review_accepted": false,
+    "actual_power_loss_durability_accepted": false,
+    "arbitrary_psd_exif_xmp_shmd_fidelity_accepted": false,
+    "production_output_source_concurrency_accepted": false,
+    "manual_production_release_accepted": false
+  },
+  "outstanding": [
+    {
+      "id": "device_windows_real",
+      "status": "PENDING_REAL_DEVICE_RECEIPT"
+    },
+    {
+      "id": "device_linux_real",
+      "status": "PENDING_REAL_DEVICE_RECEIPT"
+    },
+    {
+      "id": "fs_cross_platform_verified",
+      "status": "BLOCKED_MULTIPLE_REAL_FILESYSTEM_DEVICE_ACCEPTANCES_MISSING"
+    },
+    {
+      "id": "crash_power_loss_and_directory_durability",
+      "status": "BLOCKED_REAL_POWER_LOSS_PROOF_NOT_AVAILABLE"
+    },
+    {
+      "id": "full_psd_metadata_feature_fidelity",
+      "status": "BLOCKED_EXIF_XMP_SHMD_AND_UNKNOWN_SEMANTICS"
+    },
+    {
+      "id": "source_concurrency_and_customer_output_recovery",
+      "status": "BLOCKED_PRODUCTION_TRANSACTION_UNVERIFIED"
+    },
+    {
+      "id": "security_release_decision",
+      "status": "BLOCKED_MANUAL_RELEASE_GATE_NOT_ACCEPTED"
+    }
+  ],
+  "summary": {
+    "verified_self_reported_local_mac_platform_receipts": 1,
+    "windows_linux_real_runner_receipts_accepted": 0,
+    "real_power_loss_test_receipts": 0,
+    "unresolved_metadata_feature_categories": [
+      "EXIF",
+      "XMP",
+      "shmd/cust",
+      "unknown resources"
+    ],
+    "unaccepted_release_gates": 7,
+    "production_writes_authorized": 0
+  },
+  "decision": "PSD_PRODUCTION_MUTATION_BLOCKED",
+  "warning": "Self-reported OS/filesystem receipts must be independently witnessed and reviewed; no receipt by itself authorizes PSD writing."
+}

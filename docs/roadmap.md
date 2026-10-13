@@ -678,6 +678,34 @@ See [ADR 0029](decisions/0029-m4c13-filesystem-matrix-manual-recovery.md),
 Cross-filesystem compatibility and real crash durability remain
 **unverified**. Public PSD mutation stays **BLOCKED**.
 
+### M4c-14 — Cross-platform device handoff and PSD mutation release review
+
+Based on `develop@c6f80b4beb6b51ec64904405942b43c5ec312426`,
+the Runner fleet was inspected and had only **one live macOS Runner**;
+no native Windows/Linux device could produce real M4c-14 receipts.
+
+M4c-14 adds an independently runnable, pinned Node.js 22.23.3
+**research-only** filesystem device probe. It actually observed
+file `fsync`, hard-link/inode, `EEXIST` and directory `fsync`
+on the current Mac under ignored `target/`. On future Windows/Linux
+hosts it writes distinct **unattested** scratch device receipts,
+with OS, checkout SHA, probe source hash and actual observed
+errors; it does **not** overwrite the macOS committed receipt.
+
+A separate fail-closed release assessment lists **seven unaccepted
+gates**: real Windows device, real Linux device, supported filesystem
+matrix, power-loss durability, full PSD metadata/editor fidelity,
+production-safe source/output concurrency and explicit manual
+PSD writer authorization. Synthetic unit-test receipts are never
+accepted as real hardware verification and cannot grant a writer.
+
+See [ADR 0030](decisions/0030-m4c14-cross-platform-psd-write-release-gate.md),
+[local device evidence](data/m4c14-local-device-v1.json),
+[M4c-14 release decision](data/m4c14-psd-write-release-decision-v1.json),
+and [operator handoff](testing/m4c14-cross-platform-release-acceptance.md).
+M4c-14 **research handoff** may freeze; PSD production mutation and
+all user PSD output remain **BLOCKED**, and v0.1 `main` stays frozen.
+
 Candidate capabilities:
 
 - image crop/rotate/convert;

@@ -1,0 +1,55 @@
+{
+  "schema_version": "1",
+  "milestone": "M4c-14",
+  "evidence_type": "local_device_executed_probe_unattested",
+  "source_baseline_sha": "c6f80b4beb6b51ec64904405942b43c5ec312426",
+  "executing_checkout_sha": "c6f80b4beb6b51ec64904405942b43c5ec312426",
+  "probe_script_sha256": "b3f2378861c1029d4900a2ac5f4d88ca99c341121fc52b41de74b8bff69feabf",
+  "host": {
+    "platform": "darwin",
+    "arch": "arm64",
+    "node_version": "22.23.3",
+    "os_release": "27.0.0"
+  },
+  "private_test_scope": "new ignored target/m4c14-device-probe/run-* only",
+  "actual_filesystem": {
+    "statfs_type": "26",
+    "statfs_block_size": 4096
+  },
+  "observations": {
+    "exclusive_private_file_created": true,
+    "source_file_fsync_succeeded": true,
+    "hard_link_succeeded": true,
+    "hard_link_error_code": null,
+    "hard_link_same_inode": true,
+    "source_destination_sha256_equal": true,
+    "second_link_existing_destination_denied": true,
+    "parent_directory_fsync": {
+      "syscall_succeeded": true,
+      "error_code": null
+    },
+    "source_file_size": 38,
+    "destination_file_size": 38
+  },
+  "test_evaluated": [
+    "file.create_exclusive",
+    "file.fsync",
+    "hardlink.same_device_inode",
+    "hardlink.no_clobber",
+    "directory.fsync.syscall"
+  ],
+  "not_evaluated": [
+    "PSD Photoshop save/reopen",
+    "actual power loss",
+    "storage controller flush",
+    "different filesystem/device",
+    "filesystem vendor/product claims",
+    "source concurrent writer",
+    "cross-platform acceptance",
+    "public PSD mutation"
+  ],
+  "hardware_attested": false,
+  "power_loss_durability_certified": false,
+  "production_write_authorized": false,
+  "note": "A successful syscall is not proof of crash durability or device authenticity."
+}

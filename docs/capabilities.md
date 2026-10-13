@@ -297,6 +297,18 @@ and never automatically removes or retries output. No broad
 filesystem, metadata or PSD writing capability is authorized.
 See [ADR 0029](decisions/0029-m4c13-filesystem-matrix-manual-recovery.md).
 
+M4c-14 adds a **portable but non-production** local filesystem
+device probe for future native Windows/Linux test machines. This
+stage has **one real macOS device receipt** and **zero** Windows/Linux
+ones. A new offline release assessment rejects mismatched or forged
+source/probe evidence and maintains seven unaccepted PSD writing
+gates, including power-loss testing, opaque EXIF/XMP/`shmd` fidelity,
+source concurrency and final manual approval.
+No general PSD writer, external output feature or
+`yu psd rename` is exposed. See
+[ADR 0030](decisions/0030-m4c14-cross-platform-psd-write-release-gate.md);
+`PSD_PRODUCTION_MUTATION_BLOCKED` is unchanged.
+
 PR #22 exposes the four read-only operations through the public CLI. PR #23 adds layer bitmap export to the separately versioned `31.0.2+node22.23.3.yu2` package. Effective capabilities use the exact active version, not the inventory union of all installed versions. This does not promise arbitrary PSD feature coverage or full rendering fidelity. The package is still a prototype with CI artifacts and placeholder distribution URLs; no public catalog is claimed.
 
 Compatibility roles:
