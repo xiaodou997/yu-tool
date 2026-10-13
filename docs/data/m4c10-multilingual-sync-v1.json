@@ -1,0 +1,119 @@
+{
+  "schema_version": "1",
+  "milestone": "M4c-10",
+  "public_write_authorized": false,
+  "summary": {
+    "paired_native_runs": 2,
+    "synchronized_multilingual_names_reopened": 2,
+    "metadata_fidelity_certifications": 0,
+    "production_writes_authorized": 0
+  },
+  "cases": [
+    {
+      "fixture": "chinese",
+      "source_sha256": "f11e7212e7131c5e6114a09d405f703b9e3d7fa652e1f11e6a365a8d5524ac52",
+      "candidate_sha256": "b10663d8e6ef28a4fda94e1b2fbec7742a4a24330fbc175b6d5415f5fe7b0516",
+      "requested_name": "实验图层",
+      "original_name": "测试图层",
+      "changed_name_bytes": 8,
+      "UTF16BE_and_GB18030_synchronized": true,
+      "saved_original": {
+        "bytes": 504477,
+        "sha256": "ba9302a69e3b4929546d262115c1b894d30a7c02ae719bdfda141ed6d6a7f465"
+      },
+      "saved_candidate": {
+        "bytes": 504473,
+        "sha256": "82e6def6dce887936a990f41a36def8339cf20b66fd3c6868dce6208b5b3237d"
+      },
+      "photoshop_original_names": [
+        {
+          "kind": "layer",
+          "name": "Layer 0"
+        },
+        {
+          "kind": "layer",
+          "name": "测试图层"
+        }
+      ],
+      "photoshop_candidate_names": [
+        {
+          "kind": "layer",
+          "name": "Layer 0"
+        },
+        {
+          "kind": "layer",
+          "name": "实验图层"
+        }
+      ],
+      "photoshop_reopened_candidate_names": [
+        {
+          "kind": "layer",
+          "name": "Layer 0"
+        },
+        {
+          "kind": "layer",
+          "name": "实验图层"
+        }
+      ],
+      "native_name_reopen_verified": true,
+      "saved_lyid_and_dual_name_verified": true,
+      "independent_saved_composite_equal": true,
+      "full_opaque_metadata_semantics_certified": false,
+      "source_and_inputs_unchanged": true,
+      "public_write_authorized": false
+    },
+    {
+      "fixture": "cyrillic",
+      "source_sha256": "c72585b65610bfacc6a8184297d29f88d711adb74ca49d5c8b477aba0017fe33",
+      "candidate_sha256": "916ecefce6517a73b6f851f72c500a30d7ac84f0a095cf0c49327d1b44014f12",
+      "requested_name": "Тест",
+      "original_name": "Слой",
+      "changed_name_bytes": 8,
+      "UTF16BE_and_GB18030_synchronized": true,
+      "saved_original": {
+        "bytes": 504479,
+        "sha256": "3d11b51d68377d4a4443fbac56b0fc8b4923bb0b898a64b4d9cb466f40f444a6"
+      },
+      "saved_candidate": {
+        "bytes": 504475,
+        "sha256": "57c923c74d657d386f39e4f8108568b4d502bd879374a1b5f3d57bf04f3f90d4"
+      },
+      "photoshop_original_names": [
+        {
+          "kind": "layer",
+          "name": "Layer 0"
+        },
+        {
+          "kind": "layer",
+          "name": "Слой"
+        }
+      ],
+      "photoshop_candidate_names": [
+        {
+          "kind": "layer",
+          "name": "Layer 0"
+        },
+        {
+          "kind": "layer",
+          "name": "Тест"
+        }
+      ],
+      "photoshop_reopened_candidate_names": [
+        {
+          "kind": "layer",
+          "name": "Layer 0"
+        },
+        {
+          "kind": "layer",
+          "name": "Тест"
+        }
+      ],
+      "native_name_reopen_verified": true,
+      "saved_lyid_and_dual_name_verified": true,
+      "independent_saved_composite_equal": true,
+      "full_opaque_metadata_semantics_certified": false,
+      "source_and_inputs_unchanged": true,
+      "public_write_authorized": false
+    }
+  ]
+}

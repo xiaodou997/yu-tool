@@ -254,6 +254,18 @@ semantics are not universally proven. No general layer rename
 or in-place PSD write is available; see
 [ADR 0025](decisions/0025-m4c9-legacy-name-layer-id-metadata.md).
 
+M4c-10 adds research-only Chinese and Cyrillic **synchronized**
+Unicode + observed-GB18030 Pascal same-width name edits, each
+reopened successfully by actual Photoshop 2026. In independent
+Photoshop reorder/group experiments, duplicate-name layer `lyid`
+values `6` and `2` remained stable while their raw PSD
+record positions changed. Saved Photoshop multilingual control/edit
+pairs retain identical raw channel and compressed composite data
+but still have unverified metadata/resource differences.
+These are sample-scoped feasibility results, **not** a public
+PSD editor or universal charset/identity certification.
+See [ADR 0026](decisions/0026-m4c10-multilingual-dual-name-and-lyid.md).
+
 PR #22 exposes the four read-only operations through the public CLI. PR #23 adds layer bitmap export to the separately versioned `31.0.2+node22.23.3.yu2` package. Effective capabilities use the exact active version, not the inventory union of all installed versions. This does not promise arbitrary PSD feature coverage or full rendering fidelity. The package is still a prototype with CI artifacts and placeholder distribution URLs; no public catalog is claimed.
 
 Compatibility roles:

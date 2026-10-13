@@ -570,6 +570,34 @@ M4c-10 should focus on locale-scoped dual-name synchronized updates
 and stronger Photoshop metadata preservation; public PSD editing is
 still **BLOCKED**.
 
+### M4c-10 — Multilingual dual-name sync and lyid reorder/group research
+
+Based on `develop@6002b1b2b844dc48ceb11357cbc814d2a041366e`,
+two SHA-bound Photoshop-native ordinary pixel PSDs were used to
+demonstrate **synchronized**, equal-width Unicode `luni` and
+sample-observed GB18030 Pascal renames for Chinese
+`测试图层 → 实验图层` and Cyrillic `Слой → Тест`.
+Both passed real Photoshop 2026 paired scratch save/reopen, retained
+`lyid=6` target and `lyid=2` non-target identity, and had
+identical independent saved-control/candidate composite pixels.
+
+Separately, duplicate-name layers were **reordered** and
+**moved into a new native Photoshop group** in independent scratch
+experiments; target `lyid=6` and other `lyid=2` remained stable,
+while raw PSD layer record indexes changed and new grouping-related
+IDs appeared. Raw offsets and names cannot substitute for revalidated
+per-document layer identity.
+
+Both synchronized multilingual Photoshop saved pairs still have
+unexplained image resources/metadata, despite identical raw layer
+channels and merged image data. No blanket GB18030 codec policy,
+no global `lyid` permanence, no public PSD mutation is approved.
+See [ADR 0026](decisions/0026-m4c10-multilingual-dual-name-and-lyid.md),
+[paired multilingual evidence](data/m4c10-multilingual-sync-v1.json),
+[native structure evidence](data/m4c10-lyid-reorder-group-v1.json),
+[saved metadata audit](data/m4c10-metadata-paired-v1.json) and
+[M4c-10 acceptance](testing/m4c10-multilingual-lyid-acceptance.md).
+
 Candidate capabilities:
 
 - image crop/rotate/convert;

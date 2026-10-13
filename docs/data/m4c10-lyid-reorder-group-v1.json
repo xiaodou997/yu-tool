@@ -1,0 +1,99 @@
+{
+  "schema_version": "1",
+  "milestone": "M4c-10",
+  "operation": "Photoshop native scratch only lyid reorder and group stability",
+  "public_write_authorized": false,
+  "summary": {
+    "native_structural_operations_tested": 2,
+    "operations_preserving_target_lyids": 2,
+    "production_writes_authorized": 0
+  },
+  "cases": [
+    {
+      "action": "reorder",
+      "source_sha256": "62ec35093fd2f388932461536030d3e66d63685b2013e0c01d771ced79f4a47e",
+      "output_sha256": "a050d8ef5273b2d93465bd0daf7c7779982a89f60f96c47752425941daa65366",
+      "Photoshop_lyids_6_and_2_preserved": true,
+      "expected_native_structure_observed": true,
+      "native_layers": [
+        {
+          "photoshop_lyid": 6,
+          "depth": 0,
+          "group": false,
+          "name": "Layer 0"
+        },
+        {
+          "photoshop_lyid": 2,
+          "depth": 0,
+          "group": false,
+          "name": "Layer 0"
+        }
+      ],
+      "raw_lyid_records": [
+        {
+          "raw_index": 0,
+          "photoshop_lyid": 2,
+          "legacy_name": "Layer 0"
+        },
+        {
+          "raw_index": 1,
+          "photoshop_lyid": 6,
+          "legacy_name": "Layer 0"
+        }
+      ],
+      "source_and_input_unchanged": true,
+      "public_write_authorized": false
+    },
+    {
+      "action": "group",
+      "source_sha256": "62ec35093fd2f388932461536030d3e66d63685b2013e0c01d771ced79f4a47e",
+      "output_sha256": "5a90de910b51e7af5bc028951d284c260f5e140864582e4de981b215a16c2eb8",
+      "Photoshop_lyids_6_and_2_preserved": true,
+      "expected_native_structure_observed": true,
+      "native_layers": [
+        {
+          "photoshop_lyid": 7,
+          "depth": 0,
+          "group": true,
+          "name": "M4c10 Research Group"
+        },
+        {
+          "photoshop_lyid": 6,
+          "depth": 1,
+          "group": false,
+          "name": "Layer 0"
+        },
+        {
+          "photoshop_lyid": 2,
+          "depth": 0,
+          "group": false,
+          "name": "Layer 0"
+        }
+      ],
+      "raw_lyid_records": [
+        {
+          "raw_index": 0,
+          "photoshop_lyid": 2,
+          "legacy_name": "Layer 0"
+        },
+        {
+          "raw_index": 1,
+          "photoshop_lyid": 8,
+          "legacy_name": "</Layer group>"
+        },
+        {
+          "raw_index": 2,
+          "photoshop_lyid": 6,
+          "legacy_name": "Layer 0"
+        },
+        {
+          "raw_index": 3,
+          "photoshop_lyid": 7,
+          "legacy_name": "M4c10 Research Group"
+        }
+      ],
+      "source_and_input_unchanged": true,
+      "public_write_authorized": false
+    }
+  ]
+}

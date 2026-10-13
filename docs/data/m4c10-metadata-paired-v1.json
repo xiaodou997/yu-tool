@@ -1,0 +1,100 @@
+{
+  "schema_version": "1",
+  "milestone": "M4c-10",
+  "operation": "strict SHA-bound saved pair meta comparison read only",
+  "public_write_authorized": false,
+  "summary": {
+    "paired_native_multilingual_cases": 2,
+    "pairs_with_identical_raw_channels": 2,
+    "pairs_with_identical_compressed_merged_image": 2,
+    "pairs_with_unresolved_metadata": 2,
+    "production_writes_authorized": 0
+  },
+  "cases": [
+    {
+      "fixture": "chinese",
+      "control_sha256": "ba9302a69e3b4929546d262115c1b894d30a7c02ae719bdfda141ed6d6a7f465",
+      "candidate_sha256": "82e6def6dce887936a990f41a36def8339cf20b66fd3c6868dce6208b5b3237d",
+      "saved_layer_counts": [
+        2,
+        2
+      ],
+      "resources": {
+        "added": [],
+        "removed": [],
+        "changed": [
+          "1060:#0",
+          "1050:#0",
+          "1058:#0"
+        ]
+      },
+      "tags": {
+        "added": [],
+        "removed": [],
+        "changed": [
+          "layer:0:luni#0"
+        ]
+      },
+      "raw_channel_delta": {
+        "added": [],
+        "removed": [],
+        "changed": []
+      },
+      "compressed_merged_image_equal": true,
+      "XMP_changed_markers": [
+        "DocumentID",
+        "InstanceID",
+        "ModifyDate",
+        "MetadataDate",
+        "History"
+      ],
+      "EXIF_bytes_equal": false,
+      "raw_image_resource_changes_nonzero": true,
+      "unknown_metadata_preservation_proven": false,
+      "production_write_authorized": false
+    },
+    {
+      "fixture": "cyrillic",
+      "control_sha256": "3d11b51d68377d4a4443fbac56b0fc8b4923bb0b898a64b4d9cb466f40f444a6",
+      "candidate_sha256": "57c923c74d657d386f39e4f8108568b4d502bd879374a1b5f3d57bf04f3f90d4",
+      "saved_layer_counts": [
+        2,
+        2
+      ],
+      "resources": {
+        "added": [],
+        "removed": [],
+        "changed": [
+          "1060:#0",
+          "1050:#0",
+          "1058:#0"
+        ]
+      },
+      "tags": {
+        "added": [],
+        "removed": [],
+        "changed": [
+          "layer:0:luni#0"
+        ]
+      },
+      "raw_channel_delta": {
+        "added": [],
+        "removed": [],
+        "changed": []
+      },
+      "compressed_merged_image_equal": true,
+      "XMP_changed_markers": [
+        "DocumentID",
+        "InstanceID",
+        "ModifyDate",
+        "MetadataDate",
+        "History"
+      ],
+      "EXIF_bytes_equal": false,
+      "raw_image_resource_changes_nonzero": true,
+      "unknown_metadata_preservation_proven": false,
+      "production_write_authorized": false
+    }
+  ],
+  "warning": "Photoshop saves may alter history/identity metadata. Neither XMP nor EXIF nor opaque shmd is globally safe to ignore."
+}
