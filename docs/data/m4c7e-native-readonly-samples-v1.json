@@ -1,0 +1,110 @@
+{
+  "schema_version": "1",
+  "milestone": "M4c-7e",
+  "operation": "Photoshop read-only scratch fixture inspection",
+  "public_write_authorized": false,
+  "native_preflight": {
+    "status": "ready_empty_workspace",
+    "ready": true,
+    "open_documents": 0
+  },
+  "summary": {
+    "requested_readonly_fixtures": 3,
+    "inspected": 3,
+    "source_copies_unchanged": 3,
+    "production_writes_authorized": 0
+  },
+  "cases": [
+    {
+      "fixture": "bench-baseline-rgb",
+      "source_sha256": "391f4c009b9bd4cc5fdffb3799c3476f7d690874e6ca458463ab7fe3b5739aee",
+      "public_write_authorized": false,
+      "read_only": true,
+      "photoshop_save_attempted": false,
+      "status": "photoshop_read_only_inspected",
+      "native_photoshop_layers": [
+        {
+          "kind": "layer",
+          "name": "Layer 0"
+        },
+        {
+          "kind": "layer",
+          "name": "Layer 1"
+        }
+      ],
+      "psd_tools_logical_layers": [
+        {
+          "name": "Layer 1",
+          "kind": "pixel"
+        },
+        {
+          "name": "Layer 0",
+          "kind": "pixel"
+        }
+      ],
+      "native_layer_count": 2,
+      "reference_layer_count": 2,
+      "native_background_count": 0,
+      "native_and_reference_layer_count_equal": true,
+      "source_and_scratch_unchanged": true
+    },
+    {
+      "fixture": "simple-pixel-layers-psd",
+      "source_sha256": "406ddf7cbf5a1065b992b9c0d2a59be6290a371b90f23b9a04c0e6bbc94beb0c",
+      "public_write_authorized": false,
+      "read_only": true,
+      "photoshop_save_attempted": false,
+      "status": "photoshop_read_only_inspected",
+      "native_photoshop_layers": [
+        {
+          "kind": "layer",
+          "name": "Слой"
+        },
+        {
+          "kind": "background",
+          "name": "背景"
+        }
+      ],
+      "psd_tools_logical_layers": [
+        {
+          "name": "Фон",
+          "kind": "pixel"
+        },
+        {
+          "name": "Слой",
+          "kind": "pixel"
+        }
+      ],
+      "native_layer_count": 2,
+      "reference_layer_count": 2,
+      "native_background_count": 1,
+      "native_and_reference_layer_count_equal": true,
+      "source_and_scratch_unchanged": true
+    },
+    {
+      "fixture": "text-layer",
+      "source_sha256": "b24e6f4c7277dd499ebb20c88ac06698f4563e75bfeb6aa6cb0d2466140fd81f",
+      "public_write_authorized": false,
+      "read_only": true,
+      "photoshop_save_attempted": false,
+      "status": "photoshop_read_only_inspected",
+      "native_photoshop_layers": [
+        {
+          "kind": "layer",
+          "name": "A"
+        }
+      ],
+      "psd_tools_logical_layers": [
+        {
+          "name": "A",
+          "kind": "type"
+        }
+      ],
+      "native_layer_count": 1,
+      "reference_layer_count": 1,
+      "native_background_count": 0,
+      "native_and_reference_layer_count_equal": true,
+      "source_and_scratch_unchanged": true
+    }
+  ]
+}

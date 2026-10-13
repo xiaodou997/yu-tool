@@ -473,6 +473,43 @@ prior [v2 unresponsive receipt](data/m4c7c-photoshop-control-v2.json)
 remains preserved as history. Next investigate editor metadata and
 composite recomposition deltas (M4c-7d), not public PSD mutation.
 
+### M4c-7d — Native rendering and metadata differential (research accepted)
+
+Two independent native Photoshop control/renamed PSD save runs now have
+four **Photoshop-rendered PNGs each**. Photoshop-native pixels differ
+by **0** between original, renamed, saved control and saved renamed
+candidate in both runs. The earlier 160/20,000-pixel difference comes
+from `psd-tools 1.20.0` independently compositing the *original* PSD,
+not from a native Photoshop save-induced visual change on this fixture.
+
+Photoshop Slices Resource **1050** encodes the different saved-document
+names, explaining this exact control/candidate **16-byte** file-length
+delta (20 vs 12 UTF-16 code units). Other byte-level variations in
+EXIF **1058**, XMP **1060** (document IDs/history/timestamps) and
+four `shmd/cust` metadata blocks remain semantically **unverified**.
+See [ADR 0022](decisions/0022-photoshop-m4c7d-metadata-fidelity-boundary.md),
+[native pixel/metadata evidence](data/m4c7d-photoshop-metadata-preview-v1.json)
+and [targeted resource forensic evidence](data/m4c7d-metadata-forensics-v1.json).
+
+### M4c-7e — Research exit, deny production PSD mutation
+
+The frozen PSD/PSB corpus expands research **read-only** coverage to
+13 valid fixtures, including high-bit, Smart Object, Type, shape,
+artboard and masks. Three representative files have also been
+opened/read/closed without saving in Photoshop 2026: ordinary pixel
+layers, Cyrillic/Background, and a Type layer. Only
+`bench-baseline-rgb` is a new normal-pixel **research candidate**;
+it has **not** been admitted to M4c-2/M4c-7a mutation allow-lists.
+General PSD writes, length-changing names, Background, text/effects
+and opaque metadata preservation remain blocked.
+
+See [ADR 0023](decisions/0023-m4c7e-psd-mutation-research-exit.md),
+[corpus profile](data/m4c7e-readonly-corpus-profile-v1.json),
+[Photoshop read-only receipt](data/m4c7e-native-readonly-samples-v1.json)
+and [final decision](data/m4c7e-release-decision-v1.json).
+The frozen v0.1 `main` baseline and production PSD capabilities remain
+unchanged. A separate approved release gate is required for any write.
+
 Candidate capabilities:
 
 - image crop/rotate/convert;

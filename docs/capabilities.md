@@ -217,6 +217,20 @@ mutation command is exposed. See
 [ADR 0021](decisions/0021-photoshop-native-save-reopen-reacceptance.md)
 and the [new v3 receipt](data/m4c7c-photoshop-native-reacceptance-v3.json).
 
+M4c-7d added **native Photoshop PNG comparisons**. Those native
+composites are pixel-identical before/after save and between control/
+renamed group copies across two runs. The earlier 160-pixel mismatch
+belongs to independent psd-tools composition of the *original*
+fixture. Slices Resource 1050 explains this specimen's saved-name
+16-byte length delta; EXIF, XMP document identifiers/history and
+`shmd/cust` remain unproven metadata. See [ADR 0022](decisions/0022-photoshop-m4c7d-metadata-fidelity-boundary.md).
+
+M4c-7e extended **read-only** sample review to 13 valid PSD/PSB
+documents and 3 additional native Photoshop read-only inspections.
+No new write allow-list entry or `yu psd rename` command is enabled.
+The [ADR 0023](decisions/0023-m4c7e-psd-mutation-research-exit.md)
+decision is `PSD_PRODUCTION_MUTATION_BLOCKED`.
+
 PR #22 exposes the four read-only operations through the public CLI. PR #23 adds layer bitmap export to the separately versioned `31.0.2+node22.23.3.yu2` package. Effective capabilities use the exact active version, not the inventory union of all installed versions. This does not promise arbitrary PSD feature coverage or full rendering fidelity. The package is still a prototype with CI artifacts and placeholder distribution URLs; no public catalog is claimed.
 
 Compatibility roles:

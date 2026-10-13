@@ -1,0 +1,310 @@
+{
+  "schema_version": "1",
+  "milestone": "M4c-7e",
+  "operation": "psd.readonly.fixture_classification.research",
+  "public_write_authorized": false,
+  "summary": {
+    "scanned": 13,
+    "unadmitted_to_public_writes": 13,
+    "new_editor_research_profile_candidates": 1,
+    "production_writes_authorized": 0
+  },
+  "cases": [
+    {
+      "fixture": "bench-advanced-blending",
+      "source_sha256": "433b583db7361a0be3dd6be74031288da16f1a01b4573c125e1bdcdc9697acf4",
+      "format": "psd",
+      "bit_depth": 8,
+      "color_mode": 3,
+      "logical_layer_count": 3,
+      "layer_kinds": [
+        "artboard",
+        "shape"
+      ],
+      "duplicate_logical_name_count": 0,
+      "non_ascii_logical_name_count": 0,
+      "unknown_raw_metadata_count": 11,
+      "existing_m4c7a_gate": "not_in_exact_hash_research_scope",
+      "next_research_classification": "read_only_profile_only_not_rename_admitted",
+      "reasons": [
+        "complex_layer_kinds_not_admitted",
+        "unknown_metadata_requires_preservation_review"
+      ],
+      "mutation_authorized": false,
+      "public_write_authorized": false
+    },
+    {
+      "fixture": "bench-baseline-rgb",
+      "source_sha256": "391f4c009b9bd4cc5fdffb3799c3476f7d690874e6ca458463ab7fe3b5739aee",
+      "format": "psd",
+      "bit_depth": 8,
+      "color_mode": 3,
+      "logical_layer_count": 2,
+      "layer_kinds": [
+        "pixel"
+      ],
+      "duplicate_logical_name_count": 0,
+      "non_ascii_logical_name_count": 0,
+      "unknown_raw_metadata_count": 6,
+      "existing_m4c7a_gate": "not_in_exact_hash_research_scope",
+      "next_research_classification": "candidate_for_new_independent_read_only_editor_validation",
+      "reasons": [
+        "unknown_metadata_requires_preservation_review"
+      ],
+      "mutation_authorized": false,
+      "public_write_authorized": false
+    },
+    {
+      "fixture": "bench-high-bit-psb",
+      "source_sha256": "232bde4537492a671d22b7ff7025a786bc8110677ce5add180103f977be4f5ee",
+      "format": "psb",
+      "bit_depth": 32,
+      "color_mode": 3,
+      "logical_layer_count": 2,
+      "layer_kinds": [
+        "pixel",
+        "shape"
+      ],
+      "duplicate_logical_name_count": 0,
+      "non_ascii_logical_name_count": 0,
+      "unknown_raw_metadata_count": 5,
+      "existing_m4c7a_gate": "not_in_exact_hash_research_scope",
+      "next_research_classification": "read_only_profile_only_not_rename_admitted",
+      "reasons": [
+        "high_bit_depth",
+        "complex_layer_kinds_not_admitted",
+        "unknown_metadata_requires_preservation_review"
+      ],
+      "mutation_authorized": false,
+      "public_write_authorized": false
+    },
+    {
+      "fixture": "bench-high-bit-rgb",
+      "source_sha256": "f349d0e2e253e1d7b3dcd8645d555a1605b7e2d6bba1b99de164ab7853e4871c",
+      "format": "psd",
+      "bit_depth": 16,
+      "color_mode": 3,
+      "logical_layer_count": 10,
+      "layer_kinds": [
+        "group",
+        "pixel",
+        "posterize"
+      ],
+      "duplicate_logical_name_count": 0,
+      "non_ascii_logical_name_count": 0,
+      "unknown_raw_metadata_count": 6,
+      "existing_m4c7a_gate": "not_in_exact_hash_research_scope",
+      "next_research_classification": "read_only_profile_only_not_rename_admitted",
+      "reasons": [
+        "high_bit_depth",
+        "complex_layer_kinds_not_admitted",
+        "unknown_metadata_requires_preservation_review"
+      ],
+      "mutation_authorized": false,
+      "public_write_authorized": false
+    },
+    {
+      "fixture": "bench-layer-effects",
+      "source_sha256": "6ab41ce6e17b3287c703dc4cf4d898506ffc1bd9babf20d0f1de5ef6df1d2e1e",
+      "format": "psd",
+      "bit_depth": 8,
+      "color_mode": 3,
+      "logical_layer_count": 12,
+      "layer_kinds": [
+        "pixel",
+        "type"
+      ],
+      "duplicate_logical_name_count": 0,
+      "non_ascii_logical_name_count": 0,
+      "unknown_raw_metadata_count": 5,
+      "existing_m4c7a_gate": "not_in_exact_hash_research_scope",
+      "next_research_classification": "read_only_profile_only_not_rename_admitted",
+      "reasons": [
+        "complex_layer_kinds_not_admitted",
+        "unknown_metadata_requires_preservation_review"
+      ],
+      "mutation_authorized": false,
+      "public_write_authorized": false
+    },
+    {
+      "fixture": "bench-masks",
+      "source_sha256": "5f9e03f6f1c8ac04dd1e15f7253b489942c3958c00a0e4876b2f944f8ce31d67",
+      "format": "psd",
+      "bit_depth": 8,
+      "color_mode": 3,
+      "logical_layer_count": 3,
+      "layer_kinds": [
+        "pixel",
+        "shape",
+        "type"
+      ],
+      "duplicate_logical_name_count": 0,
+      "non_ascii_logical_name_count": 0,
+      "unknown_raw_metadata_count": 8,
+      "existing_m4c7a_gate": "not_in_exact_hash_research_scope",
+      "next_research_classification": "read_only_profile_only_not_rename_admitted",
+      "reasons": [
+        "complex_layer_kinds_not_admitted",
+        "unknown_metadata_requires_preservation_review"
+      ],
+      "mutation_authorized": false,
+      "public_write_authorized": false
+    },
+    {
+      "fixture": "bench-smart-object",
+      "source_sha256": "69ea01bf88cb85c48d3a78c3bb9e06ae141c9c9fc6a88267eae95c315e16180e",
+      "format": "psd",
+      "bit_depth": 8,
+      "color_mode": 3,
+      "logical_layer_count": 4,
+      "layer_kinds": [
+        "pixel",
+        "smartobject"
+      ],
+      "duplicate_logical_name_count": 0,
+      "non_ascii_logical_name_count": 0,
+      "unknown_raw_metadata_count": 5,
+      "existing_m4c7a_gate": "not_in_exact_hash_research_scope",
+      "next_research_classification": "read_only_profile_only_not_rename_admitted",
+      "reasons": [
+        "complex_layer_kinds_not_admitted",
+        "unknown_metadata_requires_preservation_review"
+      ],
+      "mutation_authorized": false,
+      "public_write_authorized": false
+    },
+    {
+      "fixture": "duplicate-layer-names",
+      "source_sha256": "8af765f631fa11637e5bf826696452a1c9b00f2b970d6d5c74bd2415bb7dedd9",
+      "format": "psd",
+      "bit_depth": 8,
+      "color_mode": 3,
+      "logical_layer_count": 2,
+      "layer_kinds": [
+        "pixel"
+      ],
+      "duplicate_logical_name_count": 1,
+      "non_ascii_logical_name_count": 0,
+      "unknown_raw_metadata_count": 0,
+      "existing_m4c7a_gate": "not_in_exact_hash_research_scope",
+      "next_research_classification": "read_only_profile_only_not_rename_admitted",
+      "reasons": [
+        "duplicate_logical_names"
+      ],
+      "mutation_authorized": false,
+      "public_write_authorized": false
+    },
+    {
+      "fixture": "layer-masks",
+      "source_sha256": "cc6363e24089c2f8910ae44b8067825e2af5e1c43c5d8b3bc6323934fa3cfacd",
+      "format": "psd",
+      "bit_depth": 8,
+      "color_mode": 3,
+      "logical_layer_count": 3,
+      "layer_kinds": [
+        "pixel",
+        "shape"
+      ],
+      "duplicate_logical_name_count": 0,
+      "non_ascii_logical_name_count": 0,
+      "unknown_raw_metadata_count": 7,
+      "existing_m4c7a_gate": "not_in_exact_hash_research_scope",
+      "next_research_classification": "read_only_profile_only_not_rename_admitted",
+      "reasons": [
+        "complex_layer_kinds_not_admitted",
+        "unknown_metadata_requires_preservation_review"
+      ],
+      "mutation_authorized": false,
+      "public_write_authorized": false
+    },
+    {
+      "fixture": "nested-group",
+      "source_sha256": "1aaf572b69f0b0fa7c04b7b3a14c97e310a0c7bbdc06e733c9dd0d0cdcf7df1c",
+      "format": "psd",
+      "bit_depth": 8,
+      "color_mode": 3,
+      "logical_layer_count": 3,
+      "layer_kinds": [
+        "group",
+        "pixel",
+        "shape"
+      ],
+      "duplicate_logical_name_count": 0,
+      "non_ascii_logical_name_count": 0,
+      "unknown_raw_metadata_count": 10,
+      "existing_m4c7a_gate": "research_save_reopen_candidate",
+      "next_research_classification": "read_only_profile_only_not_rename_admitted",
+      "reasons": [
+        "complex_layer_kinds_not_admitted",
+        "unknown_metadata_requires_preservation_review"
+      ],
+      "mutation_authorized": false,
+      "public_write_authorized": false
+    },
+    {
+      "fixture": "simple-pixel-layers-psb",
+      "source_sha256": "863c51eb4d4e72214a3cbdf06a0594c485e4262d899318b1ba914d4c848382ab",
+      "format": "psb",
+      "bit_depth": 8,
+      "color_mode": 3,
+      "logical_layer_count": 2,
+      "layer_kinds": [
+        "pixel"
+      ],
+      "duplicate_logical_name_count": 0,
+      "non_ascii_logical_name_count": 2,
+      "unknown_raw_metadata_count": 4,
+      "existing_m4c7a_gate": "not_in_exact_hash_research_scope",
+      "next_research_classification": "read_only_profile_only_not_rename_admitted",
+      "reasons": [
+        "non_ascii_names_require_legacy_fidelity",
+        "unknown_metadata_requires_preservation_review"
+      ],
+      "mutation_authorized": false,
+      "public_write_authorized": false
+    },
+    {
+      "fixture": "simple-pixel-layers-psd",
+      "source_sha256": "406ddf7cbf5a1065b992b9c0d2a59be6290a371b90f23b9a04c0e6bbc94beb0c",
+      "format": "psd",
+      "bit_depth": 8,
+      "color_mode": 3,
+      "logical_layer_count": 2,
+      "layer_kinds": [
+        "pixel"
+      ],
+      "duplicate_logical_name_count": 0,
+      "non_ascii_logical_name_count": 2,
+      "unknown_raw_metadata_count": 0,
+      "existing_m4c7a_gate": "not_in_exact_hash_research_scope",
+      "next_research_classification": "read_only_profile_only_not_rename_admitted",
+      "reasons": [
+        "non_ascii_names_require_legacy_fidelity"
+      ],
+      "mutation_authorized": false,
+      "public_write_authorized": false
+    },
+    {
+      "fixture": "text-layer",
+      "source_sha256": "b24e6f4c7277dd499ebb20c88ac06698f4563e75bfeb6aa6cb0d2466140fd81f",
+      "format": "psd",
+      "bit_depth": 8,
+      "color_mode": 3,
+      "logical_layer_count": 1,
+      "layer_kinds": [
+        "type"
+      ],
+      "duplicate_logical_name_count": 0,
+      "non_ascii_logical_name_count": 0,
+      "unknown_raw_metadata_count": 5,
+      "existing_m4c7a_gate": "not_in_exact_hash_research_scope",
+      "next_research_classification": "read_only_profile_only_not_rename_admitted",
+      "reasons": [
+        "complex_layer_kinds_not_admitted",
+        "unknown_metadata_requires_preservation_review"
+      ],
+      "mutation_authorized": false,
+      "public_write_authorized": false
+    }
+  ]
+}

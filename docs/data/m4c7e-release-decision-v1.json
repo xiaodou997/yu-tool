@@ -1,0 +1,46 @@
+{
+  "schema_version": "1",
+  "milestone": "M4c-7e",
+  "date": "2026-10-13",
+  "status": "research_exit_accepted_production_write_blocked",
+  "public_psd_write_authorized": false,
+  "main_v01_release_baseline_changed": false,
+  "evidence": {
+    "photoshop_native_group_rename_save_reopen_verified_for_exact_fixture": true,
+    "photoshop_native_composite_unchanged_in_two_isolated_group_fixture_runs": true,
+    "psd_tools_original_preview_discrepancy_located_to_independent_parser": true,
+    "image_resource_1050_slices_name_only_difference_explained_for_fixture": true,
+    "exif_xmp_shmd_full_metadata_semantics_verified": false,
+    "full_unknown_resource_preservation_proven": false,
+    "ordinary_pixel_layer_mutation_in_photoshop_verified": false,
+    "different_length_unicode_rename_supported": false,
+    "background_layer_rename_supported": false,
+    "windows_linux_native_editor_fidelity_verified": false
+  },
+  "expanded_read_only_sample_review": {
+    "valid_psd_psb_structures": 13,
+    "additional_photoshop_native_read_only_cases": 3,
+    "potential_new_pixel_editor_research_fixture": "bench-baseline-rgb",
+    "new_research_fixtures_promoted_to_m4c2_allowlist": 0,
+    "new_public_writer_capabilities": 0
+  },
+  "blocked_categories": [
+    "arbitrary_user_psd_writes",
+    "photoshop_background_layer_rename",
+    "mismatched_legacy_pascal_and_unicode_names",
+    "text_shape_smart_object_or_effects_mutation",
+    "high_bit_depth_or_non_rgb_mutation",
+    "unknown_metadata_loss_or_uninterpreted_shmd_cust",
+    "exif_xmp_provenance_and_history_preservation",
+    "variable_length_luni_relocation",
+    "unversioned_or_in_place_output"
+  ],
+  "next_acceptance_gates": [
+    "independently_classify_exif_xmp_shmd_semantics_without_globally_ignoring_unknown_fields",
+    "create_exact_hash_scoped_normal_pixel_and_multilingual_test_fixtures",
+    "perform_native_photoshop_paired_save_reopen_and_metadata_receipts_per_new_fixture",
+    "implement_version_bound_no_clobber_staged_output_receipt_if_and_only_if_approved",
+    "hold_separate_explicit_production_release_decision"
+  ],
+  "decision": "PSD_PRODUCTION_MUTATION_BLOCKED"
+}
