@@ -1,0 +1,139 @@
+{
+  "schema_version": "1",
+  "milestone": "M4c-9",
+  "status": "partially_decoded_opaque_metadata_not_certified",
+  "public_write_authorized": false,
+  "summary": {
+    "paired_runs": 2,
+    "custom_layer_time_items": 16,
+    "all_custom_metadata_structural_prefix_equal": true,
+    "full_EXIF_XMP_shmd_semantic_fidelity_certified": false,
+    "production_writes_authorized": 0
+  },
+  "limitations": [
+    "cust/layerTime descriptor shape identified for this fixture, timestamp semantics not globally certified",
+    "XMP DocumentID/InstanceID/History must not be blindly normalized away",
+    "EXIF TIFF payload only byte-level inspected; no blanket preservation waiver",
+    "Photoshop save may legitimately update document history but arbitrary unknown metadata cannot be ignored"
+  ],
+  "runs": [
+    {
+      "run_index": 1,
+      "source_file_sha256": [
+        "5c797a704684448f8b5118fa58e5ba8b0ec6550acc11b98e23fa8ed297feace8",
+        "c4dad545aff8c0b6205a15d28e774c45a0fa86120101a34414766516eb07f885"
+      ],
+      "layer_time": [
+        {
+          "raw_layer_index": 0,
+          "control_value": 1791856309.0833,
+          "candidate_value": 1791856309.906503,
+          "delta_seconds": 0.8232028484344482,
+          "prefix_sha_equal": true,
+          "metadata_opaque_semantics_certified": false
+        },
+        {
+          "raw_layer_index": 1,
+          "control_value": 1791856309.083333,
+          "candidate_value": 1791856309.906541,
+          "delta_seconds": 0.8232080936431885,
+          "prefix_sha_equal": true,
+          "metadata_opaque_semantics_certified": false
+        },
+        {
+          "raw_layer_index": 2,
+          "control_value": 1791856309.083346,
+          "candidate_value": 1791856309.906555,
+          "delta_seconds": 0.8232090473175049,
+          "prefix_sha_equal": true,
+          "metadata_opaque_semantics_certified": false
+        },
+        {
+          "raw_layer_index": 3,
+          "control_value": 1791856309.083377,
+          "candidate_value": 1791856309.906592,
+          "delta_seconds": 0.8232150077819824,
+          "prefix_sha_equal": true,
+          "metadata_opaque_semantics_certified": false
+        }
+      ],
+      "xmp": {
+        "marker_fields_differing": [
+          "DocumentID",
+          "InstanceID",
+          "History"
+        ],
+        "all_XMP_properties_semantically_verified": false
+      },
+      "exif": {
+        "control_length": 306,
+        "candidate_length": 306,
+        "number_of_differing_bytes": 0,
+        "differing_byte_offsets": [],
+        "tiff_signature": "4d4d002a",
+        "exif_content_semantics_certified": false
+      }
+    },
+    {
+      "run_index": 2,
+      "source_file_sha256": [
+        "f5c907cf017bf105cdade4ab84a68e013d6e13b82105bad91f1b6252bd9b836a",
+        "9ec098bf1b1bf22a60c286248e80042893393bfd62481124c6a6038962d30748"
+      ],
+      "layer_time": [
+        {
+          "raw_layer_index": 0,
+          "control_value": 1791856326.16256,
+          "candidate_value": 1791856326.980945,
+          "delta_seconds": 0.818385124206543,
+          "prefix_sha_equal": true,
+          "metadata_opaque_semantics_certified": false
+        },
+        {
+          "raw_layer_index": 1,
+          "control_value": 1791856326.162597,
+          "candidate_value": 1791856326.980979,
+          "delta_seconds": 0.8183820247650146,
+          "prefix_sha_equal": true,
+          "metadata_opaque_semantics_certified": false
+        },
+        {
+          "raw_layer_index": 2,
+          "control_value": 1791856326.162612,
+          "candidate_value": 1791856326.980993,
+          "delta_seconds": 0.8183810710906982,
+          "prefix_sha_equal": true,
+          "metadata_opaque_semantics_certified": false
+        },
+        {
+          "raw_layer_index": 3,
+          "control_value": 1791856326.162646,
+          "candidate_value": 1791856326.981027,
+          "delta_seconds": 0.8183808326721191,
+          "prefix_sha_equal": true,
+          "metadata_opaque_semantics_certified": false
+        }
+      ],
+      "xmp": {
+        "marker_fields_differing": [
+          "DocumentID",
+          "InstanceID",
+          "ModifyDate",
+          "MetadataDate",
+          "History"
+        ],
+        "all_XMP_properties_semantically_verified": false
+      },
+      "exif": {
+        "control_length": 306,
+        "candidate_length": 306,
+        "number_of_differing_bytes": 1,
+        "differing_byte_offsets": [
+          166
+        ],
+        "tiff_signature": "4d4d002a",
+        "exif_content_semantics_certified": false
+      }
+    }
+  ]
+}

@@ -538,6 +538,38 @@ See [ADR 0024](decisions/0024-m4c8-pixel-multilingual-rename-boundary.md),
 [Unicode-only mismatch experiment](data/m4c8-luni-only-multilingual-v1.json)
 and [acceptance](testing/m4c8-pixel-multilingual-acceptance.md).
 
+### M4c-9 — Legacy name charset, layer identity and metadata semantics
+
+On `develop@24440751bf059d8696ce639e6d603ddc611d028b`,
+the frozen Photoshop-generated Chinese and Cyrillic research PSDs
+were cross-checked by source SHA-256. Their legacy Pascal bytes decode
+to the same names as Unicode `luni` **using GB18030 on this machine**
+(`测试图层`: `b2e2cad4cdbcb2e3`,
+`Слой`: `a7b3a7dda7e0a7db`). This is
+**not a general PSD charset guarantee**; Latin-1 raw inventory text
+is a lossless byte representation, not the intended user display.
+
+Two same-name `Layer 0` pixel layers were disambiguated using unique
+Photoshop `lyid` **6** and **2**. A precisely scoped,
+fixed-length scratch-only dual-name edit selected `lyid=6` and
+persisted only its rename to `Layer A` through actual Photoshop
+save/reopen; the other `lyid=2` layer retained its name.
+
+M4c-9 also recognized a `layerTime` float64 field in the
+observed 52-byte `shmd/cust` items (16 metadata instances
+from M4c-7d's two paired saves). XMP document-instance-history fields
+and EXIF remain semantically **not certified**. These recognized
+fields are **not** a new metadata ignore-list, and no production
+write admission is enabled.
+
+See [ADR 0025](decisions/0025-m4c9-legacy-name-layer-id-metadata.md),
+[legacy encoding and native lyid receipt](data/m4c9-encoding-lyid-v1.json),
+[metadata evidence](data/m4c9-metadata-semantics-v1.json),
+and [acceptance](testing/m4c9-encoding-lyid-metadata-acceptance.md).
+M4c-10 should focus on locale-scoped dual-name synchronized updates
+and stronger Photoshop metadata preservation; public PSD editing is
+still **BLOCKED**.
+
 Candidate capabilities:
 
 - image crop/rotate/convert;

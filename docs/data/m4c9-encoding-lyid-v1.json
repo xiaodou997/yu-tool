@@ -1,0 +1,156 @@
+{
+  "schema_version": "1",
+  "milestone": "M4c-9",
+  "operation": "scratch only Photoshop legacy encoding and lyid identity study",
+  "public_write_authorized": false,
+  "summary": {
+    "language_fixtures": 2,
+    "language_legacy_gb18030_equals_luni": 2,
+    "duplicate_layer_ids_unique": 2,
+    "native_photoshop_lyid_rename_reopen_verified": 1,
+    "production_writes_authorized": 0
+  },
+  "cases": [
+    {
+      "fixture": "chinese",
+      "source_sha256": "f11e7212e7131c5e6114a09d405f703b9e3d7fa652e1f11e6a365a8d5524ac52",
+      "raw_layers": [
+        {
+          "raw_index": 0,
+          "photoshop_lyid": 6,
+          "unicode_name": "测试图层",
+          "legacy_raw_hex": "b2e2cad4cdbcb2e3",
+          "legacy_as_gb18030": "测试图层",
+          "legacy_gb18030_matches_unicode": true,
+          "legacy_encoding_certified_for_arbitrary_PSD": false
+        },
+        {
+          "raw_index": 1,
+          "photoshop_lyid": 2,
+          "unicode_name": "Layer 0",
+          "legacy_raw_hex": "4c617965722030",
+          "legacy_as_gb18030": "Layer 0",
+          "legacy_gb18030_matches_unicode": true,
+          "legacy_encoding_certified_for_arbitrary_PSD": false
+        }
+      ],
+      "source_unchanged": true,
+      "copied_scratch_unchanged": true,
+      "production_write_authorized": false
+    },
+    {
+      "fixture": "cyrillic",
+      "source_sha256": "c72585b65610bfacc6a8184297d29f88d711adb74ca49d5c8b477aba0017fe33",
+      "raw_layers": [
+        {
+          "raw_index": 0,
+          "photoshop_lyid": 6,
+          "unicode_name": "Слой",
+          "legacy_raw_hex": "a7b3a7dda7e0a7db",
+          "legacy_as_gb18030": "Слой",
+          "legacy_gb18030_matches_unicode": true,
+          "legacy_encoding_certified_for_arbitrary_PSD": false
+        },
+        {
+          "raw_index": 1,
+          "photoshop_lyid": 2,
+          "unicode_name": "Layer 0",
+          "legacy_raw_hex": "4c617965722030",
+          "legacy_as_gb18030": "Layer 0",
+          "legacy_gb18030_matches_unicode": true,
+          "legacy_encoding_certified_for_arbitrary_PSD": false
+        }
+      ],
+      "source_unchanged": true,
+      "copied_scratch_unchanged": true,
+      "production_write_authorized": false
+    },
+    {
+      "fixture": "duplicate",
+      "source_sha256": "62ec35093fd2f388932461536030d3e66d63685b2013e0c01d771ced79f4a47e",
+      "raw_layers": [
+        {
+          "raw_index": 0,
+          "photoshop_lyid": 6,
+          "unicode_name": "Layer 0",
+          "legacy_raw_hex": "4c617965722030",
+          "legacy_as_gb18030": "Layer 0",
+          "legacy_gb18030_matches_unicode": true,
+          "legacy_encoding_certified_for_arbitrary_PSD": false
+        },
+        {
+          "raw_index": 1,
+          "photoshop_lyid": 2,
+          "unicode_name": "Layer 0",
+          "legacy_raw_hex": "4c617965722030",
+          "legacy_as_gb18030": "Layer 0",
+          "legacy_gb18030_matches_unicode": true,
+          "legacy_encoding_certified_for_arbitrary_PSD": false
+        }
+      ],
+      "source_unchanged": true,
+      "copied_scratch_unchanged": true,
+      "production_write_authorized": false
+    }
+  ],
+  "duplicate_identity_experiment": {
+    "source_sha256": "62ec35093fd2f388932461536030d3e66d63685b2013e0c01d771ced79f4a47e",
+    "exact_stable_lyid_requested": 6,
+    "non_target_lyid": 2,
+    "source_layer_names_ambiguous": true,
+    "touched_original_bytes": 2,
+    "candidate_sha256": "189e8988e3e90982e85c7c8c9a4e179134173672cbac87b99af4fa40961533fb",
+    "saved_copy_sha256": "71dd56994215677cbda6eed4be8bf41f1f0e76f4968ba1d7798ad11912956fd1",
+    "photoshop_before": [
+      {
+        "photoshop_layer_id": 2,
+        "name": "Layer 0"
+      },
+      {
+        "photoshop_layer_id": 6,
+        "name": "Layer 0"
+      }
+    ],
+    "photoshop_after_patch": [
+      {
+        "photoshop_layer_id": 2,
+        "name": "Layer 0"
+      },
+      {
+        "photoshop_layer_id": 6,
+        "name": "Layer A"
+      }
+    ],
+    "photoshop_saved_reopened": [
+      {
+        "photoshop_layer_id": 2,
+        "name": "Layer 0"
+      },
+      {
+        "photoshop_layer_id": 6,
+        "name": "Layer A"
+      }
+    ],
+    "psd_tools_saved_layer_names": [
+      "Layer A",
+      "Layer 0"
+    ],
+    "saved_raw_layer_ids": [
+      {
+        "id": 6,
+        "name": "Layer A"
+      },
+      {
+        "id": 2,
+        "name": "Layer 0"
+      }
+    ],
+    "native_id_binding_verified": true,
+    "no_write_authorization": true
+  },
+  "remaining_uncertainty": [
+    "GB18030 matches observed Photoshop locale fixtures only, not a general PSD locale guarantee",
+    "lyid stable on these exact Photoshop saves but must not be treated as globally unique across documents",
+    "any opaque metadata changed by native Photoshop save is not certified preserved"
+  ]
+}

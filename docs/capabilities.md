@@ -242,6 +242,18 @@ The strict metadata-fidelity gate remains unproven and
 `PSD_PRODUCTION_MUTATION_BLOCKED` is unchanged. See
 [ADR 0024](decisions/0024-m4c8-pixel-multilingual-rename-boundary.md).
 
+M4c-9 demonstrates research-only dual-name byte interpretation:
+Photoshop 2026 Chinese and Cyrillic sample Pascal names match
+`luni` using a **sample-observed GB18030 decoding**, not a
+universal charset policy. The native Photoshop `lyid` of 6
+uniquely identifies one of two same-name layers; a two-byte
+dual-name scratch patch survives Photoshop save/reopen without
+renaming `lyid=2`. `shmd/cust` reveals a `layerTime`
+descriptor on this fixture, but XMP/EXIF and other metadata
+semantics are not universally proven. No general layer rename
+or in-place PSD write is available; see
+[ADR 0025](decisions/0025-m4c9-legacy-name-layer-id-metadata.md).
+
 PR #22 exposes the four read-only operations through the public CLI. PR #23 adds layer bitmap export to the separately versioned `31.0.2+node22.23.3.yu2` package. Effective capabilities use the exact active version, not the inventory union of all installed versions. This does not promise arbitrary PSD feature coverage or full rendering fidelity. The package is still a prototype with CI artifacts and placeholder distribution URLs; no public catalog is claimed.
 
 Compatibility roles:
