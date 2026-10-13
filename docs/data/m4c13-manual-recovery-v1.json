@@ -1,0 +1,105 @@
+{
+  "schema_version": "1",
+  "milestone": "M4c-13",
+  "operation": "manual-only independent PSD research transaction review",
+  "public_write_authorized": false,
+  "summary": {
+    "read_only_manual_dispositions": 4,
+    "missing_receipt_explicit_manual_holds": 2,
+    "automatic_recovery_writes": 0,
+    "production_psd_writes_authorized": 0
+  },
+  "cases": [
+    {
+      "test_cutpoint": "after_stage",
+      "initial_research_state": "interrupted_after_stage_before_link",
+      "manual_recovery": {
+        "original_classification": "staged_only_manual_disposition_required",
+        "decision": "HOLD_STAGED_ONLY",
+        "operator_steps": [
+          "Confirm that the transaction belongs to the pinned research source, not a customer PSD",
+          "Inspect the private intent and staged SHA-256; no output was observed",
+          "Do not automatically retry, rename, delete the stage or publish new output",
+          "Open a new separately authorized research transaction if a fresh output is still required"
+        ],
+        "source_version_matches": true,
+        "current_published_state": "absent",
+        "private_staging_and_published_inode_match": false,
+        "publisher_receipt_previously_present": false,
+        "actual_power_loss_durability_proven": false,
+        "no_auto_repair": true,
+        "no_auto_republish": true,
+        "no_auto_delete": true,
+        "production_psd_write_authorized": false
+      }
+    },
+    {
+      "test_cutpoint": "after_link",
+      "initial_research_state": "interrupted_after_link_before_parent_fsync",
+      "manual_recovery": {
+        "original_classification": "published_candidate_without_receipt_reinspect_only",
+        "decision": "HOLD_PUBLISHED_NO_VERIFIED_RECEIPT",
+        "operator_steps": [
+          "Preserve the existing published inode and private stage unchanged",
+          "Record source SHA-256 and inode, output SHA-256, stage/output device and inode identity",
+          "Treat earlier publication acknowledgement and crash durability as INCONCLUSIVE",
+          "Obtain a separate manual evidence and release decision; never fabricate a success receipt"
+        ],
+        "source_version_matches": true,
+        "current_published_state": "matching_candidate_observed",
+        "private_staging_and_published_inode_match": true,
+        "publisher_receipt_previously_present": false,
+        "actual_power_loss_durability_proven": false,
+        "no_auto_repair": true,
+        "no_auto_republish": true,
+        "no_auto_delete": true,
+        "production_psd_write_authorized": false
+      }
+    },
+    {
+      "test_cutpoint": "after_directory_fsync",
+      "initial_research_state": "interrupted_after_parent_fsync_before_receipt",
+      "manual_recovery": {
+        "original_classification": "published_candidate_without_receipt_reinspect_only",
+        "decision": "HOLD_PUBLISHED_NO_VERIFIED_RECEIPT",
+        "operator_steps": [
+          "Preserve the existing published inode and private stage unchanged",
+          "Record source SHA-256 and inode, output SHA-256, stage/output device and inode identity",
+          "Treat earlier publication acknowledgement and crash durability as INCONCLUSIVE",
+          "Obtain a separate manual evidence and release decision; never fabricate a success receipt"
+        ],
+        "source_version_matches": true,
+        "current_published_state": "matching_candidate_observed",
+        "private_staging_and_published_inode_match": true,
+        "publisher_receipt_previously_present": false,
+        "actual_power_loss_durability_proven": false,
+        "no_auto_repair": true,
+        "no_auto_republish": true,
+        "no_auto_delete": true,
+        "production_psd_write_authorized": false
+      }
+    },
+    {
+      "test_cutpoint": "normal_completed",
+      "initial_research_state": "observed_verified_after_parent_fsync",
+      "manual_recovery": {
+        "original_classification": "verified_receipt_observed",
+        "decision": "OBSERVED_COMPLETED_RESEARCH",
+        "operator_steps": [
+          "Confirm the existing research-only receipt and current output device/inode and SHA-256",
+          "Preserve the original transaction evidence for independent review",
+          "Do not infer actual power-loss recovery, source race freedom or production PSD write approval"
+        ],
+        "source_version_matches": true,
+        "current_published_state": "matching_candidate_observed",
+        "private_staging_and_published_inode_match": true,
+        "publisher_receipt_previously_present": true,
+        "actual_power_loss_durability_proven": false,
+        "no_auto_repair": true,
+        "no_auto_republish": true,
+        "no_auto_delete": true,
+        "production_psd_write_authorized": false
+      }
+    }
+  ]
+}

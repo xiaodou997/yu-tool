@@ -652,6 +652,32 @@ See [ADR 0028](decisions/0028-m4c12-recovery-filesystem-metadata.md),
 [acceptance](testing/m4c12-recovery-filesystem-acceptance.md).
 **PSD production mutation stays BLOCKED** and `main` remains frozen.
 
+### M4c-13 — Real filesystem matrix and manual-only output recovery
+
+On `develop@7e87e7c5f3a65b6e801a54a4e60210af34c41089`,
+YuTool ran an **actual local APFS** hard-link/no-clobber,
+device/inode equality, file `fsync` and output directory `fsync`
+experiment entirely inside ignored research scratch space.
+The host also has mounted NTFS (**read-only**) and OrbStack NFS
+volumes, but no test data was written there; separate Windows/Linux
+device or power-loss receipts remain **NOT TESTED**.
+
+A new M4c-13 `--inspect` **read-only manual recovery** tool
+classifies M4c-12 staged-only, published-without-receipt, previously
+verified, source-drift, competing-output and invalid-evidence states,
+prescribing manual holds without automatic PSD retry, deletion,
+republication or fabricated success receipts. Hard-link inode
+identity is checked so even a rival output with the *same SHA-256*
+cannot be confused with this transaction. Postpublication data
+replacement is detected despite an old verified receipt.
+
+See [ADR 0029](decisions/0029-m4c13-filesystem-matrix-manual-recovery.md),
+[real/missing filesystem evidence](data/m4c13-filesystem-matrix-v1.json),
+[manual recovery evidence](data/m4c13-manual-recovery-v1.json) and
+[acceptance](testing/m4c13-filesystem-recovery-acceptance.md).
+Cross-filesystem compatibility and real crash durability remain
+**unverified**. Public PSD mutation stays **BLOCKED**.
+
 Candidate capabilities:
 
 - image crop/rotate/convert;

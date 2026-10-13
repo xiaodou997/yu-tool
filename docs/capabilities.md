@@ -287,6 +287,16 @@ publishing, and does not waive EXIF/XMP/`shmd` metadata differences.
 See [ADR 0028](decisions/0028-m4c12-recovery-filesystem-metadata.md).
 `PSD_PRODUCTION_MUTATION_BLOCKED` remains unchanged.
 
+M4c-13 adds a **local APFS only** filesystem capability probe
+and a strictly **read-only operator-recovery checklist** for
+staged or published-but-unacknowledged fixed research PSD outputs.
+NTFS/NFS mounts are inventoried but **not write-tested**;
+Windows/Linux and power-loss durability have **no device
+receipts**. Recovery refuses invalid identity or receipt claims
+and never automatically removes or retries output. No broad
+filesystem, metadata or PSD writing capability is authorized.
+See [ADR 0029](decisions/0029-m4c13-filesystem-matrix-manual-recovery.md).
+
 PR #22 exposes the four read-only operations through the public CLI. PR #23 adds layer bitmap export to the separately versioned `31.0.2+node22.23.3.yu2` package. Effective capabilities use the exact active version, not the inventory union of all installed versions. This does not promise arbitrary PSD feature coverage or full rendering fidelity. The package is still a prototype with CI artifacts and placeholder distribution URLs; no public catalog is claimed.
 
 Compatibility roles:

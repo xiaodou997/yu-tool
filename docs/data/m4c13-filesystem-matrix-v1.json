@@ -1,0 +1,68 @@
+{
+  "schema_version": "1",
+  "milestone": "M4c-13",
+  "operation": "real macOS filesystem probe plus inventory-only untested volumes",
+  "public_write_authorized": false,
+  "summary": {
+    "local_apfs_filesystems_with_observed_hard_link_and_sync": 1,
+    "real_windows_linux_device_receipts": 0,
+    "NTFS_and_NFS_write_tests": 0,
+    "physical_power_cut_tests": 0,
+    "production_writes_authorized": 0
+  },
+  "caveats": [
+    "statfs and successful file/directory fsync report syscall outcomes, not post-power-loss persistence",
+    "read-only NTFS and mounted NFS not written to; do not claim cross-filesystem compatibility",
+    "real Windows and Linux receipts absent, not simulated passes",
+    "the private hard-link experiment cannot authorize a general PSD writer"
+  ],
+  "volume_cases": [
+    {
+      "class": "macos_local_apfs",
+      "evidence_kind": "real_local_write_test",
+      "state": "tested_local_single_volume",
+      "volume_write_tested": true,
+      "actual_capabilities": {
+        "filesystem": "apfs",
+        "scope": "same local mounted writable APFS Data volume, ignored target scratch only",
+        "filesystem_device": "16777234",
+        "statfs_type": "26",
+        "statfs_block_size": 4096,
+        "hard_link_creation_observed": true,
+        "hard_link_inode_identity_observed": true,
+        "existing_target_hardlink_refused": true,
+        "file_fsync_returned_success": true,
+        "directory_fsync_returned_success": true,
+        "real_power_loss_test_completed": false,
+        "true_durability_proven": false,
+        "other_filesystems_tested_for_writes": false
+      }
+    },
+    {
+      "class": "macos_mounted_ntfs",
+      "evidence_kind": "mount_inventory_only",
+      "state": "read_only_mount_skip_writes",
+      "mount_count": 1,
+      "volume_write_tested": false
+    },
+    {
+      "class": "macos_mounted_nfs",
+      "evidence_kind": "mount_inventory_only",
+      "state": "mounted_no_test_authorization",
+      "mount_count": 1,
+      "volume_write_tested": false
+    },
+    {
+      "class": "windows_ntfs",
+      "evidence_kind": "no_host_test_receipt",
+      "state": "not_tested",
+      "volume_write_tested": false
+    },
+    {
+      "class": "linux_local_and_network",
+      "evidence_kind": "no_host_test_receipt",
+      "state": "not_tested",
+      "volume_write_tested": false
+    }
+  ]
+}
