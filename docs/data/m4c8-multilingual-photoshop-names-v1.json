@@ -1,0 +1,161 @@
+{
+  "schema_version": "1",
+  "milestone": "M4c-8",
+  "type": "Photoshop-native multilingual and duplicate layer-name compatibility research",
+  "public_write_authorized": false,
+  "summary": {
+    "scenarios": 3,
+    "saved_and_reopened": 3,
+    "legacy_unicode_divergent": 2,
+    "production_write_authorizations": 0
+  },
+  "cases": [
+    {
+      "scenario": "chinese",
+      "requested_name": "测试图层",
+      "source_sha256": "391f4c009b9bd4cc5fdffb3799c3476f7d690874e6ca458463ab7fe3b5739aee",
+      "operation": "Photoshop edits scratch copy then native saveAs, no YuTool PSD writer",
+      "native_save_completed": true,
+      "public_write_authorized": false,
+      "native_layers": [
+        {
+          "kind": "layer",
+          "name": "Layer 0"
+        },
+        {
+          "kind": "layer",
+          "name": "测试图层"
+        }
+      ],
+      "independent_layers": [
+        {
+          "name": "测试图层",
+          "kind": "pixel"
+        },
+        {
+          "name": "Layer 0",
+          "kind": "pixel"
+        }
+      ],
+      "raw_names": [
+        {
+          "raw_index": 0,
+          "unicode": "测试图层",
+          "legacy_pascal": "²âÊÔÍ¼²ã",
+          "same_exact_encoding": false
+        },
+        {
+          "raw_index": 1,
+          "unicode": "Layer 0",
+          "legacy_pascal": "Layer 0",
+          "same_exact_encoding": true
+        }
+      ],
+      "native_name_after_reopen_correct": true,
+      "independent_unicode_name_correct": true,
+      "has_dual_name_difference": true,
+      "duplicate_names_visible": false,
+      "output_sha256": "f11e7212e7131c5e6114a09d405f703b9e3d7fa652e1f11e6a365a8d5524ac52",
+      "status": "native_name_observation_passed",
+      "original_and_research_input_unchanged": true
+    },
+    {
+      "scenario": "cyrillic",
+      "requested_name": "Слой",
+      "source_sha256": "391f4c009b9bd4cc5fdffb3799c3476f7d690874e6ca458463ab7fe3b5739aee",
+      "operation": "Photoshop edits scratch copy then native saveAs, no YuTool PSD writer",
+      "native_save_completed": true,
+      "public_write_authorized": false,
+      "native_layers": [
+        {
+          "kind": "layer",
+          "name": "Layer 0"
+        },
+        {
+          "kind": "layer",
+          "name": "Слой"
+        }
+      ],
+      "independent_layers": [
+        {
+          "name": "Слой",
+          "kind": "pixel"
+        },
+        {
+          "name": "Layer 0",
+          "kind": "pixel"
+        }
+      ],
+      "raw_names": [
+        {
+          "raw_index": 0,
+          "unicode": "Слой",
+          "legacy_pascal": "§³§Ý§à§Û",
+          "same_exact_encoding": false
+        },
+        {
+          "raw_index": 1,
+          "unicode": "Layer 0",
+          "legacy_pascal": "Layer 0",
+          "same_exact_encoding": true
+        }
+      ],
+      "native_name_after_reopen_correct": true,
+      "independent_unicode_name_correct": true,
+      "has_dual_name_difference": true,
+      "duplicate_names_visible": false,
+      "output_sha256": "c72585b65610bfacc6a8184297d29f88d711adb74ca49d5c8b477aba0017fe33",
+      "status": "native_name_observation_passed",
+      "original_and_research_input_unchanged": true
+    },
+    {
+      "scenario": "duplicate",
+      "requested_name": "Layer 0",
+      "source_sha256": "391f4c009b9bd4cc5fdffb3799c3476f7d690874e6ca458463ab7fe3b5739aee",
+      "operation": "Photoshop edits scratch copy then native saveAs, no YuTool PSD writer",
+      "native_save_completed": true,
+      "public_write_authorized": false,
+      "native_layers": [
+        {
+          "kind": "layer",
+          "name": "Layer 0"
+        },
+        {
+          "kind": "layer",
+          "name": "Layer 0"
+        }
+      ],
+      "independent_layers": [
+        {
+          "name": "Layer 0",
+          "kind": "pixel"
+        },
+        {
+          "name": "Layer 0",
+          "kind": "pixel"
+        }
+      ],
+      "raw_names": [
+        {
+          "raw_index": 0,
+          "unicode": "Layer 0",
+          "legacy_pascal": "Layer 0",
+          "same_exact_encoding": true
+        },
+        {
+          "raw_index": 1,
+          "unicode": "Layer 0",
+          "legacy_pascal": "Layer 0",
+          "same_exact_encoding": true
+        }
+      ],
+      "native_name_after_reopen_correct": true,
+      "independent_unicode_name_correct": true,
+      "has_dual_name_difference": false,
+      "duplicate_names_visible": true,
+      "output_sha256": "62ec35093fd2f388932461536030d3e66d63685b2013e0c01d771ced79f4a47e",
+      "status": "native_name_observation_passed",
+      "original_and_research_input_unchanged": true
+    }
+  ]
+}

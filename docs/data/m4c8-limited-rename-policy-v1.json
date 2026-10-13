@@ -1,0 +1,56 @@
+{
+  "schema_version": "1",
+  "milestone": "M4c-8",
+  "status": "research_only",
+  "public_psd_write_authorized": false,
+  "production_psd_rename_available": false,
+  "mutation_admission_mode": "exact_sha256_and_research_output_only",
+  "normal_pixel_study": {
+    "fixture": "bench-baseline-rgb",
+    "source_sha256": "391f4c009b9bd4cc5fdffb3799c3476f7d690874e6ca458463ab7fe3b5739aee",
+    "format": "psd",
+    "bit_depth": 8,
+    "color_mode": "rgb",
+    "raw_layer_index": 0,
+    "logical_name": "Layer 1",
+    "proposed_name": "Layer A",
+    "allowed_only_in_experimental_copy": true,
+    "name_length_units_must_match": true,
+    "unicode_and_ascii_pascal_must_match": true,
+    "native_photoshop_pair_required": true,
+    "full_metadata_fidelity_certified": false,
+    "public_write_authorized": false
+  },
+  "multilingual_studies": {
+    "source": "Photoshop-generated copies of bench-baseline-rgb in ignored target",
+    "chinese": {
+      "name": "测试图层",
+      "unicode_only_test": "实验图层",
+      "legacy_pascal_encoding": "opaque_unvalidated",
+      "production_admission": "blocked"
+    },
+    "cyrillic": {
+      "name": "Слой",
+      "unicode_only_test": "Тест",
+      "legacy_pascal_encoding": "opaque_unvalidated",
+      "production_admission": "blocked"
+    },
+    "duplicate_names": {
+      "name": "Layer 0",
+      "production_admission": "blocked_without_stable_native_layer_identity"
+    }
+  },
+  "blocked": [
+    "arbitrary_user_file",
+    "native_Photoshop_Background",
+    "name_based_ambiguous_duplicate_layer_selection",
+    "unverified_non_ascii_legacy_name_encoding",
+    "unicode_only_patch_with_stale_legacy_pascal",
+    "variable_utf16_code_unit_length_relocation",
+    "text_shape_smartobject_and_effect_layer_mutation",
+    "opaque_exif_xmp_shmd_metadata_preservation_not_proven",
+    "overwrite_existing_output_or_mutate_source",
+    "non_rgb_high_bit_depth",
+    "public_rename_without_separate_release_gate"
+  ]
+}

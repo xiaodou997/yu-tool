@@ -1,0 +1,110 @@
+{
+  "schema_version": "1",
+  "milestone": "M4c-8",
+  "operation": "pixel_layer_rename_native_research",
+  "public_write_authorized": false,
+  "summary": {
+    "photoshop_save_pairs": 1,
+    "native_pixel_name_reopen_verified": 1,
+    "strict_opaque_metadata_fidelity_certified": 0,
+    "production_write_authorizations": 0
+  },
+  "cases": [
+    {
+      "fixture": "bench-baseline-rgb",
+      "kind": "pixel",
+      "source_sha256": "391f4c009b9bd4cc5fdffb3799c3476f7d690874e6ca458463ab7fe3b5739aee",
+      "candidate_sha256": "d062542d521ccc45f6c12d4352c3ce1ab4eb78455a6dc5ab301f185cdd5eccd9",
+      "byte_patch_changed_bytes": 2,
+      "src_bytes_equal_candidate_bytes": true,
+      "two_name_encodings_updated": true,
+      "control_saved": true,
+      "modified_saved": true,
+      "public_write_authorized": false,
+      "source_layers": [
+        {
+          "kind": "layer",
+          "name": "Layer 0"
+        },
+        {
+          "kind": "layer",
+          "name": "Layer 1"
+        }
+      ],
+      "candidate_layers": [
+        {
+          "kind": "layer",
+          "name": "Layer 0"
+        },
+        {
+          "kind": "layer",
+          "name": "Layer A"
+        }
+      ],
+      "native_input_names_changed_only_target": true,
+      "saved_original": {
+        "bytes": 504443,
+        "sha256": "f4802446afcdc3594b6193aea4feb0b509b3800ee871fe8170c6591281e196f9"
+      },
+      "saved_modified": {
+        "bytes": 504441,
+        "sha256": "3de5eec5dbf00a126b10fb0dcdf02d3c94401e974b2e020e252a52a32373f2d5"
+      },
+      "reopened_control_layers": [
+        {
+          "kind": "layer",
+          "name": "Layer 0"
+        },
+        {
+          "kind": "layer",
+          "name": "Layer 1"
+        }
+      ],
+      "reopened_modified_layers": [
+        {
+          "kind": "layer",
+          "name": "Layer 0"
+        },
+        {
+          "kind": "layer",
+          "name": "Layer A"
+        }
+      ],
+      "native_reopen_persists_only_target_name": true,
+      "independent_saved_pixel_equal": true,
+      "independent_saved_tree_only_name_changed": true,
+      "saved_raw_pair": {
+        "resources": {
+          "added": [],
+          "removed": [],
+          "changed": [
+            "1060:#0",
+            "1050:#0",
+            "1058:#0"
+          ]
+        },
+        "tags": {
+          "added": [],
+          "removed": [],
+          "changed": [
+            "layer:0:luni#0"
+          ]
+        },
+        "channels": {
+          "added": [],
+          "removed": [],
+          "changed": []
+        },
+        "merged_composite_equal": true,
+        "full_strict_byte_gate_passed": false,
+        "output_byte_lengths": [
+          504443,
+          504441
+        ]
+      },
+      "native_name_reopen_research_passed": true,
+      "status": "pixel_name_reopen_verified_only_not_writer_approval",
+      "all_original_and_experiment_inputs_unchanged": true
+    }
+  ]
+}

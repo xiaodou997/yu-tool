@@ -231,6 +231,17 @@ No new write allow-list entry or `yu psd rename` command is enabled.
 The [ADR 0023](decisions/0023-m4c7e-psd-mutation-research-exit.md)
 decision is `PSD_PRODUCTION_MUTATION_BLOCKED`.
 
+M4c-8 adds **research-only** native Photoshop evidence for one exact-hash
+ordinary pixel-layer byte patch, with correct name persistence after
+save/reopen and matching independently decoded saved composites.
+Photoshop native scratch experiments also confirm Chinese/Cyrillic
+name display and duplicate names. Multilingual Pascal raw bytes use
+encoding semantics not yet independently validated; Unicode-only
+patches leave those bytes stale, so they are **not admitted**.
+The strict metadata-fidelity gate remains unproven and
+`PSD_PRODUCTION_MUTATION_BLOCKED` is unchanged. See
+[ADR 0024](decisions/0024-m4c8-pixel-multilingual-rename-boundary.md).
+
 PR #22 exposes the four read-only operations through the public CLI. PR #23 adds layer bitmap export to the separately versioned `31.0.2+node22.23.3.yu2` package. Effective capabilities use the exact active version, not the inventory union of all installed versions. This does not promise arbitrary PSD feature coverage or full rendering fidelity. The package is still a prototype with CI artifacts and placeholder distribution URLs; no public catalog is claimed.
 
 Compatibility roles:

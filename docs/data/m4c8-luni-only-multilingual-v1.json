@@ -1,0 +1,60 @@
+{
+  "schema_version": "1",
+  "milestone": "M4c-8",
+  "operation": "exact native fixture luni-only compatibility test",
+  "public_write_authorized": false,
+  "summary": {
+    "tested": 2,
+    "photoshop_unicode_name_read_matches": 2,
+    "unresolved_legacy_mismatch": 2,
+    "production_writes_authorized": 0
+  },
+  "cases": [
+    {
+      "scenario": "chinese",
+      "old_name": "测试图层",
+      "new_name": "实验图层",
+      "unicode_patch_native_reopen_shows_new_name": true,
+      "unicode_patch_psd_tools_shows_new_name": true,
+      "legacy_pascal_untouched": true,
+      "old_legacy_pascal_bytes_latin1": "²âÊÔÍ¼²ã",
+      "source_sha256": "f11e7212e7131c5e6114a09d405f703b9e3d7fa652e1f11e6a365a8d5524ac52",
+      "candidate_sha256": "d4874c3a4bf418643d0e55f103da2492583d4175470f82bd406e73800e483d2c",
+      "native_layers": [
+        {
+          "kind": "layer",
+          "name": "Layer 0"
+        },
+        {
+          "kind": "layer",
+          "name": "实验图层"
+        }
+      ],
+      "public_write_authorized": false,
+      "status": "research_only_legacy_divergent"
+    },
+    {
+      "scenario": "cyrillic",
+      "old_name": "Слой",
+      "new_name": "Тест",
+      "unicode_patch_native_reopen_shows_new_name": true,
+      "unicode_patch_psd_tools_shows_new_name": true,
+      "legacy_pascal_untouched": true,
+      "old_legacy_pascal_bytes_latin1": "§³§Ý§à§Û",
+      "source_sha256": "c72585b65610bfacc6a8184297d29f88d711adb74ca49d5c8b477aba0017fe33",
+      "candidate_sha256": "11b92d0702fc5b1188bd155edcd2532712dc2bef2f017edf7fad470c44ceb38b",
+      "native_layers": [
+        {
+          "kind": "layer",
+          "name": "Layer 0"
+        },
+        {
+          "kind": "layer",
+          "name": "Тест"
+        }
+      ],
+      "public_write_authorized": false,
+      "status": "research_only_legacy_divergent"
+    }
+  ]
+}

@@ -510,6 +510,34 @@ and [final decision](data/m4c7e-release-decision-v1.json).
 The frozen v0.1 `main` baseline and production PSD capabilities remain
 unchanged. A separate approved release gate is required for any write.
 
+### M4c-8 — Ordinary pixel and multilingual name research
+
+On `develop@30db4036368e3961213f4e69555dda9d51f00d35`,
+the first **ordinary** RGB 8-bit pixel layer fixed-width rename
+experiment uses frozen `bench-baseline-rgb`:
+`Layer 1 → Layer A`. The byte patch changes only two name bytes
+across `luni` and matching ASCII Pascal, leaving unrelated input
+PSD bytes untouched. Actual Photoshop 2026 saved, closed and reopened
+both scratch PSD control/candidate with correct names; independently
+decoded saved pixels and encoded image/channel bytes agree.
+**Strict opaque metadata fidelity remains unverified**, so no
+public PSD writer or new broad allow-list is enabled.
+
+Photoshop-native scratch files also demonstrated read/reopen support
+for Chinese `测试图层`, Cyrillic `Слой` and duplicate
+`Layer 0` names. The non-ASCII Pascal byte encodings are **not**
+semantically equivalent to their Latin-1 inventory text; separate
+Unicode-only patches display correctly in Photoshop but retain old
+legacy bytes and are **denied** as a production edit strategy.
+Duplicate names require stable target identity rather than name lookup.
+
+See [ADR 0024](decisions/0024-m4c8-pixel-multilingual-rename-boundary.md),
+[research policy](data/m4c8-limited-rename-policy-v1.json),
+[normal pixel Photoshop receipt](data/m4c8-pixel-photoshop-fidelity-v1.json),
+[multilingual receipt](data/m4c8-multilingual-photoshop-names-v1.json),
+[Unicode-only mismatch experiment](data/m4c8-luni-only-multilingual-v1.json)
+and [acceptance](testing/m4c8-pixel-multilingual-acceptance.md).
+
 Candidate capabilities:
 
 - image crop/rotate/convert;
