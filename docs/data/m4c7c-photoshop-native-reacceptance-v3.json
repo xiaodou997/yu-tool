@@ -1,0 +1,212 @@
+{
+  "schema_version": "1",
+  "milestone": "M4c-7b/c",
+  "operation": "real_Photoshop_saveAs_close_reopen_isolated_copies_with_unchanged_control",
+  "application": "Adobe Photoshop 2026 (macOS)",
+  "public_write_authorized": false,
+  "summary": {
+    "admitted_cases": 1,
+    "native_name_reopen_verified": 1,
+    "native_two_outputs_saved": 1,
+    "strict_byte_fidelity_verified": 0,
+    "paired_research_save_reopen_passed": 0,
+    "blocked_or_mismatch": 1,
+    "product_write_authorizations": 0
+  },
+  "cases": [
+    {
+      "fixture": "nested-group",
+      "source_sha256": "1aaf572b69f0b0fa7c04b7b3a14c97e310a0c7bbdc06e733c9dd0d0cdcf7df1c",
+      "candidate_sha256": "48d003ea6d48a6d99a916935794d3e82d365e558bacfc6c777f8e9a1e103f88e",
+      "status": "native_name_reopen_verified_fidelity_blocked",
+      "control_saved": true,
+      "candidate_saved": true,
+      "save_command_attempted": true,
+      "public_write_authorized": false,
+      "editor_control_name_preserved": true,
+      "editor_candidate_name_preserved": true,
+      "control_semantic_tree_preserved": true,
+      "candidate_semantic_tree_preserved": true,
+      "independent_preview_control_preserved": false,
+      "independent_preview_candidate_preserved": false,
+      "independent_preview_saved_control_vs_saved_candidate_equal": true,
+      "photoshop_native_control_names": [
+        {
+          "kind": "group",
+          "name": "Group 1"
+        },
+        {
+          "kind": "layer",
+          "name": "Shape 1"
+        },
+        {
+          "kind": "background",
+          "name": "背景"
+        }
+      ],
+      "photoshop_native_candidate_names": [
+        {
+          "kind": "group",
+          "name": "Group 2"
+        },
+        {
+          "kind": "layer",
+          "name": "Shape 1"
+        },
+        {
+          "kind": "background",
+          "name": "背景"
+        }
+      ],
+      "output_control": {
+        "sha256": "2252a13297554a2ce37dbf0484ffa74c17ad275c94d0a8ae8a65401dfe18bfa4",
+        "bytes": 33256
+      },
+      "output_candidate": {
+        "sha256": "c561ed1777b7d9265b0307765f8ae13233c00c0b8c001a5610f1bca8dd7c2880",
+        "bytes": 33240
+      },
+      "control_raw_differences": {
+        "resources": {
+          "added": [
+            "1028:#0",
+            "1082:#0",
+            "1083:#0",
+            "1092:#0",
+            "1097:#0"
+          ],
+          "removed": [
+            "1071:#0",
+            "4001:#0"
+          ],
+          "changed": [
+            "1061:#0",
+            "1060:#0",
+            "1050:#0",
+            "1064:#0",
+            "1036:#0",
+            "1057:#0",
+            "1058:#0",
+            "4000:#0"
+          ]
+        },
+        "tagged": {
+          "added": [
+            "layer:0:shmd#0",
+            "layer:1:shmd#0",
+            "layer:2:shmd#0",
+            "layer:3:shmd#0",
+            "document:-:CAI #0",
+            "document:-:OCIO#0",
+            "document:-:GenI#0",
+            "document:-:cinf#0"
+          ],
+          "removed": [],
+          "changed": [
+            "layer:0:lspf#0",
+            "layer:3:lsct#0"
+          ]
+        },
+        "composite_byte_equal": false,
+        "source_bytes": 31480,
+        "output_bytes": 33256
+      },
+      "candidate_raw_differences": {
+        "resources": {
+          "added": [
+            "1028:#0",
+            "1082:#0",
+            "1083:#0",
+            "1092:#0",
+            "1097:#0"
+          ],
+          "removed": [
+            "1071:#0",
+            "4001:#0"
+          ],
+          "changed": [
+            "1061:#0",
+            "1060:#0",
+            "1050:#0",
+            "1064:#0",
+            "1036:#0",
+            "1057:#0",
+            "1058:#0",
+            "4000:#0"
+          ]
+        },
+        "tagged": {
+          "added": [
+            "layer:0:shmd#0",
+            "layer:1:shmd#0",
+            "layer:2:shmd#0",
+            "layer:3:shmd#0",
+            "document:-:CAI #0",
+            "document:-:OCIO#0",
+            "document:-:GenI#0",
+            "document:-:cinf#0"
+          ],
+          "removed": [],
+          "changed": [
+            "layer:0:lspf#0",
+            "layer:3:lsct#0"
+          ]
+        },
+        "composite_byte_equal": false,
+        "source_bytes": 31480,
+        "output_bytes": 33240
+      },
+      "saved_pair_strict_raw_evidence": {
+        "status": "research_pair_compared",
+        "public_write_authorized": false,
+        "old_unicode_name": "Group 1",
+        "candidate_unicode_name": "Group 2",
+        "old_pascal_name": "Group 1",
+        "candidate_pascal_name": "Group 2",
+        "header_equal": true,
+        "resources": {
+          "added": [],
+          "removed": [],
+          "changed": [
+            "1060:#0",
+            "1050:#0",
+            "1058:#0"
+          ]
+        },
+        "channels": {
+          "added": [],
+          "removed": [],
+          "changed": []
+        },
+        "tags": {
+          "added": [],
+          "removed": [],
+          "changed": [
+            "layer:0:shmd#0",
+            "layer:1:shmd#0",
+            "layer:2:shmd#0",
+            "layer:3:luni#0",
+            "layer:3:shmd#0"
+          ]
+        },
+        "structure_changed_raw_indices": [],
+        "legacy_name_changed_raw_indices": [
+          3
+        ],
+        "merged_composite_equal": true,
+        "source_format_equal": true,
+        "byte_difference_proof": {
+          "file_size_equal": false,
+          "changed_name_byte_count": 0,
+          "changed_non_name_byte_count": 16
+        },
+        "strict_saved_pair_bytes_passed": false
+      },
+      "native_name_save_reopen_verified": true,
+      "strict_byte_fidelity_verified": false,
+      "source_to_photoshop_save_preview_changed": true,
+      "save_roundtrip_research_passed": false,
+      "source_and_experimental_candidate_unchanged": true
+    }
+  ]
+}

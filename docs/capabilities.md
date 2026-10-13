@@ -206,6 +206,17 @@ control/candidate buffers; it refuses changes to any non-target bytes.
 See [ADR 0020](decisions/0020-psd-native-photoshop-readiness-gate.md)
 and the [native blocked receipt](data/m4c7c-photoshop-control-v2.json).
 
+Following the user's Photoshop restart, **M4c-7c now has one real native
+Photoshop 2026 group-rename save/reopen result**: the name persists,
+both independently saved PSDs re-open with consistent layer trees, and
+the decoded images of the two *saved* documents agree. But Photoshop's
+save on the untouched control also changes decoded preview pixels, and
+the saved control/candidate files have differing opaque metadata and
+file sizes. Strict raw preservation is **not verified**, and no PSD
+mutation command is exposed. See
+[ADR 0021](decisions/0021-photoshop-native-save-reopen-reacceptance.md)
+and the [new v3 receipt](data/m4c7c-photoshop-native-reacceptance-v3.json).
+
 PR #22 exposes the four read-only operations through the public CLI. PR #23 adds layer bitmap export to the separately versioned `31.0.2+node22.23.3.yu2` package. Effective capabilities use the exact active version, not the inventory union of all installed versions. This does not promise arbitrary PSD feature coverage or full rendering fidelity. The package is still a prototype with CI artifacts and placeholder distribution URLs; no public catalog is claimed.
 
 Compatibility roles:

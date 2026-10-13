@@ -20,7 +20,7 @@ const { compareSavedPair } = require("./m4c7c_saved_pair_gate.cjs");
 const ROOT = path.resolve(__dirname, "../../../../");
 const M4C2 = require(path.join(ROOT, "docs/data/psd-safe-mutation-scope-m4c2-v1.json"));
 const OUTPUT_ROOT = path.join(ROOT,"target/m4c7-psd-photoshop-save");
-const REPORT = path.join(ROOT,"docs/data/m4c7c-photoshop-control-v2.json");
+const REPORT = path.join(ROOT,"docs/data/m4c7c-photoshop-native-reacceptance-v3.json");
 const AG_PATH = path.join(ROOT,"packaging/ag-psd-engine/node_modules/ag-psd");
 const sha = data=>crypto.createHash("sha256").update(data).digest("hex");
 
@@ -211,6 +211,18 @@ function buildEvidence() {
           expected_old_name:admittedCase.before,
           expected_new_name:admittedCase.after,
         });
+      // Native rename persistence is narrower than comprehensive PSD
+      // preservation. These independent gates cannot authorize writing.
+      output.native_name_save_reopen_verified=
+        output.editor_control_name_preserved &&
+        output.editor_candidate_name_preserved &&
+        output.control_semantic_tree_preserved &&
+        output.candidate_semantic_tree_preserved;
+      output.strict_byte_fidelity_verified=
+        output.saved_pair_strict_raw_evidence.strict_saved_pair_bytes_passed;
+      output.source_to_photoshop_save_preview_changed=
+        !output.independent_preview_control_preserved ||
+        !output.independent_preview_candidate_preserved;
       output.save_roundtrip_research_passed=output.editor_control_name_preserved &&
         output.editor_candidate_name_preserved &&
         output.control_semantic_tree_preserved && output.candidate_semantic_tree_preserved &&
@@ -218,7 +230,11 @@ function buildEvidence() {
         output.independent_preview_candidate_preserved &&
         output.independent_preview_saved_control_vs_saved_candidate_equal &&
         output.saved_pair_strict_raw_evidence.strict_saved_pair_bytes_passed;
-      output.status=output.save_roundtrip_research_passed?"paired_control_verified":"paired_control_mismatch";
+      output.status=output.save_roundtrip_research_passed?
+        "paired_control_verified":
+        output.native_name_save_reopen_verified?
+          "native_name_reopen_verified_fidelity_blocked":
+          "paired_control_mismatch";
     } catch(error) {
       output.status="blocked_or_failed";
       output.error=String(error?.message||error).slice(0,500);
@@ -241,6 +257,12 @@ function buildEvidence() {
     public_write_authorized:false,
     summary:{
       admitted_cases:cases.length,
+      native_name_reopen_verified:cases.filter(c=>
+        c.native_name_save_reopen_verified).length,
+      native_two_outputs_saved:cases.filter(c=>
+        c.control_saved && c.candidate_saved).length,
+      strict_byte_fidelity_verified:cases.filter(c=>
+        c.strict_byte_fidelity_verified).length,
       paired_research_save_reopen_passed:cases.filter(c=>c.save_roundtrip_research_passed).length,
       blocked_or_mismatch:cases.filter(c=>!c.save_roundtrip_research_passed).length,
       product_write_authorizations:0,
@@ -254,11 +276,23 @@ if(require.main===module) {
   if(!["--write","--check"].includes(mode)||process.argv.length!==3){
     process.stderr.write("usage: node m4c7_photoshop_save_probe.cjs --write|--check\n");
     process.exitCode=2;
-  } else {
+  } else if (mode==="--write") {
     const report=buildEvidence();
-    if(mode==="--write")fs.writeFileSync(REPORT,report);
-    else assert.equal(fs.readFileSync(REPORT,"utf8"),report);
+    fs.writeFileSync(REPORT,report);
     console.log(JSON.stringify({mode,...JSON.parse(report).summary}));
+  } else {
+    // Actual Photoshop saveAs can add time-dependent document metadata.
+    // --check validates the frozen native receipt offline and must NEVER
+    // silently re-run a save or compare nondeterministic output hashes.
+    const report=JSON.parse(fs.readFileSync(REPORT,"utf8"));
+    assert.equal(report.public_write_authorized,false);
+    assert.equal(report.summary.product_write_authorizations,0);
+    assert.ok(report.cases.every(c=>c.public_write_authorized===false));
+    assert.equal(report.summary.native_name_reopen_verified,
+      report.cases.filter(c=>c.native_name_save_reopen_verified).length);
+    assert.equal(report.summary.paired_research_save_reopen_passed,
+      report.cases.filter(c=>c.save_roundtrip_research_passed).length);
+    console.log(JSON.stringify({mode,offline_receipt_check:true,...report.summary}));
   }
 }
 module.exports={saveAsIndependentCopy,buildEvidence,compareRaw};

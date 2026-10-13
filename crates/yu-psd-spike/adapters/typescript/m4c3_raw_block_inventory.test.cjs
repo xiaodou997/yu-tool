@@ -130,6 +130,27 @@ test("unknown Additional Layer Information keys are recorded without skipping th
   assert.equal(result.safe_to_rewrite, false);
 });
 
+test("Photoshop-style trailing zero padding is recognized but never certifies writing", () => {
+  const initial = source("upstream/psd-tools/group.psd");
+  const baseline = scan(initial);
+  const layerMask = baseline.sections.find(x => x.name === "layer_and_mask_info");
+  const insertAt = layerMask.offset + layerMask.length;
+  const bytes = Buffer.concat([
+    initial.subarray(0, insertAt), Buffer.from([0, 0]),
+    initial.subarray(insertAt),
+  ]);
+  bytes.writeUInt32BE(layerMask.length + 2, layerMask.length_field_offset);
+  const result = scan(bytes);
+  assert.equal(result.summary.layer_record_count, baseline.summary.layer_record_count);
+  assert.equal(result.summary.image_resource_count, baseline.summary.image_resource_count);
+  assert.ok(result.risks.includes("tagged_block_trailing_zero_padding"));
+  assert.equal(result.mutation_authorized, false);
+  assert.equal(result.safe_to_rewrite, false);
+  const bad = Buffer.from(bytes);
+  bad[insertAt + 1] = 1;
+  expectFailure(bad);
+});
+
 test("malformed signatures, truncated sections and lengths fail closed", () => {
   const initial = source(SIMPLE);
   expectFailure(source("malformed/truncated-header.psd"));

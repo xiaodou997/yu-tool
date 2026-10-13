@@ -447,6 +447,32 @@ and [tests](testing/m4c7c-native-gate-and-saved-pair.md). Native
 Photoshop app recovery requires separately confirmed user control;
 do not force close or silently alter macOS permissions.
 
+### M4c-7c — Native Photoshop save/reopen reacceptance (2026-10-13)
+
+After the user restarted Photoshop 2026, the native readiness preflight
+reported zero open documents and accepted Apple Events. The one
+strictly scoped `nested-group` fixture was saved to two independent
+scratch outputs: unchanged `Group 1` control and byte-patched
+`Group 2` candidate. **Both saved and reopened successfully in actual
+Photoshop**, and the expected names persisted. Independent psd-tools
+found matching logical trees and **matching decoded pixels between the
+two saved outputs**, with no original/source-input changes.
+
+However **full fidelity is NOT accepted**: Photoshop saved outputs
+produce different preview pixels compared with the pre-save inputs
+(including the untouched control), and the two saved outputs have
+different non-name metadata (`1060`, `1050`, `1058`, several `shmd`
+records) and differ by 16 bytes in file length. Their raw layer-channel
+and encoded merged-composite bytes match. The strict byte-preservation
+gate still fails, **PSD public write remains BLOCKED**.
+
+See [ADR 0021](decisions/0021-photoshop-native-save-reopen-reacceptance.md),
+[v3 native receipt](data/m4c7c-photoshop-native-reacceptance-v3.json)
+and [reacceptance tests](testing/m4c7c-native-reacceptance.md). The
+prior [v2 unresponsive receipt](data/m4c7c-photoshop-control-v2.json)
+remains preserved as history. Next investigate editor metadata and
+composite recomposition deltas (M4c-7d), not public PSD mutation.
+
 Candidate capabilities:
 
 - image crop/rotate/convert;

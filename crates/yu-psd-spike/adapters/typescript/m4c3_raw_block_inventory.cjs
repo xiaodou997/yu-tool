@@ -150,6 +150,16 @@ function scan(buffer, options = {}) {
   function tagRecords(cursor, scope, layerIndex = null) {
     while (cursor.left() > 0) {
       const offset = cursor.pos;
+      // Photoshop may terminate a section's tagged-block sequence with
+      // 1-3 zero bytes for alignment. Accept only a bounded all-zero tail
+      // and flag it as an unaudited serialization characteristic.
+      if (cursor.left() <= 3 &&
+          cursor.buf.subarray(cursor.pos, cursor.end).every(b => b === 0)) {
+        const padding = cursor.left();
+        cursor.skip(padding);
+        addRisk("tagged_block_trailing_zero_padding");
+        break;
+      }
       // Some PSD/PSB writers put two zero alignment bytes before a tagged
       // block sequence. Record this noncanonical feature; never silently
       // certify a write based on our ability to step over the padding.
