@@ -1,0 +1,245 @@
+{
+  "schema_version": "1",
+  "milestone": "M4c-7d-metadata",
+  "public_write_authorized": false,
+  "description": "only metadata payload type and repeatability evidence; no unknown-field waiver",
+  "category_status": {
+    "1050": "filename-derived Slices document-name bytes explained for this exact fixture",
+    "1058": "EXIF bytes may change across runs; contents not fully interpreted",
+    "1060": "XMP document/history fields may change across runs; not a safe exclusion list",
+    "shmd": "per-layer cust metadata changes; 52-byte payload semantic meaning unresolved"
+  },
+  "summary": {
+    "runs": 2,
+    "resource_1050_suffix_equal": true,
+    "resource_1050_difference_explained_for_fixture": true,
+    "opaque_metadata_fidelity_certified": false,
+    "production_writes_authorized": 0
+  },
+  "runs": [
+    {
+      "saved_files": [
+        {
+          "name": "nested-group-control-saved.psd",
+          "sha256": "5c797a704684448f8b5118fa58e5ba8b0ec6550acc11b98e23fa8ed297feace8"
+        },
+        {
+          "name": "nested-group-candidate-saved.psd",
+          "sha256": "c4dad545aff8c0b6205a15d28e774c45a0fa86120101a34414766516eb07f885"
+        }
+      ],
+      "resources": {
+        "1050": {
+          "description": "Slices",
+          "lengths": [
+            861,
+            845
+          ],
+          "same_length": false,
+          "changed_byte_positions_within_shared_length": 569,
+          "first_change_offset": 23,
+          "last_change_offset": 844,
+          "byte_equal": false,
+          "slices_name": {
+            "resource_id": 1050,
+            "description": "Slices",
+            "encoded_units": [
+              20,
+              12
+            ],
+            "names": [
+              "nested-group-control",
+              "nested-group"
+            ],
+            "payload_lengths": [
+              861,
+              845
+            ],
+            "expected_byte_delta": 16,
+            "observed_byte_delta": 16,
+            "identical_except_name": true,
+            "interpretation": "file-name-like Slices document name; no generic metadata preservation waiver"
+          },
+          "data_sha256_control": "0a7fb79f79bcc9145d980721fa508c3a899c3c4a55c71dfe9d259fe1c8df673c",
+          "data_sha256_candidate": "3582318349c7910412bb729600ba2d1747445409fe641dcd9bb3a37bcc4bf40f"
+        },
+        "1058": {
+          "description": "EXIF_data_1",
+          "lengths": [
+            306,
+            306
+          ],
+          "same_length": true,
+          "changed_byte_positions_within_shared_length": 0,
+          "first_change_offset": -1,
+          "last_change_offset": -1,
+          "byte_equal": true,
+          "data_sha256_control": "f3f534553dfab4f4be72511ce913b87153905101a24eb00e94b66754dcc96713",
+          "data_sha256_candidate": "f3f534553dfab4f4be72511ce913b87153905101a24eb00e94b66754dcc96713"
+        },
+        "1060": {
+          "description": "XMP_metadata",
+          "lengths": [
+            14564,
+            14564
+          ],
+          "same_length": true,
+          "changed_byte_positions_within_shared_length": 115,
+          "first_change_offset": 1041,
+          "last_change_offset": 1957,
+          "byte_equal": false,
+          "xmp_marker_keys_differing": [
+            "DocumentID",
+            "InstanceID",
+            "History"
+          ],
+          "data_sha256_control": "ed660f0cb51046fcc0a53a77fb124fdc73aafaf08a704df04777dafdb69049be",
+          "data_sha256_candidate": "3a98be5e0626383f318ef2dd4f9fa56c7fc0b714636ec167d0b56223ed1aefe1"
+        }
+      },
+      "shmd": {
+        "entries": 4,
+        "changed_entries": 4,
+        "entries_detail": [
+          {
+            "layer_index": 0,
+            "metadata_key": "cust",
+            "serialized_length": 52,
+            "changed": true
+          },
+          {
+            "layer_index": 1,
+            "metadata_key": "cust",
+            "serialized_length": 52,
+            "changed": true
+          },
+          {
+            "layer_index": 2,
+            "metadata_key": "cust",
+            "serialized_length": 52,
+            "changed": true
+          },
+          {
+            "layer_index": 3,
+            "metadata_key": "cust",
+            "serialized_length": 52,
+            "changed": true
+          }
+        ]
+      }
+    },
+    {
+      "saved_files": [
+        {
+          "name": "nested-group-control-saved.psd",
+          "sha256": "f5c907cf017bf105cdade4ab84a68e013d6e13b82105bad91f1b6252bd9b836a"
+        },
+        {
+          "name": "nested-group-candidate-saved.psd",
+          "sha256": "9ec098bf1b1bf22a60c286248e80042893393bfd62481124c6a6038962d30748"
+        }
+      ],
+      "resources": {
+        "1050": {
+          "description": "Slices",
+          "lengths": [
+            861,
+            845
+          ],
+          "same_length": false,
+          "changed_byte_positions_within_shared_length": 569,
+          "first_change_offset": 23,
+          "last_change_offset": 844,
+          "byte_equal": false,
+          "slices_name": {
+            "resource_id": 1050,
+            "description": "Slices",
+            "encoded_units": [
+              20,
+              12
+            ],
+            "names": [
+              "nested-group-control",
+              "nested-group"
+            ],
+            "payload_lengths": [
+              861,
+              845
+            ],
+            "expected_byte_delta": 16,
+            "observed_byte_delta": 16,
+            "identical_except_name": true,
+            "interpretation": "file-name-like Slices document name; no generic metadata preservation waiver"
+          },
+          "data_sha256_control": "0a7fb79f79bcc9145d980721fa508c3a899c3c4a55c71dfe9d259fe1c8df673c",
+          "data_sha256_candidate": "3582318349c7910412bb729600ba2d1747445409fe641dcd9bb3a37bcc4bf40f"
+        },
+        "1058": {
+          "description": "EXIF_data_1",
+          "lengths": [
+            306,
+            306
+          ],
+          "same_length": true,
+          "changed_byte_positions_within_shared_length": 1,
+          "first_change_offset": 166,
+          "last_change_offset": 166,
+          "byte_equal": false,
+          "data_sha256_control": "c9e814348649a4c424d5dc11c6d54a4283b77e1d6c6b12ed74afe003934bc0e7",
+          "data_sha256_candidate": "7781c38857dd5486ca3f9465cf524e7bf094fb0aba10fc055a551c595097bda3"
+        },
+        "1060": {
+          "description": "XMP_metadata",
+          "lengths": [
+            14564,
+            14564
+          ],
+          "same_length": true,
+          "changed_byte_positions_within_shared_length": 114,
+          "first_change_offset": 894,
+          "last_change_offset": 2026,
+          "byte_equal": false,
+          "xmp_marker_keys_differing": [
+            "ModifyDate",
+            "MetadataDate",
+            "DocumentID",
+            "InstanceID",
+            "History"
+          ],
+          "data_sha256_control": "f0d6abc44e2b0d63fb189984b04e05e9e15d20f6494248edb69f67b63028ccbc",
+          "data_sha256_candidate": "3d711d2e070c5524b4764381ac7e8bc2574b64f818cc227269bea442b0caccfa"
+        }
+      },
+      "shmd": {
+        "entries": 4,
+        "changed_entries": 4,
+        "entries_detail": [
+          {
+            "layer_index": 0,
+            "metadata_key": "cust",
+            "serialized_length": 52,
+            "changed": true
+          },
+          {
+            "layer_index": 1,
+            "metadata_key": "cust",
+            "serialized_length": 52,
+            "changed": true
+          },
+          {
+            "layer_index": 2,
+            "metadata_key": "cust",
+            "serialized_length": 52,
+            "changed": true
+          },
+          {
+            "layer_index": 3,
+            "metadata_key": "cust",
+            "serialized_length": 52,
+            "changed": true
+          }
+        ]
+      }
+    }
+  ]
+}
