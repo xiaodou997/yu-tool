@@ -1,0 +1,29 @@
+{
+  "schema_version": "1",
+  "milestone": "M4c-11",
+  "public_write_authorized": false,
+  "scope": "known 8-bit RGB pixel PSD, research output only",
+  "summary": {
+    "private_staged_published": 1,
+    "sha_bound_verifications": 1,
+    "no_clobber_violations": 0,
+    "production_writes_authorized": 0
+  },
+  "cases": [
+    {
+      "milestone": "M4c-11",
+      "kind": "research_only_nonclobber_receipt",
+      "status": "verified_private_scratch_published",
+      "original_sha256": "391f4c009b9bd4cc5fdffb3799c3476f7d690874e6ca458463ab7fe3b5739aee",
+      "output_sha256": "d062542d521ccc45f6c12d4352c3ce1ab4eb78455a6dc5ab301f185cdd5eccd9",
+      "output_bytes": 500483,
+      "candidate_name": "Layer A",
+      "source_version_rechecked": true,
+      "same_filesystem_atomic_hard_link": true,
+      "output_exists_verified": true,
+      "native_photoshop_save_not_performed": true,
+      "full_opaque_metadata_fidelity_certified": false,
+      "public_write_authorized": false
+    }
+  ]
+}

@@ -1,0 +1,264 @@
+{
+  "schema_version": "1",
+  "milestone": "M4c-11",
+  "operation": "pinned Photoshop save EXIF TIFF XMP identity shmd forensic gate",
+  "public_write_authorized": false,
+  "summary": {
+    "paired_multilingual_cases": 2,
+    "cases_with_XMP_identity_or_history_deltas": 2,
+    "cases_with_EXIF_tag_or_byte_differences": 2,
+    "cases_with_unknown_semantics": 2,
+    "public_writes_authorized": 0
+  },
+  "exclusion_policy": "NONE: recognize fields but never waive unknown field/content differences",
+  "cases": [
+    {
+      "fixture": "chinese",
+      "SHA_bound_input_pair": [
+        "ba9302a69e3b4929546d262115c1b894d30a7c02ae719bdfda141ed6d6a7f465",
+        "82e6def6dce887936a990f41a36def8339cf20b66fd3c6868dce6208b5b3237d"
+      ],
+      "XMP_fields": [
+        {
+          "field": "DocumentID",
+          "present_in_control": true,
+          "present_in_candidate": true,
+          "sha256_equal": false,
+          "metadata_identity_field_not_ignored": true
+        },
+        {
+          "field": "InstanceID",
+          "present_in_control": true,
+          "present_in_candidate": true,
+          "sha256_equal": false,
+          "metadata_identity_field_not_ignored": true
+        },
+        {
+          "field": "OriginalDocumentID",
+          "present_in_control": true,
+          "present_in_candidate": true,
+          "sha256_equal": true,
+          "metadata_identity_field_not_ignored": true
+        },
+        {
+          "field": "ModifyDate",
+          "present_in_control": true,
+          "present_in_candidate": true,
+          "sha256_equal": false,
+          "metadata_identity_field_not_ignored": true
+        },
+        {
+          "field": "MetadataDate",
+          "present_in_control": true,
+          "present_in_candidate": true,
+          "sha256_equal": false,
+          "metadata_identity_field_not_ignored": true
+        },
+        {
+          "field": "History",
+          "present_in_control": true,
+          "present_in_candidate": true,
+          "sha256_equal": false,
+          "metadata_identity_field_not_ignored": true
+        }
+      ],
+      "XMP_unproven_semantic_fields": [
+        "DocumentID",
+        "InstanceID",
+        "ModifyDate",
+        "MetadataDate",
+        "History"
+      ],
+      "EXIF_tag_forensics": {
+        "byte_order": [
+          "II",
+          "II"
+        ],
+        "ifd_count": [
+          3,
+          3
+        ],
+        "total_tags": [
+          22,
+          22
+        ],
+        "changed_tag_keys": [
+          "8:306:2:20"
+        ],
+        "removed_tag_keys": [],
+        "added_tag_keys": [],
+        "changed_known_fields": [
+          "DateTime"
+        ],
+        "equal_raw_bytes": false,
+        "complete_semantic_preservation_certified": false
+      },
+      "Slices_name_forensics": {
+        "names": [
+          "chinese-original",
+          "chinese-synced"
+        ],
+        "identical_except_name": true,
+        "observed_byte_delta": 4,
+        "expected_byte_delta": 4
+      },
+      "shmd": {
+        "number_control": 2,
+        "number_candidate": 2,
+        "raw_entries_equal": true,
+        "entry_types": [
+          "cust"
+        ],
+        "complete_semantics_proven": false
+      },
+      "resource_delta": {
+        "added": [],
+        "removed": [],
+        "changed": [
+          "1060:#0",
+          "1050:#0",
+          "1058:#0"
+        ]
+      },
+      "tagged_block_delta": {
+        "added": [],
+        "removed": [],
+        "changed": [
+          "layer:0:luni#0"
+        ]
+      },
+      "channel_delta": {
+        "added": [],
+        "removed": [],
+        "changed": []
+      },
+      "compressed_merged_image_equal": true,
+      "all_opaque_metadata_semantics_proven": false,
+      "production_write_authorized": false
+    },
+    {
+      "fixture": "cyrillic",
+      "SHA_bound_input_pair": [
+        "3d11b51d68377d4a4443fbac56b0fc8b4923bb0b898a64b4d9cb466f40f444a6",
+        "57c923c74d657d386f39e4f8108568b4d502bd879374a1b5f3d57bf04f3f90d4"
+      ],
+      "XMP_fields": [
+        {
+          "field": "DocumentID",
+          "present_in_control": true,
+          "present_in_candidate": true,
+          "sha256_equal": false,
+          "metadata_identity_field_not_ignored": true
+        },
+        {
+          "field": "InstanceID",
+          "present_in_control": true,
+          "present_in_candidate": true,
+          "sha256_equal": false,
+          "metadata_identity_field_not_ignored": true
+        },
+        {
+          "field": "OriginalDocumentID",
+          "present_in_control": true,
+          "present_in_candidate": true,
+          "sha256_equal": true,
+          "metadata_identity_field_not_ignored": true
+        },
+        {
+          "field": "ModifyDate",
+          "present_in_control": true,
+          "present_in_candidate": true,
+          "sha256_equal": false,
+          "metadata_identity_field_not_ignored": true
+        },
+        {
+          "field": "MetadataDate",
+          "present_in_control": true,
+          "present_in_candidate": true,
+          "sha256_equal": false,
+          "metadata_identity_field_not_ignored": true
+        },
+        {
+          "field": "History",
+          "present_in_control": true,
+          "present_in_candidate": true,
+          "sha256_equal": false,
+          "metadata_identity_field_not_ignored": true
+        }
+      ],
+      "XMP_unproven_semantic_fields": [
+        "DocumentID",
+        "InstanceID",
+        "ModifyDate",
+        "MetadataDate",
+        "History"
+      ],
+      "EXIF_tag_forensics": {
+        "byte_order": [
+          "II",
+          "II"
+        ],
+        "ifd_count": [
+          3,
+          3
+        ],
+        "total_tags": [
+          22,
+          22
+        ],
+        "changed_tag_keys": [
+          "8:306:2:20"
+        ],
+        "removed_tag_keys": [],
+        "added_tag_keys": [],
+        "changed_known_fields": [
+          "DateTime"
+        ],
+        "equal_raw_bytes": false,
+        "complete_semantic_preservation_certified": false
+      },
+      "Slices_name_forensics": {
+        "names": [
+          "cyrillic-original",
+          "cyrillic-synced"
+        ],
+        "identical_except_name": true,
+        "observed_byte_delta": 4,
+        "expected_byte_delta": 4
+      },
+      "shmd": {
+        "number_control": 2,
+        "number_candidate": 2,
+        "raw_entries_equal": true,
+        "entry_types": [
+          "cust"
+        ],
+        "complete_semantics_proven": false
+      },
+      "resource_delta": {
+        "added": [],
+        "removed": [],
+        "changed": [
+          "1060:#0",
+          "1050:#0",
+          "1058:#0"
+        ]
+      },
+      "tagged_block_delta": {
+        "added": [],
+        "removed": [],
+        "changed": [
+          "layer:0:luni#0"
+        ]
+      },
+      "channel_delta": {
+        "added": [],
+        "removed": [],
+        "changed": []
+      },
+      "compressed_merged_image_equal": true,
+      "all_opaque_metadata_semantics_proven": false,
+      "production_write_authorized": false
+    }
+  ]
+}

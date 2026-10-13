@@ -598,6 +598,31 @@ See [ADR 0026](decisions/0026-m4c10-multilingual-dual-name-and-lyid.md),
 [saved metadata audit](data/m4c10-metadata-paired-v1.json) and
 [M4c-10 acceptance](testing/m4c10-multilingual-lyid-acceptance.md).
 
+### M4c-11 — Metadata semantic classification and no-clobber research output
+
+Based on `develop@5b20e4c3c196ac5933305bf6257e2c00df5ab137`,
+two exact-hash Photoshop 2026 saved multilingual control/candidate
+pairs have been analyzed at **TIFF EXIF tag level**: both have
+3 IFDs and 22 entries with no entry additions/removals; the observed
+changed field is `306 DateTime`. XMP `DocumentID`, `InstanceID`,
+`History` and time-related markers remain semantically protected;
+`shmd/cust` entry bytes agree within both saved pairs, but unknown
+metadata is **not globally certified**. The exclusion list stays empty.
+
+A **separate research-only** output test now exercises exact
+SHA-256 source version binding, a deterministic fixed-width M4c-8
+normal pixel candidate, exclusive same-filesystem staging, atomic
+hard-link no-clobber publication, revalidation and negative race,
+symlink and source-version tests. It only publishes into ignored
+`target/m4c11-safe-output/run-*`, never via the public `yu` CLI.
+Filesystem persistence, production concurrency, arbitrary PSD metadata
+fidelity and release permission remain **BLOCKED**.
+
+See [ADR 0027](decisions/0027-m4c11-psd-metadata-and-output-gates.md),
+[EXIF/XMP/shmd evidence](data/m4c11-metadata-semantic-gate-v1.json),
+[research publication evidence](data/m4c11-safe-output-v1.json)
+and [acceptance](testing/m4c11-metadata-publication-acceptance.md).
+
 Candidate capabilities:
 
 - image crop/rotate/convert;

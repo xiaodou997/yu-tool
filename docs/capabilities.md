@@ -266,6 +266,17 @@ These are sample-scoped feasibility results, **not** a public
 PSD editor or universal charset/identity certification.
 See [ADR 0026](decisions/0026-m4c10-multilingual-dual-name-and-lyid.md).
 
+M4c-11 adds **offline PSD metadata forensics** (bounded TIFF EXIF
+`DateTime` field-delta identification, protected XMP document
+identity/history, and exact-hash Slices/`shmd` comparisons).
+It also includes a **research-only, fixed-fixture** PSD output
+no-clobber staging and hard-link test, with SHA source revision
+binding, post-output verification and race/symlink refusal.
+Neither research tool is exposed as a general PSD writer, and the
+metadata exclusion policy remains empty. The decision is still
+`PSD_PRODUCTION_MUTATION_BLOCKED`.
+See [ADR 0027](decisions/0027-m4c11-psd-metadata-and-output-gates.md).
+
 PR #22 exposes the four read-only operations through the public CLI. PR #23 adds layer bitmap export to the separately versioned `31.0.2+node22.23.3.yu2` package. Effective capabilities use the exact active version, not the inventory union of all installed versions. This does not promise arbitrary PSD feature coverage or full rendering fidelity. The package is still a prototype with CI artifacts and placeholder distribution URLs; no public catalog is claimed.
 
 Compatibility roles:
