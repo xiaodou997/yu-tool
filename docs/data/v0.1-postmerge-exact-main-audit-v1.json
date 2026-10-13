@@ -1,0 +1,170 @@
+{
+  "CI_three_platform_isolated_acceptance": {
+    "linux": {
+      "CI_isolated_acceptance": "PASS",
+      "candidate_sha256": "98cb66df10a7bf698cffc04880a1c561ef9dc62996f0b774e3efa51bb9511bf9",
+      "clean_vm": false,
+      "engine_sha256": "d3d420dde110f5774a7aba29ce3be1a6c41809b83c5732930c04b8c738b8bcb7",
+      "failed_case_retries": 0,
+      "source_commit": "5526dc4465c4e79ad7f2757d06b3b1693642b8af",
+      "steps": 20
+    },
+    "macos": {
+      "CI_isolated_acceptance": "PASS",
+      "candidate_sha256": "388fb2f1f60cbca3166d6b14046ad06595813f45388e0c482d99defbc611bcfc",
+      "clean_vm": false,
+      "engine_sha256": "cd1dc8caa0c8294114b39d8d5573e6d8647cd7aea09e094b073ad27afd7b406c",
+      "failed_case_retries": 0,
+      "source_commit": "5526dc4465c4e79ad7f2757d06b3b1693642b8af",
+      "steps": 20
+    },
+    "windows": {
+      "CI_isolated_acceptance": "PASS",
+      "candidate_sha256": "b5feb4f11feb8c871d93e2720f2655c6e11f59eaa04169ecae9e3c18e27ba501",
+      "clean_vm": false,
+      "engine_sha256": "07798e6b18de8d69902f5286d1dbccba557e59eb011625ae03f568ec0de1148c",
+      "failed_case_retries": 0,
+      "source_commit": "5526dc4465c4e79ad7f2757d06b3b1693642b8af",
+      "steps": 20
+    }
+  },
+  "cli_candidate": {
+    "linux": {
+      "archive_layout": 3,
+      "archive_sha256": "98cb66df10a7bf698cffc04880a1c561ef9dc62996f0b774e3efa51bb9511bf9",
+      "binary_and_all_auxiliary_hashes_match": true,
+      "candidate_archive_name": "yu-0.1.0-dev.5526dc4465c4-x86_64-unknown-linux-gnu.zip",
+      "candidate_bytes": 12180270,
+      "independent_legal_redistribution_acceptance": false,
+      "missing_notice_evidence": 0,
+      "project_license_texts_match_frozen_main_normalized_newlines": {
+        "LICENSE-APACHE": true,
+        "LICENSE-MIT": true
+      },
+      "public_release_ready": false,
+      "resolved_third_party_components": 169,
+      "source_commit": "5526dc4465c4e79ad7f2757d06b3b1693642b8af",
+      "source_tree": "6851265265d383bea9f1470b64635c3041790158",
+      "target": "x86_64-unknown-linux-gnu"
+    },
+    "macos": {
+      "archive_layout": 3,
+      "archive_sha256": "388fb2f1f60cbca3166d6b14046ad06595813f45388e0c482d99defbc611bcfc",
+      "binary_and_all_auxiliary_hashes_match": true,
+      "candidate_archive_name": "yu-0.1.0-dev.5526dc4465c4-aarch64-apple-darwin.zip",
+      "candidate_bytes": 10200951,
+      "independent_legal_redistribution_acceptance": false,
+      "missing_notice_evidence": 0,
+      "project_license_texts_match_frozen_main_normalized_newlines": {
+        "LICENSE-APACHE": true,
+        "LICENSE-MIT": true
+      },
+      "public_release_ready": false,
+      "resolved_third_party_components": 169,
+      "source_commit": "5526dc4465c4e79ad7f2757d06b3b1693642b8af",
+      "source_tree": "6851265265d383bea9f1470b64635c3041790158",
+      "target": "aarch64-apple-darwin"
+    },
+    "windows": {
+      "archive_layout": 3,
+      "archive_sha256": "b5feb4f11feb8c871d93e2720f2655c6e11f59eaa04169ecae9e3c18e27ba501",
+      "binary_and_all_auxiliary_hashes_match": true,
+      "candidate_archive_name": "yu-0.1.0-dev.5526dc4465c4-x86_64-pc-windows-msvc.zip",
+      "candidate_bytes": 8713641,
+      "independent_legal_redistribution_acceptance": false,
+      "missing_notice_evidence": 0,
+      "project_license_texts_match_frozen_main_normalized_newlines": {
+        "LICENSE-APACHE": true,
+        "LICENSE-MIT": true
+      },
+      "public_release_ready": false,
+      "resolved_third_party_components": 166,
+      "source_commit": "5526dc4465c4e79ad7f2757d06b3b1693642b8af",
+      "source_tree": "6851265265d383bea9f1470b64635c3041790158",
+      "target": "x86_64-pc-windows-msvc"
+    }
+  },
+  "developer_candidate_redistribution_review_flag": false,
+  "external_owner_gate_2_receipt_url": "https://github.com/xiaodou997/yu-tool/issues/41#issuecomment-5998812116",
+  "external_owner_gate_2_recorded_state": "ACCEPTED_IN_ISSUE_41",
+  "external_owner_receipt_authenticated_by_offline_audit": false,
+  "frozen_main_sha": "5526dc4465c4e79ad7f2757d06b3b1693642b8af",
+  "frozen_main_tree": "6851265265d383bea9f1470b64635c3041790158",
+  "local_mac_downloaded_candidate_reacceptance": {
+    "candidate_sha256": "388fb2f1f60cbca3166d6b14046ad06595813f45388e0c482d99defbc611bcfc",
+    "clean_vm": false,
+    "engine_sha256": "cd1dc8caa0c8294114b39d8d5573e6d8647cd7aea09e094b073ad27afd7b406c",
+    "network_isolated": false,
+    "source_commit": "5526dc4465c4e79ad7f2757d06b3b1693642b8af",
+    "status": "PASS",
+    "steps": 20
+  },
+  "managed_engine": {
+    "linux": {
+      "archive_bytes": 49772269,
+      "archive_sha256": "d3d420dde110f5774a7aba29ce3be1a6c41809b83c5732930c04b8c738b8bcb7",
+      "engine_version": "31.0.2+node22.23.3.yu2",
+      "legal_redistribution_acceptance": false,
+      "notice_components": [
+        "node",
+        "ag-psd",
+        "base64-js",
+        "pako"
+      ],
+      "notice_lengths": {
+        "ag-psd": 1205,
+        "base64-js": 1081,
+        "node": 145485,
+        "pako": 1104
+      },
+      "placeholder_url_in_prototype_manifest": true,
+      "public_release_ready": false
+    },
+    "macos": {
+      "archive_bytes": 42989397,
+      "archive_sha256": "cd1dc8caa0c8294114b39d8d5573e6d8647cd7aea09e094b073ad27afd7b406c",
+      "engine_version": "31.0.2+node22.23.3.yu2",
+      "legal_redistribution_acceptance": false,
+      "notice_components": [
+        "node",
+        "ag-psd",
+        "base64-js",
+        "pako"
+      ],
+      "notice_lengths": {
+        "ag-psd": 1205,
+        "base64-js": 1081,
+        "node": 145485,
+        "pako": 1104
+      },
+      "placeholder_url_in_prototype_manifest": true,
+      "public_release_ready": false
+    },
+    "windows": {
+      "archive_bytes": 39181303,
+      "archive_sha256": "07798e6b18de8d69902f5286d1dbccba557e59eb011625ae03f568ec0de1148c",
+      "engine_version": "31.0.2+node22.23.3.yu2",
+      "legal_redistribution_acceptance": false,
+      "notice_components": [
+        "node",
+        "ag-psd",
+        "base64-js",
+        "pako"
+      ],
+      "notice_lengths": {
+        "ag-psd": 1205,
+        "base64-js": 1081,
+        "node": 148217,
+        "pako": 1104
+      },
+      "placeholder_url_in_prototype_manifest": true,
+      "public_release_ready": false
+    }
+  },
+  "no_production_psd_writer": true,
+  "public_release_authorized": false,
+  "public_release_ready": false,
+  "schema_version": "1",
+  "scope": "v0.1 post-PR42 exact-main technical artifact inspection",
+  "technical_artifacts_audit": "PASS"
+}
