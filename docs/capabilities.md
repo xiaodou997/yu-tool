@@ -277,6 +277,16 @@ metadata exclusion policy remains empty. The decision is still
 `PSD_PRODUCTION_MUTATION_BLOCKED`.
 See [ADR 0027](decisions/0027-m4c11-psd-metadata-and-output-gates.md).
 
+M4c-12 tests a private PSD research **interruption/recovery and
+filesystem compatibility** experiment with deterministic and real
+disposable-child SIGKILL cutpoints, read-only reconciliation,
+source device/inode/hash checks, hard-link output identity, explicit
+directory `fsync` and fail-closed unsupported-filesystem behavior.
+It does not implement power-loss-proof, portable or public PSD
+publishing, and does not waive EXIF/XMP/`shmd` metadata differences.
+See [ADR 0028](decisions/0028-m4c12-recovery-filesystem-metadata.md).
+`PSD_PRODUCTION_MUTATION_BLOCKED` remains unchanged.
+
 PR #22 exposes the four read-only operations through the public CLI. PR #23 adds layer bitmap export to the separately versioned `31.0.2+node22.23.3.yu2` package. Effective capabilities use the exact active version, not the inventory union of all installed versions. This does not promise arbitrary PSD feature coverage or full rendering fidelity. The package is still a prototype with CI artifacts and placeholder distribution URLs; no public catalog is claimed.
 
 Compatibility roles:

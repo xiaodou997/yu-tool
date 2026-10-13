@@ -623,6 +623,35 @@ See [ADR 0027](decisions/0027-m4c11-psd-metadata-and-output-gates.md),
 [research publication evidence](data/m4c11-safe-output-v1.json)
 and [acceptance](testing/m4c11-metadata-publication-acceptance.md).
 
+### M4c-12 — Interrupted PSD output and filesystem compatibility research
+
+Based on `develop@d41650622ce8b9ee9e7900439b86e67e5cdb1140`,
+a separate **research-only** transaction and recovery probe models
+exact-source SHA, filesystem inode/version binding, versioned intent,
+private candidate staging, file and directory `fsync`, atomic
+hard-link no-clobber output, post-output candidate verification and
+a versioned receipt for the same frozen M4c-8 pixel rename.
+
+Four deterministic interruption cutpoints plus **two real SIGKILL
+terminations of disposable child processes** demonstrate how to
+classify private-stage-only, output-present/no-receipt and complete
+states without automatic recovery writes or deletion. The recovery
+probe distinguishes **same inode vs byte-identical rival output** and
+fails closed on changed/replaced source, staged bytes, intent, output
+symlinks and filesystem incompatibility.
+
+Actual directory `fsync` worked on this one local macOS filesystem.
+Simulated cross-device/unsupported-link and directory-sync failure
+are explicit **refusals**; no copy fallback is permitted. Neither
+process SIGKILL nor a successful directory `fsync` proves
+power-loss durability or cross-platform filesystem support.
+No XMP, EXIF, `shmd` or unknown metadata is auto-normalized.
+
+See [ADR 0028](decisions/0028-m4c12-recovery-filesystem-metadata.md),
+[recovery evidence](data/m4c12-recovery-filesystem-v1.json) and
+[acceptance](testing/m4c12-recovery-filesystem-acceptance.md).
+**PSD production mutation stays BLOCKED** and `main` remains frozen.
+
 Candidate capabilities:
 
 - image crop/rotate/convert;

@@ -1,0 +1,120 @@
+{
+  "schema_version": "1",
+  "milestone": "M4c-12",
+  "status": "research_recovery_classification_implemented_not_durability_certified",
+  "public_write_authorized": false,
+  "summary": {
+    "deterministic_cutpoints_tested": 4,
+    "real_child_SIGKILL_cutpoints_tested": 2,
+    "recovery_read_only_cases": 4,
+    "production_writes_authorized": 0,
+    "power_failure_durability_verified": false,
+    "supported_customer_filesystems_certified": 0
+  },
+  "observed_filesystem": {
+    "platform": "darwin",
+    "statfs_type": "26",
+    "statfs_block_size": 4096,
+    "filesystem_device_id": "16777234",
+    "observed_parent_directory_fsync": true
+  },
+  "metadata_retention_policy": {
+    "exact_known_source_patch_preserves_all_non_name_bytes": true,
+    "saved_photoshop_pairs_referenced": 2,
+    "EXIF_DateTime_changes_identified_not_ignored": true,
+    "XMP_document_identity_history_fields_not_ignored": true,
+    "shmd_and_unknown_tagged_blocks_not_ignored": true,
+    "metadata_auto_normalization_or_exclusion_rules": 0,
+    "broad_semantic_equivalence_certified": false
+  },
+  "cases": [
+    {
+      "simulated_cutpoint": "after_stage",
+      "attempted_state": "interrupted_after_stage_before_link",
+      "recovery": {
+        "milestone": "M4c-12",
+        "public_write_authorized": false,
+        "source_sha256_still_matches": true,
+        "staged_candidate_sha256_matches": true,
+        "published_status": "absent",
+        "output_inode_matches_private_staging": false,
+        "observed_output_sha256": null,
+        "existing_verified_receipt": false,
+        "classification": "staged_only_manual_disposition_required",
+        "automatic_republication_attempted": false,
+        "automatic_output_deletion_attempted": false,
+        "previous_crash_durability_proven": false
+      }
+    },
+    {
+      "simulated_cutpoint": "after_link",
+      "attempted_state": "interrupted_after_link_before_parent_fsync",
+      "recovery": {
+        "milestone": "M4c-12",
+        "public_write_authorized": false,
+        "source_sha256_still_matches": true,
+        "staged_candidate_sha256_matches": true,
+        "published_status": "matching_candidate_observed",
+        "output_inode_matches_private_staging": true,
+        "observed_output_sha256": "d062542d521ccc45f6c12d4352c3ce1ab4eb78455a6dc5ab301f185cdd5eccd9",
+        "existing_verified_receipt": false,
+        "classification": "published_candidate_without_receipt_reinspect_only",
+        "automatic_republication_attempted": false,
+        "automatic_output_deletion_attempted": false,
+        "previous_crash_durability_proven": false
+      }
+    },
+    {
+      "simulated_cutpoint": "after_directory_fsync",
+      "attempted_state": "interrupted_after_parent_fsync_before_receipt",
+      "recovery": {
+        "milestone": "M4c-12",
+        "public_write_authorized": false,
+        "source_sha256_still_matches": true,
+        "staged_candidate_sha256_matches": true,
+        "published_status": "matching_candidate_observed",
+        "output_inode_matches_private_staging": true,
+        "observed_output_sha256": "d062542d521ccc45f6c12d4352c3ce1ab4eb78455a6dc5ab301f185cdd5eccd9",
+        "existing_verified_receipt": false,
+        "classification": "published_candidate_without_receipt_reinspect_only",
+        "automatic_republication_attempted": false,
+        "automatic_output_deletion_attempted": false,
+        "previous_crash_durability_proven": false
+      }
+    },
+    {
+      "simulated_cutpoint": "normal_complete",
+      "attempted_state": "observed_verified_after_parent_fsync",
+      "recovery": {
+        "milestone": "M4c-12",
+        "public_write_authorized": false,
+        "source_sha256_still_matches": true,
+        "staged_candidate_sha256_matches": true,
+        "published_status": "matching_candidate_observed",
+        "output_inode_matches_private_staging": true,
+        "observed_output_sha256": "d062542d521ccc45f6c12d4352c3ce1ab4eb78455a6dc5ab301f185cdd5eccd9",
+        "existing_verified_receipt": true,
+        "classification": "verified_receipt_observed",
+        "automatic_republication_attempted": false,
+        "automatic_output_deletion_attempted": false,
+        "previous_crash_durability_proven": false
+      }
+    }
+  ],
+  "real_child_SIGKILL_runs": [
+    {
+      "terminator": "SIGKILL_of_disposable_child_only",
+      "phase": "--sigkill-after-stage",
+      "recovered_classification": "staged_only_manual_disposition_required",
+      "source_sha256_still_matches": true,
+      "previous_crash_durability_proven": false
+    },
+    {
+      "terminator": "SIGKILL_of_disposable_child_only",
+      "phase": "--sigkill-after-link",
+      "recovered_classification": "published_candidate_without_receipt_reinspect_only",
+      "source_sha256_still_matches": true,
+      "previous_crash_durability_proven": false
+    }
+  ]
+}
