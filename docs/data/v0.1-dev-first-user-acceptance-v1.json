@@ -1,0 +1,84 @@
+{
+  "backlog_candidates": [
+    {
+      "item": "MacBook Air Gatekeeper or launch blocked in actual downloaded test",
+      "priority": "P1_if_reproduced"
+    },
+    {
+      "item": "Multi-layer ZIP and manual CLI install require user guidance; helper avoids nested manual extraction but not terminal",
+      "priority": "P2"
+    },
+    {
+      "item": "Native app-like one-click installer is a separate beta scope; no CLI source change in this gate",
+      "priority": "P2"
+    }
+  ],
+  "created_date": "2026-10-15",
+  "frozen_main_sha": "5526dc4465c4e79ad7f2757d06b3b1693642b8af",
+  "local_connected_runner": {
+    "checks_failed": 0,
+    "checks_passed": 20,
+    "distinct_from_target_macbook_air": true,
+    "gatekeeper_status": "assessments disabled",
+    "hardware_model": "Mac13,1",
+    "isolated_user_path": "PASS",
+    "manual_gatekeeper_acceptance_performed": false,
+    "os": "macOS 27.0.1",
+    "quarantine_probes_unobserved": 2,
+    "step_names_passed": [
+      "EXTRACT_OUTER",
+      "INNER_ARCHIVES",
+      "BINARY_SHA",
+      "VERSION",
+      "DOCTOR",
+      "CAPABILITIES",
+      "IMAGE_INFO",
+      "IMAGE_RESIZE",
+      "RESIZED_IMAGE_INFO",
+      "PSD_BEFORE_INSTALL",
+      "ENGINE_INSTALL",
+      "PSD_BEFORE_ACTIVATE",
+      "ENGINE_ACTIVATE",
+      "PSD_INSPECT",
+      "PSD_TREE",
+      "LAYER_LIST",
+      "LAYER_EXPORT",
+      "ENGINE_DEACTIVATE",
+      "ENGINE_REMOVE",
+      "ORIGINAL_INPUTS_UNCHANGED"
+    ],
+    "test_home_isolated": true,
+    "user_psd_files_touched": false,
+    "zip_transfer_extraction_test": "PASS"
+  },
+  "macbook_air_manual_gate": {
+    "any_issues_recorded": "PENDING_USER_FEEDBACK",
+    "first_transfer_and_security_prompt": "PENDING",
+    "macos_minimum_version_acceptance": "PENDING",
+    "normal_user_end_to_end_acceptance": "PENDING",
+    "status": "PENDING_REAL_DEVICE"
+  },
+  "milestone": "YuTool v0.1.0-dev First User Acceptance",
+  "risk_and_release_policy": {
+    "no_apple_notarization": true,
+    "no_global_gatekeeper_changes": true,
+    "no_privilege_elevation": true,
+    "no_public_tag_or_release": true,
+    "production_psd_mutation_blocked": true,
+    "public_release_ready": false
+  },
+  "schema_version": "1",
+  "source_private_preview_sha256": "5897360ddbc770e45232b2bbbf569cb585a88d38547105a6ae872b6e72c8e44a",
+  "transfer_kit": {
+    "bytes": 54865165,
+    "contains": [
+      "original unchanged frozen macOS preview ZIP",
+      "shell helper without third-party SDK",
+      "fixed source PSD/PNG",
+      "first-user manual checklist",
+      "per-file SHA256SUMS"
+    ],
+    "name": "yu-v0.1.0-dev.5526dc4-mac-first-user-macos-arm64.zip",
+    "sha256": "e6eaa689bb0bcb7581d13b1d908f489906a8b3513817ba4fa296f77c4322719d"
+  }
+}
